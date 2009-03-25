@@ -21,6 +21,8 @@ import time, os, sys
 from subprocess import Popen, PIPE
 from ounk.ounklib import *
 
+systemPlatform = sys.platform
+
 def soundInfo(sndfile):
     setGlobalDuration(.1)
     snd = sndfile
@@ -154,12 +156,15 @@ def splitSnd(file):
     cschnls = {'monaural': 1, 'stereo': 2, 'quad': 4, 'oct': 8}
 
     # retreive sound infos
-    cspipe1 = Popen('/usr/local/bin/csound --logfile=log.txt -U sndinfo ' + file, shell=True, stdin=PIPE)
+    if systemPlatform == 'darwin':
+        cspipe1 = Popen('/usr/local/bin/csound --logfile=log.txt -U sndinfo ' + file, shell=True, stdin=PIPE)
+    elif systemPlatform == 'win32':
+        cspipe1 = Popen('start /REALTIME /WAIT csound --logfile=log.txt -U sndinfo ' + file, shell=True, stdin=PIPE)
     cspipe1.wait()
     f = open('log.txt', 'r')
     text = f.read()
     f.close()
-    os.remove('log.txt')
+    #os.remove('log.txt')
     sp = text.split('srate')[-1]
     sp = sp.replace(',', '').replace('(', '').replace(')', '').replace('\n', ' ').replace('\t', '').strip()
     sp = sp.split(' ')           
