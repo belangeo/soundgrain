@@ -178,7 +178,6 @@ def splitSnd(file):
     typ = sp[sp.index('bit')+1]
     total_time = eval(sp[sp.index('seconds')-1])
 
-    print '------ ', samprate, chnls, dur, nsamps, bitrate, typ, total_time, ' -------------'
     # create splitter.csd file
     splitter = open("splitter.csd", "w")
     splitter.write('<CsoundSynthesizer>\n')
@@ -196,6 +195,7 @@ def splitSnd(file):
     path = os.path.split(file)[0]
     outPath = os.path.expanduser('~')
     if path != '': path = path + '/'
+    print path, outPath
     splitter.write('Spath strcpy "%s"\n' % path)
     splitter.write('SoutPath strcpy "%s/"\n' % outPath)
     splitter.write('Sname strcpy "%s"\n' % os.path.split(file)[1].rsplit('.',1)[0])                                
