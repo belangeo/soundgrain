@@ -180,7 +180,6 @@ def splitSnd(file):
 
     # create splitter.csd file
     splitter = open("splitter.csd", "w")
-    print splitter
     splitter.write('<CsoundSynthesizer>\n')
     splitter.write('<CsOptions>\n')
     splitter.write('-A -d -n -b256 -B1024\n')
@@ -198,6 +197,8 @@ def splitSnd(file):
     if systemPlatform == 'darwin':    
         splitter.write('Spath strcpy "%s/"\n' % path)
         splitter.write('SoutPath strcpy "%s/"\n' % outPath)
+        splitter.write('puts Spath, 1\n')
+        splitter.write('puts SoutPath, 1\n')
     elif systemPlatform == 'win32':    
         splitter.write('Spath strcpy "%s\"\n' % path)
         splitter.write('SoutPath strcpy "%s\"\n' % outPath)
