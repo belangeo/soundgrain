@@ -180,6 +180,7 @@ def splitSnd(file):
 
     # create splitter.csd file
     splitter = open("splitter.csd", "w")
+    print splitter
     splitter.write('<CsoundSynthesizer>\n')
     splitter.write('<CsOptions>\n')
     splitter.write('-A -d -n -b256 -B1024\n')
