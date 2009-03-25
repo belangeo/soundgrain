@@ -22,7 +22,7 @@ from subprocess import Popen, PIPE
 from ounk.ounklib import *
 
 systemPlatform = sys.platform
-
+    
 def soundInfo(sndfile):
     setGlobalDuration(.1)
     snd = sndfile
@@ -194,28 +194,20 @@ def splitSnd(file):
     
     path = os.path.split(file)[0]
     outPath = os.path.expanduser('~')
-    if systemPlatform == 'darwin':    
-        splitter.write('Spath strcpy "%s/"\n' % path)
-        splitter.write('SoutPath strcpy "%s/"\n' % outPath)
-    elif systemPlatform == 'win32':    
-        splitter.write('Spath strcpy "%s\\"\n' % path)
-        splitter.write('SoutPath strcpy "%s\\"\n' % outPath)
-    splitter.write('Sname strcpy "%s"\n' % os.path.split(file)[1].rsplit('.',1)[0])                                
-    splitter.write('SinFileName strcat Sname, ".%s"\n' % os.path.split(file)[1].rsplit('.',1)[1])
-    splitter.write('SfileInput strcat Spath, SinFileName\n')
+    sndName = os.path.split(file)[1].rsplit('.',1)[0]
+    sndInFileName = os.path.split(file)[1]
+    sndFileInput = os.path.join(path, sndInFileName).replace('\\', '/')
     
-    for i in range(chnls):
-        splitter.write('SoutName%d strcat Sname, "-%d.aif"\n' % (i, i)) 
-        splitter.write('SfileOutput%d strcat SoutPath, SoutName%d\n' % (i, i))
-    
-    splitter.write('idur filelen SfileInput\n')
+    splitter.write('idur filelen "%s"\n' % sndFileInput)
     splitter.write('p3 = idur\n')
     
     outs = ', '.join(['a%d' % i for i in range(chnls)])
-    splitter.write('%s diskin2 SfileInput, 1, 0, 0, 8, 0\n' % outs)
+    splitter.write('%s diskin2 "%s", 1, 0, 0, 8, 0\n' % (outs, sndFileInput))
     
     for i in range(chnls):
-        splitter.write('fout SfileOutput%d, %d, a%d\n' % (i, {16:2, 24:8}[bitrate], i))
+        sndOutName = sndName + '-%d.aif' % i
+        sndOutFile = os.path.join(outPath, sndOutName).replace('\\', '/')
+        splitter.write('fout "%s", %d, a%d\n' % (sndOutFile, {16:2, 24:8}[bitrate], i))
     splitter.write('endin\n')
     
     splitter.write('</CsInstruments>\n')
@@ -225,7 +217,6 @@ def splitSnd(file):
     splitter.write('</CsoundSynthesizer>\n')
     splitter.close()
 
-    print '--------- ', os.path.isfile('splitter.csd'), ' ------------'
     if systemPlatform == 'darwin':    
         cspipe2 = Popen('/usr/local/bin/csound splitter.csd', shell=True, stdin=PIPE)
     elif systemPlatform == 'win32':

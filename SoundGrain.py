@@ -1113,7 +1113,7 @@ class ControlPanel(wx.Panel):
                             defaultFile="",
                             wildcard="AIFF file |*.aif;*.aiff;*.aifc;*.AIF;*.AIFF;*.Aif;*.Aiff|" \
                                      "Wave file |*.wav;*.wave;*.WAV;*.WAVE;*.Wav;*.Wave",
-                            style=wx.OPEN | wx.CHANGE_DIR)
+                            style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             sndPath = dlg.GetPath()
         dlg.Destroy()
@@ -1414,7 +1414,7 @@ class MainFrame(wx.Frame):
                             defaultDir=os.path.expanduser('~'), 
                             defaultFile="",
                             wildcard="SoundGrain file (*.sg)|*.sg",
-                            style=wx.OPEN | wx.CHANGE_DIR)
+                            style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
             self.loadFile(path)
