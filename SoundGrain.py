@@ -382,7 +382,8 @@ class DrawingSurface(wx.Panel):
     def clock(self):
         for traj in self.getActiveTrajectories():
             traj.clock()
-        self.OnPaint(None)
+        #self.OnPaint(None)
+        self.Refresh()
 
     def setYMin(self, ymin):
         self.ymin = ymin
@@ -568,7 +569,8 @@ class DrawingSurface(wx.Panel):
                 self.selected.setInitPoints()
                 self.selected.setType('free')
 
-            self.OnPaint(None)        
+            #self.OnPaint(None)      
+            self.Refresh()  
             self.ReleaseMouse()
             self.parent.createTempFile()
 
