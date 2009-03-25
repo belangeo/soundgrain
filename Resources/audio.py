@@ -225,6 +225,7 @@ def splitSnd(file):
     splitter.write('</CsoundSynthesizer>\n')
     splitter.close()
 
+    print '--------- ', os.path.isfile('splitter.csd'), ' ------------'
     if systemPlatform == 'darwin':    
         cspipe2 = Popen('/usr/local/bin/csound splitter.csd', shell=True, stdin=PIPE)
     elif systemPlatform == 'win32':
