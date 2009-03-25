@@ -40,7 +40,8 @@ def checkForDrivers():
         time.sleep(3)
     f = open(os.path.join(os.path.expanduser('~'), '.ounk', 'csoundlog.txt'), 'r')
     lines = f.readlines()
-    lines = [line for line in lines if lines[lines.index(line)] != lines[lines.index(line)-1]]
+    if systemPlatform == 'win32':
+        lines = [line for i, line in enumerate(lines) if (i % 2) == 0]
     print lines
     f.close()
     
