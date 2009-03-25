@@ -228,5 +228,5 @@ def splitSnd(file):
     elif systemPlatform == 'win32':
         cspipe2 = Popen('start /REALTIME /WAIT csound splitter.csd', shell=True, stdin=PIPE)
     cspipe2.wait()
-    os.remove('splitter.csd')
+    #os.remove('splitter.csd')
     
