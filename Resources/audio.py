@@ -197,11 +197,9 @@ def splitSnd(file):
     if systemPlatform == 'darwin':    
         splitter.write('Spath strcpy "%s/"\n' % path)
         splitter.write('SoutPath strcpy "%s/"\n' % outPath)
-        splitter.write('puts Spath, 1\n')
-        splitter.write('puts SoutPath, 1\n')
     elif systemPlatform == 'win32':    
-        splitter.write('Spath strcpy "%s\"\n' % path)
-        splitter.write('SoutPath strcpy "%s\"\n' % outPath)
+        splitter.write('Spath strcpy "%s\\"\n' % path)
+        splitter.write('SoutPath strcpy "%s\\"\n' % outPath)
     splitter.write('Sname strcpy "%s"\n' % os.path.split(file)[1].rsplit('.',1)[0])                                
     splitter.write('SinFileName strcat Sname, ".%s"\n' % os.path.split(file)[1].rsplit('.',1)[1])
     splitter.write('SfileInput strcat Spath, SinFileName\n')
