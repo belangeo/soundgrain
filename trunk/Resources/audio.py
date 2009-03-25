@@ -159,9 +159,9 @@ def splitSnd(file):
 
     # retreive sound infos
     if systemPlatform == 'darwin':
-        cspipe1 = Popen('/usr/local/bin/csound --logfile=log.txt -U sndinfo ' + file, shell=True, stdin=PIPE)
+        cspipe1 = Popen('/usr/local/bin/csound --logfile=log.txt -U sndinfo "' + file + '"', shell=True, stdin=PIPE)
     elif systemPlatform == 'win32':
-        cspipe1 = Popen('start /REALTIME /WAIT csound --logfile=log.txt -U sndinfo ' + file, shell=True, stdin=PIPE)
+        cspipe1 = Popen('start /REALTIME /WAIT csound --logfile=log.txt -U sndinfo "' + file + '"', shell=True, stdin=PIPE)
     cspipe1.wait()
     f = open('log.txt', 'r')
     text = f.read()
