@@ -338,11 +338,11 @@ class DrawingSurface(wx.Panel):
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.Bind(wx.EVT_KEY_UP, self.OnKeyUp)
         self.Bind(wx.EVT_SIZE, self.OnResize)
-        self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseEvent)
+#        self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseEvent)
         self.startTimer()
 
-    def OnEraseEvent(self, evt):
-        pass
+#    def OnEraseEvent(self, evt):
+#        pass
 
     def setCurrentSize(self, size):
         self.currentSize = size
@@ -1205,7 +1205,7 @@ class MainFrame(wx.Frame):
         self.moduleFrames = {}
         self.recall = self.undos = 0
 
-        self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseEvent)
+#        self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseEvent)
 
         self.Bind(wx.EVT_SIZE, self.OnResize)        
         self.Bind(wx.EVT_CLOSE, self.OnClose)
@@ -1307,8 +1307,8 @@ class MainFrame(wx.Frame):
         if file:
             self.loadFile(file)
 
-    def OnEraseEvent(self, evt):
-        pass
+#    def OnEraseEvent(self, evt):
+#        pass
             
     def check(self):
         self.status.SetStatusText('Scanning audio drivers...')
