@@ -338,8 +338,11 @@ class DrawingSurface(wx.Panel):
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.Bind(wx.EVT_KEY_UP, self.OnKeyUp)
         self.Bind(wx.EVT_SIZE, self.OnResize)
-
+        self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseEvent)
         self.startTimer()
+
+    def OnEraseEvent(self, evt):
+        pass
 
     def setCurrentSize(self, size):
         self.currentSize = size
