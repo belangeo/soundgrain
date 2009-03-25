@@ -283,7 +283,7 @@ class Trajectory:
             if point == self.points[-1]:
                 return
             if self.activeLp:
-                point = (self.lpx.filter(point[0]), self.lpy.filter(point[1]))
+                point = (int(round(self.lpx.filter(point[0]))), int(round(self.lpy.filter(point[1]))))
         self.points.append(point)
 
     def getLosangePoint(self):
@@ -544,6 +544,10 @@ class DrawingSurface(wx.Panel):
                     if self.parent.fillPoints:
                         self.traj.fillPoints(self.closed)
                     self.traj.setInitPoints()
+                elif self.traj.getType() == 'circle':
+                    if self.parent.fillPoints:
+                        self.traj.fillPoints(True)
+                    self.traj.setInitPoints()
                 else:
                     if self.parent.fillPoints:
                         self.traj.fillPoints(False)
@@ -551,8 +555,12 @@ class DrawingSurface(wx.Panel):
             elif self.action == 'drag': 
                 self.selected.setInitPoints()
             elif self.action == 'rescale':
-                if self.parent.fillPoints:
-                    self.selected.fillPoints(False)
+                if self.traj.getType() == 'circle':
+                    if self.parent.fillPoints:
+                        self.selected.fillPoints(True)
+                else:
+                    if self.parent.fillPoints:
+                        self.selected.fillPoints(False)
                 self.selected.setInitPoints()
             elif self.action == 'edit':
                 if self.parent.fillPoints:
@@ -602,17 +610,17 @@ class DrawingSurface(wx.Panel):
                     self.traj.lpx.reinit()
                     self.traj.lpy.reinit()
                     if self.traj.getType() == 'circle':
-                        for i in range(-halfR,halfR+1):
+                        for i in range(-halfR,halfR):
                             a = i * scaleR * r
                             x = math.cos(math.pi * i * scaleR) * r
                             y = math.sin(math.pi * i * scaleR) * r
-                            self.traj.addCirclePoint([x + self.downPos[0], y + self.downPos[1]])
+                            self.traj.addCirclePoint((int(round(x + self.downPos[0])), int(round(y + self.downPos[1]))))
                     else:
-                        for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling)+1):
+                        for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling)):
                             a = i * scaleR * r
                             x = math.cos(math.pi * i * scaleR) * r
                             y = math.sin(math.pi * self.oscilPeriod * i * scaleR) * r
-                            self.traj.addCirclePoint([x + self.downPos[0], y + self.downPos[1]])
+                            self.traj.addCirclePoint((int(round(x + self.downPos[0])), int(round(y + self.downPos[1]))))
 
             elif self.action == 'drag':
                 if self.selected.getType() in ['free', 'line']:
@@ -639,17 +647,17 @@ class DrawingSurface(wx.Panel):
                 self.traj.lpx.reinit()
                 self.traj.lpy.reinit()
                 if self.selected.getType() == 'circle':
-                    for i in range(-halfR,halfR+1):
+                    for i in range(-halfR,halfR):
                         a = i * scaleR * r
                         x = math.cos(math.pi * i * scaleR) * r
                         y = math.sin(math.pi * i * scaleR) * r
-                        self.selected.addCirclePoint([x + self.selected.getCenter()[0], y + self.selected.getCenter()[1]])
+                        self.selected.addCirclePoint((int(round(x + self.selected.getCenter()[0])), int(round(y + self.selected.getCenter()[1]))))
                 else:
-                    for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling)+1):
+                    for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling)):
                         a = i * scaleR * r
                         x = math.cos(math.pi * i * scaleR) * r
                         y = math.sin(math.pi * self.oscilPeriod * i * scaleR) * r
-                        self.selected.addCirclePoint([x + self.selected.getCenter()[0], y + self.selected.getCenter()[1]])
+                        self.selected.addCirclePoint((int(round(x + self.selected.getCenter()[0])), int(round(y + self.selected.getCenter()[1]))))
             elif self.action == 'edit':
                 x,y = evt.GetPosition()
                 offset = (self.downPos[0] - x, self.downPos[1] - y)
@@ -1418,8 +1426,21 @@ class MainFrame(wx.Frame):
                             style=wx.SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
-            self.saveFile(path)
-        dlg.Destroy()
+            if os.path.isfile(path):
+                dlg2 = wx.MessageDialog(self,
+                      '"%s" already exists. Do you want to replace it?' % os.path.split(path)[1],
+                      'Warning!', wx.OK | wx.ICON_INFORMATION | wx.CANCEL)
+                if dlg2.ShowModal() == wx.ID_OK:
+                    dlg2.Destroy()
+                    self.saveFile(path)
+                    dlg.Destroy()
+                else:
+                    dlg2.Destroy()
+                    dlg.Destroy()
+                    self.handleSaveAs(None)
+            else:
+                self.saveFile(path)
+                dlg.Destroy()
 
     def saveFile(self, path):
         self.currentFile = path
