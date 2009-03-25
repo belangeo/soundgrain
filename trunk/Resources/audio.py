@@ -40,6 +40,8 @@ def checkForDrivers():
         time.sleep(3)
     f = open(os.path.join(os.path.expanduser('~'), '.ounk', 'csoundlog.txt'), 'r')
     lines = f.readlines()
+    lines = [line for line in lines if lines[lines.index(line)] != lines[lines.index(line)-1]]
+    print lines
     f.close()
     
     total = len(lines)
