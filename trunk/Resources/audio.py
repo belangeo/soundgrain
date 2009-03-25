@@ -165,7 +165,6 @@ def splitSnd(file):
     cspipe1.wait()
     f = open('log.txt', 'r')
     text = f.read()
-    print text
     f.close()
     os.remove('log.txt')
     sp = text.split('srate')[-1]
@@ -179,6 +178,7 @@ def splitSnd(file):
     typ = sp[sp.index('bit')+1]
     total_time = eval(sp[sp.index('seconds')-1])
 
+    print '------ ', samprate, chnls, dur, nsamps, bitrate, typ, total_time, ' -------------'
     # create splitter.csd file
     splitter = open("splitter.csd", "w")
     splitter.write('<CsoundSynthesizer>\n')
