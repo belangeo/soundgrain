@@ -42,7 +42,6 @@ def checkForDrivers():
     lines = f.readlines()
     if systemPlatform == 'win32':
         lines = [line for i, line in enumerate(lines) if (i % 2) == 0]
-    print lines
     f.close()
     
     total = len(lines)
@@ -166,8 +165,9 @@ def splitSnd(file):
     cspipe1.wait()
     f = open('log.txt', 'r')
     text = f.read()
+    print text
     f.close()
-    #os.remove('log.txt')
+    os.remove('log.txt')
     sp = text.split('srate')[-1]
     sp = sp.replace(',', '').replace('(', '').replace(')', '').replace('\n', ' ').replace('\t', '').strip()
     sp = sp.split(' ')           
