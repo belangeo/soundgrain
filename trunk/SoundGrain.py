@@ -1205,6 +1205,8 @@ class MainFrame(wx.Frame):
         self.moduleFrames = {}
         self.recall = self.undos = 0
 
+        self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseEvent)
+
         self.Bind(wx.EVT_SIZE, self.OnResize)        
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         if wx.Platform == '__WXMAC__':
@@ -1304,6 +1306,9 @@ class MainFrame(wx.Frame):
 
         if file:
             self.loadFile(file)
+
+    def OnEraseEvent(self, evt):
+        pass
             
     def check(self):
         self.status.SetStatusText('Scanning audio drivers...')
