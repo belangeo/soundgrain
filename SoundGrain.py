@@ -699,6 +699,7 @@ class DrawingSurface(wx.Panel):
                     dc.DrawRoundedRectanglePointSize((t.getLosangePoint()[0]-5,t.getLosangePoint()[1]-5), (10,10), 1)
  
         sendXYControls(self.getValues())
+        evt.Skip()
 
     def clip(self, off, exXs, exYs):
         Xs = [p[0] for p in self.selected.getPoints()]
