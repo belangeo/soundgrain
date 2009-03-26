@@ -1,0 +1,20 @@
+#Features expected for version 2.0
+
+= Introduction =
+
+This is a short list of features that I want to add before releasing version 2.0.
+
+
+= Details =
+
+- Minimal documentation (trajectories manipulation shortcuts).
+
+- Amplitude meter and global volume control.
+
+- Reading of trajectories should be done directly by Csound. The interface will serve only to edit trajectories.
+
+- Each trajectory will have it's own speed and point step.
+
+- Mapping of Y axis on more than one parameter (choice, mix and axis range will be edited by the user)
+
+- Trajectories presets system with interpolation.
