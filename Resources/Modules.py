@@ -303,6 +303,19 @@ class Module(wx.Frame):
         self.sl_index.SetValue(int(self.index*100))
         self.indexValue.SetLabel(str(self.index))
 
+    def handleCutoff(self, event):
+        self.cutoff = event.GetInt() * 100
+        self.cutoffValue.SetLabel(str(self.cutoff) + ' Hz')
+        self.continuousControl('/cutoff', self.cutoff)   
+
+    def getCutoff(self):
+        return self.cutoff
+
+    def setCutoff(self, cutoff):
+        self.cutoff = cutoff
+        self.sl_cutoff.SetValue(int(self.cutoff*0.01))
+        self.cutoffValue.SetLabel(str(self.cutoff) + ' Hz')
+
     def makeGrainOverlapsBox(self, box):
         box.Add(wx.StaticText(self, -1, "Number of grains"), 0, wx.LEFT|wx.TOP, 5)
         overlapsBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -457,6 +470,15 @@ class Module(wx.Frame):
         indexBox.Add(self.indexValue, 0, wx.RIGHT, 10)
         box.Add(indexBox, 0, wx.ALL, 5)
 
+    def makeCutoffBox(self, box):
+        box.Add(wx.StaticText(self, -1, "Lowpass cutoff"), 0, wx.LEFT|wx.TOP, 5)
+        cutoffBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_cutoff = wx.Slider( self, -1, int(self.cutoff * 0.01), 1, 160, size=(200, -1), style=wx.SL_HORIZONTAL)
+        cutoffBox.Add(self.sl_cutoff, 0, wx.RIGHT, 10)
+        self.cutoffValue = wx.StaticText(self, -1, str(self.sl_cutoff.GetValue() * 100) + ' Hz')
+        cutoffBox.Add(self.cutoffValue, 0, wx.RIGHT, 10)
+        box.Add(cutoffBox, 0, wx.ALL, 5)
+
 class GranulatorFrame(Module): 
     def __init__(self, parent, surface, continuousControl):
         Module.__init__(self, parent, surface, continuousControl)
@@ -525,6 +547,7 @@ class FFTReaderFrame(Module):
         self.overlaps = 8
         self.winsize = 2048 
         self.formant = 0
+        self.cutoff = 10000
         self.amplitude = 0.7
         self.linLogSqrt = 0
 
@@ -535,6 +558,7 @@ class FFTReaderFrame(Module):
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
         self.makeKeepFormantBox(box)
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
+        self.makeCutoffBox(box)
         self.makeAmplitudeBox(box)
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
         self.makeYaxisTranspoBox(box)
@@ -544,6 +568,7 @@ class FFTReaderFrame(Module):
         self.Bind(wx.EVT_SLIDER, self.handleOverlaps, self.sl_overlaps)        
         self.Bind(wx.EVT_SLIDER, self.handleWindowSize, self.sl_winsize)        
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleKeepFormant, self.tog_formant)        
+        self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
         self.tx_ymin.Bind(wx.EVT_CHAR, self.handleYMin)        
         self.tx_ymax.Bind(wx.EVT_CHAR, self.handleYMax)        
@@ -555,7 +580,7 @@ class FFTReaderFrame(Module):
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
 
         self.widgets = [self.sl_fftsize, self.sl_overlaps, self.sl_winsize, self.tog_formant]
-        self.controls = {'/amplitude': self.getAmp}
+        self.controls = {'/amplitude': self.getAmp, '/cutoff': self.getCutoff}
 
         self.Show(False)
 
@@ -567,6 +592,7 @@ class FFTReaderFrame(Module):
                 'overlaps': self.getOverlaps(),
                 'winsize': self.getWindowSize(),
                 'formant': self.getKeepFormant(),
+                'cutoff': self.getCutoff(),
                 'amp': self.getAmp(),
                 'ymin': self.getYMin(),
                 'ymax': self.getYMax(),
@@ -577,6 +603,7 @@ class FFTReaderFrame(Module):
         self.setOverlaps(dict['overlaps'])
         self.setWindowSize(dict['winsize'])
         self.setKeepFormant(dict['formant'])
+        self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
         self.setYMin(dict['ymin'])
         self.setYMax(dict['ymax'])
@@ -594,6 +621,7 @@ class FFTAdsynFrame(Module):
         self.numbins = 50
         self.first = 0
         self.incr = 3        
+        self.cutoff = 10000
         self.amplitude = 0.7
         self.linLogSqrt = 0
 
@@ -606,6 +634,7 @@ class FFTAdsynFrame(Module):
         self.makeFirstBinBox(box)
         self.makeIncrementBox(box)
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
+        self.makeCutoffBox(box)
         self.makeAmplitudeBox(box)
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
         self.makeYaxisTranspoBox(box)
@@ -617,6 +646,7 @@ class FFTAdsynFrame(Module):
         self.Bind(wx.EVT_SLIDER, self.handleNumBins, self.sl_numbins)                
         self.Bind(wx.EVT_SLIDER, self.handleFirst, self.sl_first)                
         self.Bind(wx.EVT_SLIDER, self.handleIncr, self.sl_incr)                
+        self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
         self.tx_ymin.Bind(wx.EVT_CHAR, self.handleYMin)        
         self.tx_ymax.Bind(wx.EVT_CHAR, self.handleYMax)        
@@ -628,7 +658,7 @@ class FFTAdsynFrame(Module):
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
 
         self.widgets = [self.sl_fftsize, self.sl_overlaps, self.sl_winsize, self.sl_numbins, self.sl_first, self.sl_incr]
-        self.controls = {'/amplitude': self.getAmp}
+        self.controls = {'/amplitude': self.getAmp, '/cutoff': self.getCutoff}
 
         self.Show(False)
 
@@ -642,6 +672,7 @@ class FFTAdsynFrame(Module):
                 'numbins': self.getNumBins(),
                 'first': self.getFirst(),
                 'incr': self.getIncr(),
+                'cutoff': self.getCutoff(),
                 'amp': self.getAmp(),
                 'ymin': self.getYMin(),
                 'ymax': self.getYMax(),
@@ -654,6 +685,7 @@ class FFTAdsynFrame(Module):
         self.setNumBins(dict['numbins'])
         self.setFirst(dict['first'])
         self.setIncr(dict['incr'])
+        self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
         self.setYMin(dict['ymin'])
         self.setYMax(dict['ymax'])
@@ -667,6 +699,7 @@ class FFTRingModFrame(Module):
         self.fftsize = 1024        
         self.overlaps = 8
         self.winsize = 2048         
+        self.cutoff = 10000
         self.amplitude = 0.7
         self.transpo = 1
         self.linLogSqrt = 0
@@ -677,6 +710,7 @@ class FFTRingModFrame(Module):
         self.makeFFTWinSizeBox(box)
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
         self.makeTranspoBox(box)
+        self.makeCutoffBox(box)
         self.makeAmplitudeBox(box)
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
         self.makeYaxisTranspoBox(box, "Y axis (* 100 = Sine pitch)")
@@ -686,6 +720,7 @@ class FFTRingModFrame(Module):
         self.Bind(wx.EVT_SLIDER, self.handleOverlaps, self.sl_overlaps)        
         self.Bind(wx.EVT_SLIDER, self.handleWindowSize, self.sl_winsize)                
         self.Bind(wx.EVT_SLIDER, self.handleTranspo, self.sl_transpo)        
+        self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
         self.tx_ymin.Bind(wx.EVT_CHAR, self.handleYMin)        
         self.tx_ymax.Bind(wx.EVT_CHAR, self.handleYMax)        
@@ -697,7 +732,7 @@ class FFTRingModFrame(Module):
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
 
         self.widgets = [self.sl_fftsize, self.sl_overlaps, self.sl_winsize]
-        self.controls = {'/amplitude': self.getAmp, '/transpo': self.getTranspo}
+        self.controls = {'/amplitude': self.getAmp, '/transpo': self.getTranspo, '/cutoff': self.getCutoff}
 
         self.Show(False)
 
@@ -709,6 +744,7 @@ class FFTRingModFrame(Module):
                 'overlaps': self.getOverlaps(),
                 'winsize': self.getWindowSize(),
                 'transpo': self.getTranspo(),
+                'cutoff': self.getCutoff(),
                 'amp': self.getAmp(),
                 'ymin': self.getYMin(),
                 'ymax': self.getYMax(),
@@ -719,6 +755,7 @@ class FFTRingModFrame(Module):
         self.setOverlaps(dict['overlaps'])
         self.setWindowSize(dict['winsize'])
         self.setTranspo(dict['transpo'])
+        self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
         self.setYMin(dict['ymin'])
         self.setYMax(dict['ymax'])
@@ -737,6 +774,7 @@ class FMCrossSynthFrame(Module):
         self.carrier = 1
         self.modulator = .5
         self.index = 5
+        self.cutoff = 10000
         self.amplitude = 0.7
         self.linLogSqrt = 0
 
@@ -753,6 +791,7 @@ class FMCrossSynthFrame(Module):
         self.makeModulatorBox(box)
         self.makeIndexBox(box)
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
+        self.makeCutoffBox(box)
         self.makeAmplitudeBox(box)
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
         self.makeYaxisTranspoBox(box, "Y axis (FM pitch)")
@@ -766,6 +805,7 @@ class FMCrossSynthFrame(Module):
         self.Bind(wx.EVT_SLIDER, self.handleCarrier, self.sl_carrier)        
         self.Bind(wx.EVT_SLIDER, self.handleModulator, self.sl_modulator)        
         self.Bind(wx.EVT_SLIDER, self.handleIndex, self.sl_index)        
+        self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
         self.tx_ymin.Bind(wx.EVT_CHAR, self.handleYMin)        
         self.tx_ymax.Bind(wx.EVT_CHAR, self.handleYMax)        
@@ -778,7 +818,7 @@ class FMCrossSynthFrame(Module):
 
         self.widgets = [self.sl_fftsize, self.sl_overlaps, self.sl_winsize, self.sl_pitch]
         self.controls = {'/amplitude': self.getAmp, '/transpo': self.getTranspo, '/carrier': self.getCarrier, 
-                         '/modulator': self.getModulator, '/index': self.getIndex}
+                         '/modulator': self.getModulator, '/index': self.getIndex, '/cutoff': self.getCutoff}
 
         self.Show(False)
 
@@ -794,6 +834,7 @@ class FMCrossSynthFrame(Module):
                 'carrier': self.getCarrier(),
                 'modulator': self.getModulator(),
                 'index': self.getIndex(),
+                'cutoff': self.getCutoff(),
                 'amp': self.getAmp(),
                 'ymin': self.getYMin(),
                 'ymax': self.getYMax(),
@@ -808,6 +849,7 @@ class FMCrossSynthFrame(Module):
         self.setCarrier(dict['carrier'])
         self.setModulator(dict['modulator'])
         self.setIndex(dict['index'])
+        self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
         self.setYMin(dict['ymin'])
         self.setYMax(dict['ymax'])

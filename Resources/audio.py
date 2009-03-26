@@ -90,39 +90,42 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
         dcblock(input='outgrain', amplitudeVar='amplitude')                
     elif module == 'FFTReader':
         fftsize, overlaps, windowsize, keepformant = args[0], args[1], args[2], args[3]
-        oscReceive(bus = 'amplitude', adress = '/amplitude', port = 8002, portamento = 0.005)
+        oscReceive(bus = ['amplitude', 'cutoff'], adress = ['/amplitude', '/cutoff'], port = 8002, portamento = 0.005)
         soundTableRead(table=tab, duration=dur, out='snd')
         fftBufRead(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, bufferlength=dur, 
                    transpo=1, keepformant=keepformant, pointerposVar=xlist, transpoVar=ylist, amplitudeVar=amplist, out='fft')
-        dcblock(input='fft', amplitudeVar='amplitude')                
+        lowpass(input='fft', cutoff=1, cutoffVar='cutoff', out='lp')
+        dcblock(input='lp', amplitudeVar='amplitude')                
     elif module == 'FFTRingMod':
-        oscReceive(bus = ['amplitude', 'transpo'], adress = ['/amplitude', '/transpo'], port = 8002, portamento = 0.005)
+        oscReceive(bus = ['amplitude', 'cutoff', 'transpo'], adress = ['/amplitude', '/cutoff', '/transpo'], port = 8002, portamento = 0.005)
         for i in range(len(xlist)):
             soundTableRead(table=tab, duration=dur, out='snd')
             fftBufRead(input='snd', fftsize=1024, overlaps=4, windowsize=1024, bufferlength=dur, 
                    transpo=1, transpoVar='transpo', keepformant=0, pointerposVar=xlist[i], amplitudeVar=amplist[i], out='fft%d' % i)
             sine(pitch = 100, pitchVar=ylist[i], out='sin%d' % i)
-            ringMod(in1='fft%d' % i, in2='sin%d' % i, amplitudeVar='amplitude')
+            ringMod(in1='fft%d' % i, in2='sin%d' % i, amplitudeVar='amplitude', out='ring')
+        lowpass(input='ring', cutoff=1, cutoffVar='cutoff')
     elif module == 'FFTAdsyn':
         fftsize, overlaps, windowsize, bins, first, incr = args[0], args[1], args[2], args[3], args[4], args[5]
-        oscReceive(bus = 'amplitude', adress = '/amplitude', port = 8002, portamento = 0.005)
+        oscReceive(bus = ['amplitude', 'cutoff'], adress = ['/amplitude', '/cutoff'], port = 8002, portamento = 0.005)
         soundTableRead(table=tab, duration=dur, out='snd')
         fftBufAdsyn(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, amplitudeVar=amplist,
                    numbins=bins, firstbin=first, binincr=incr, pointerposVar=xlist, transpoVar=ylist, bufferlength=dur, out='fft')
-        dcblock(input='fft', amplitudeVar='amplitude')                
+        lowpass(input='fft', cutoff=1, cutoffVar='cutoff', out='lp')
+        dcblock(input='lp', amplitudeVar='amplitude')                
     elif module == 'FMCrossSynth':
         fftsize, overlaps, windowsize, pitch = args[0], args[1], args[2], args[3]
-        oscReceive(bus = ['amplitude', 'transpo', 'carrier', 'modulator', 'index'], 
-                   adress = ['/amplitude','/transpo', '/carrier', '/modulator', '/index'], port = 8002, portamento = 0.005)
+        oscReceive(bus = ['amplitude', 'cutoff', 'transpo', 'carrier', 'modulator', 'index'], 
+                   adress = ['/amplitude', '/cutoff','/transpo', '/carrier', '/modulator', '/index'], port = 8002, portamento = 0.005)
         soundTableRead(table=tab, duration=dur, out='snd')
         for i in range(len(xlist)):
             fftBufRead(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, bufferlength=dur, 
                    transpo=1, transpoVar='transpo', keepformant=0, pointerposVar=xlist[i], amplitudeVar=amplist[i], out='reader%d' % i)
             freqMod(pitch=pitch, modulator=1, index=1, carrierVar='carrier', modulatorVar='modulator', indexVar='index', 
                     pitchVar=ylist[i], out='fm%d' % i)
-            #train(pitch=pitch, pitchVar=ylist[i], damp=.5, out='fm%d' % i)
             crossSynth(in1='fm%d' % i, in2='reader%d' % i, out='fft')
-        dcblock(input='fft', amplitudeVar='amplitude')                
+        lowpass(input='fft', cutoff=1, cutoffVar='cutoff', out='lp')
+        dcblock(input='lp', amplitudeVar='amplitude')                
     elif module == 'AutoModulation':
         oscReceive(bus = 'amplitude', adress = '/amplitude', port = 8002, portamento = 0.005)
         tablesMod(table1=tab, table2=tab, amplitudeVar=amplist, index1Var=xlist, index2Var=ylist, out='mod')
