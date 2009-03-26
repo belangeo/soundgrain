@@ -13,8 +13,8 @@ This is a short list of features that I want to add before releasing version 2.0
 
 - Reading of trajectories should be done directly by Csound. The interface will serve only to edit trajectories.
 
-- Each trajectory will have it's own speed and point step.
+- Each trajectory will have its own speed and point step.
 
-- Mapping of Y axis on more than one parameter (choice, mix and axis range will be edited by the user)
+- Mapping of Y axis on more than one parameter (choice, mix and axis range will be edited by the user).
 
 - Trajectories presets system with interpolation.
