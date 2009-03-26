@@ -10,6 +10,6 @@ find . -name .svn -depth -exec rm -rf {} \;
 find . -name *.pyc -depth -exec rm -f {} \;
 find . -name .* -depth -exec rm -f {} \;
 cd ..
-#tar -cjvf SoundGrain.tar.bz2 SoundGrain
-mv SoundGrain/SoundGrain.app SoundGrain.app
+tar -cjvf SoundGrain.tar.bz2 SoundGrain
+#mv SoundGrain/SoundGrain.app SoundGrain.app
 rm -rf SoundGrain

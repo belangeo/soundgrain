@@ -20,8 +20,12 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 from math import sin, pi, sqrt
 import os, sys, time, tempfile, xmlrpclib
 import wx
+from wx.lib.wordwrap import wordwrap
 
 systemPlatform = sys.platform
+
+NAME = 'Sound Grain'
+VERSION = '1.0'
 
 print os.getcwd()
 if '/SoundGrain.app' in os.getcwd():
@@ -338,11 +342,7 @@ class DrawingSurface(wx.Panel):
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.Bind(wx.EVT_KEY_UP, self.OnKeyUp)
         self.Bind(wx.EVT_SIZE, self.OnResize)
-#        self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseEvent)
         self.startTimer()
-
-#    def OnEraseEvent(self, evt):
-#        pass
 
     def setCurrentSize(self, size):
         self.currentSize = size
@@ -1205,8 +1205,6 @@ class MainFrame(wx.Frame):
         self.moduleFrames = {}
         self.recall = self.undos = 0
 
-#        self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseEvent)
-
         self.Bind(wx.EVT_SIZE, self.OnResize)        
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         if wx.Platform == '__WXMAC__':
@@ -1272,6 +1270,12 @@ class MainFrame(wx.Frame):
         self.menu3.AppendMenu(menuId+1, "Examples", self.subMenu3)
         menuBar.Append(self.menu3, "&Modules")
 
+        menu4 = wx.Menu()
+        helpItem = menu4.Append(400, '&About %s %s' % (NAME, VERSION), 'wxPython RULES!!!')
+        wx.App.SetMacAboutMenuItemId(helpItem.GetId())
+        self.Bind(wx.EVT_MENU, self.showAbout, helpItem)
+        menuBar.Append(menu4, '&Help')
+
         self.SetMenuBar(menuBar)
         
         mainBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -1306,9 +1310,6 @@ class MainFrame(wx.Frame):
 
         if file:
             self.loadFile(file)
-
-#    def OnEraseEvent(self, evt):
-#        pass
             
     def check(self):
         self.status.SetStatusText('Scanning audio drivers...')
@@ -1402,6 +1403,7 @@ class MainFrame(wx.Frame):
         if self.moduleFrames[self.currentModule].IsShown():
             self.moduleFrames[self.currentModule].Show(False)
         self.currentModule = self.modules[menuId]
+        self.currentFile = None
         self.SetTitle(self.currentModule)
         
     def openFxWindow(self):
@@ -1587,6 +1589,43 @@ class MainFrame(wx.Frame):
 
     def log(self, text):
         self.status.SetStatusText(text)
+
+    def showAbout(self, evt):
+        info = wx.AboutDialogInfo()
+
+        description = wordwrap(
+"Sound Grain is a graphical interface where " 
+"users can draw and edit trajectories to " 
+"control granular sound synthesis modules.\n"
+
+"Sound Grain is written with Python and " 
+"uses Csound as its audio engine. Csound 5 " 
+"must be installed on the system to allow " 
+"Sound Grain to run.",350, wx.ClientDC(self))
+
+        licence = wordwrap(
+"SoundGrain is free software: you can "
+"redistribute it and/or modify it under "
+"the terms of the GNU General Public "
+"License as published by the Free Software " 
+"Foundation, either version 3 of the License, " 
+"or (at your option) any later version.\n"
+
+"SoundGrain is distributed in the hope that "
+"it will be useful, but WITHOUT ANY WARRANTY; "
+"without even the implied warranty of "
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR "
+"PURPOSE. See the GNU General Public License "
+"for more details.", 350, wx.ClientDC(self)) 
+
+        info.SetIcon(wx.Icon(os.path.join(RESOURCES_PATH, 'SoundGrain.png'), wx.BITMAP_TYPE_PNG))
+        info.SetName('Sound Grain')
+        info.SetVersion('1.0')
+        info.SetDescription(description)
+        info.SetCopyright('(C) 2009 Olivier Belanger')
+        info.SetWebSite('http://code.google.com/p/soundgrain')
+        info.SetLicence(licence)
+        wx.AboutBox(info)
               
 if __name__ == '__main__': 
     try:
