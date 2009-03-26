@@ -1,4 +1,4 @@
-Features expected for version 2.0
+Expected features for version 2.0
 
 = Introduction =
 
