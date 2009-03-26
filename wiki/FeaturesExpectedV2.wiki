@@ -18,3 +18,5 @@ This is a short list of features that I want to add before releasing version 2.0
 - Mapping of Y axis on more than one parameter (choice, mix and axis range will be edited by the user).
 
 - Trajectories presets system with interpolation.
+
+- Create a preferences file to set manually OSC host and port. This will allow sharing of trajectories with others apps and computer.
