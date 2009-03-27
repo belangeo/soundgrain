@@ -8,3 +8,5 @@ Bugs of version 1.0.
 = Details =
 
 - Doesn't accept sound with spaces in its path. (fixed in sources)
+
+- Sometimes, we have to wake up some sliders to get sound (because the message is sent before Csound is ready to receive it). Need to grab a signal from Csound when it's ready to play, to be sure that OSC messages are sent when Csound is ready. 
