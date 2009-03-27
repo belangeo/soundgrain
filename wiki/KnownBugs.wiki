@@ -1,0 +1,10 @@
+Bugs of version 1.0.
+
+= Introduction =
+
+Bugs of version 1.0.
+
+
+= Details =
+
+- Doesn't accept sound with spaces in its path.
