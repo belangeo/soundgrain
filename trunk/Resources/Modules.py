@@ -47,7 +47,7 @@ class Module(wx.Frame):
         if audioState:
             for widget in self.widgets:
                 widget.Disable()
-            wx.CallLater(1000, self.initControlValues)
+            #wx.CallLater(1000, self.initControlValues)
         else:
             for widget in self.widgets:
                 widget.Enable()

@@ -26,7 +26,7 @@ systemPlatform = sys.platform
 def soundInfo(sndfile):
     setGlobalDuration(.1)
     snd = sndfile
-    chans, samprate, dur, frac, samps = getSoundInfo(snd)
+    chans, samprate, dur, frac, samps, bitrate = getSoundInfo(snd)
     startCsound()
     return (chans, samprate, dur)
     
@@ -70,9 +70,9 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     setGlobalDuration(-1)
 
     snd = sndfile
-    chans, samprate, dur, frac, samps = getSoundInfo(snd)
+    chans, samprate, dur, frac, samps, bitrate = getSoundInfo(snd)
     
-    setAudioAttributes(samplingrate=samprate, controlrate=samprate/10, softbuffer=512, hardbuffer=2048)
+    setAudioAttributes(samplingrate=samprate, controlrate=samprate/10, sampleformat=bitrate, softbuffer=512, hardbuffer=2048)
     
     setChannels(chans)
     tab = genSoundTable(snd)

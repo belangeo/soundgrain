@@ -39,6 +39,7 @@ else:
 from Resources.audio import *
 from Resources.Biquad import BiquadLP
 from Resources.Modules import *
+from Resources.WaitCsound import WaitCsound
 
 trajTypes = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 
@@ -1120,8 +1121,8 @@ class ControlPanel(wx.Panel):
                             style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             sndPath = dlg.GetPath()
+            self.loadSound(sndPath)
         dlg.Destroy()
-        self.loadSound(sndPath)
 
     def loadSound(self, sndPath):
         self.sndPath = sndPath
@@ -1155,8 +1156,14 @@ class ControlPanel(wx.Panel):
                 self.trajMax.Disable()
                 self.tx_output.Disable()
                 self.tog_record.Enable()
+                for item in self.parent.modules:
+                    self.parent.menu3.Enable(self.parent.menu3.FindItem(item), False)
+                for i in range(self.parent.subMenu3.GetMenuItemCount()):
+                    self.parent.subMenu3.Enable(i + 3000, False)
                 for t in self.surface.getAllTrajectories():
                     t.initCounter()
+                wait = WaitCsound(self.csoundReady)
+                wait.start()
                 args = self.parent.moduleFrames[self.parent.currentModule].getFixedValues()
                 startAudio(self.numTraj, self.sndPath, self.parent.audioDriver, self.tx_output.GetValue(), self.parent.currentModule, *args)
                 if self.parent.currentModule in ['FFTReader','FFTAdsyn', 'FFTRingMod', 'FMCrossSynth']:
@@ -1170,8 +1177,17 @@ class ControlPanel(wx.Panel):
             self.tog_record.SetValue(0)
             self.tog_record.SetLabel('Start')
             self.tog_record.Disable()
+            for item in self.parent.modules:
+                self.parent.menu3.Enable(self.parent.menu3.FindItem(item), True)
+            for i in range(self.parent.subMenu3.GetMenuItemCount()):
+                self.parent.subMenu3.Enable(i + 3000, True)
             stopAudio()
         self.parent.moduleFrames[self.parent.currentModule].activateWidgets(event.GetInt())
+
+    def csoundReady(self, msg):
+        print msg
+        if msg == 'ready':
+            self.parent.moduleFrames[self.parent.currentModule].initControlValues()
 
     def handleOutput(self, event):
         key = event.GetKeyCode()
