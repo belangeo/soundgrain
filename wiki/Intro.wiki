@@ -40,8 +40,8 @@ Used to choose the desired driver. The drivers list is updated only on startup.
 
 Granulates a sound by moving a pointer in the sound. It gives control on grain size and on a per-grain randomly choosed transposition.
 
-* X axis: Pointer position in the sound
-* Y axis: Global transposition
+ * X axis: Pointer position in the sound
+ * Y axis: Global transposition
 
 == FFTReader ==
 
