@@ -8,7 +8,7 @@ Open, Save or Save as .sg files (not sound). A .sg file is a snapshot of the sta
 
 == Undo - Redo ==
 
-There is unlimited undo and redo stage. These actions have effect only on drawing surface (trajectories).
+There is unlimited undo and redo stages. These actions have effect only on drawing surface (trajectories).
  
 == Draw Waveform ==
 
@@ -81,3 +81,7 @@ This modules performs a modulation of a sound with itself.
 == Examples ==
 
 Some example projects.
+
+= Drawing surface =
+
+ * *clic on empty space* : adds a new traejctory
