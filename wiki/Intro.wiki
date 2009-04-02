@@ -86,7 +86,7 @@ Some example projects.
 
 = Drawing surface =
 
- * *clic on empty space* : adds a new traejctory
+ * *clic on empty space* : adds a new trajectory
  * *left-clic on red rect* : moves a trajectory
  * *right-clic on red rect* : deletes a trajectory
  * *alt+clic on red rect* : duplicates a trajectory
