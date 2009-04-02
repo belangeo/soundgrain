@@ -84,7 +84,7 @@ This modules performs a modulation of a sound with itself.
 
 Some example projects.
 
-== Drawing surface ==
+= Drawing surface =
 
  * *clic on empty space* : adds a new traejctory
  * *left-clic on red rect* : moves a trajectory
