@@ -1,8 +1,4 @@
-Getting started.
-
-= Introduction =
-
-List of commands.
+Getting started. List of commands.
 
 = Menu File =
 
@@ -47,36 +43,36 @@ Granulates a sound by moving a pointer in the sound. It gives control on grain s
 
 Resynthesis of the sound by moving a pointer in an FFT buffer. 
 
-X axis: Pointer position in the sound
-Y axis: Global transposition
+ * X axis: Pointer position in the sound
+ * Y axis: Global transposition
 
 == FFTAdsyn ==
 
 Same as FFTReader with additional control on the number and position of bins used in synthesis.
 
-X axis: Pointer position in the sound
-Y axis: Global transposition
+ * X axis: Pointer position in the sound
+ * Y axis: Global transposition
 
 == FFTRingMod ==
 
 Performs a ring modulation between a FFT resynthesis of the sound and a sine wave. 
 
-X axis: Pointer position in the sound
-Y axis: Pitch of the sine wave
+ * X axis: Pointer position in the sound
+ * Y axis: Pitch of the sine wave
 
 == FMCrossSynth ==
 
 Cross synthesis between the sound and a frequency modulation.
 
-X axis: Pointer position in the sound
-Y axis: FM base pitch
+ * X axis: Pointer position in the sound
+ * Y axis: FM base pitch
 
 == AutoModulation ==
 
 This modules performs a modulation of a sound with itself.
 
-X axis: Pointer position in the sound
-Y axis: Pointer position in the sound
+ * X axis: Pointer position in the sound
+ * Y axis: Pointer position in the sound
 
 == Examples ==
 
