@@ -1,0 +1,12 @@
+Getting started.
+
+= Introduction =
+
+List of SoundGrain's commands.
+
+
+= Details =
+
+== Menu Drawing ==
+
+=== Draw waveform ===
