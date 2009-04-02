@@ -91,4 +91,4 @@ Some example projects.
  * *right-clic on red rect* : deletes a trajectory
  * *alt+clic on red rect* : duplicates a trajectory
  * *left-clic on blue diamond* : rescales a circle or oscil trajectory
- * *left-clic on a trajectory* : the user can drag and modify the shape of the trajectory 
+ * *left-clic on a trajectory* : the user can drag and modify the shape of the trajectory. See Edition levels. 
