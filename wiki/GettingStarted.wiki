@@ -1,0 +1,94 @@
+List of commands.
+
+= Menus =
+
+== Menu File ==
+
+Open, Save or Save as .sg files (not sound). A .sg file is a snapshot of the state of the project.
+
+== Menu Drawing ==
+
+=== Undo - Redo ===
+
+There is unlimited undo and redo stages. These actions have effect only on drawing surface (trajectories).
+ 
+=== Draw Waveform ===
+
+If checked, the sound waveform will be drawn behind the trajectories.
+
+=== Activate Lowpass filter ===
+
+If checked, All points of a trajectory will be filtered by a lowpass filter. This can be used to smooth the trajectory or to insert resonance in the curve when the Q is very high.
+
+=== Fill points ===
+
+If checked, spaces between points in a trajectory (especially when stretching the curve) will be filled by adding additional points. If unchecked, number of points in the trajectory won't change, Useful to keep synchronization between similar trajectories.
+
+=== Edition levels ===
+
+Set the spread of modification of a trajectory when edited with mouse. Higher values give narrower transformations.
+
+=== Reinit counters ===
+
+Re-sync the trajectories points counter. This is automatically done when the audio is started.  
+
+== Menu Audio Drivers ==
+
+Used to choose the desired driver. The drivers list is updated only on startup.
+
+== Menu Modules ==
+
+=== Granulator ===
+
+Granulates a sound by moving a pointer in the sound. It gives control on grain size and on a per-grain randomly choosed transposition.
+
+ * X axis: Pointer position in the sound
+ * Y axis: Global transposition
+
+=== FFTReader ===
+
+Resynthesis of the sound by moving a pointer in an FFT buffer. 
+
+ * X axis: Pointer position in the sound
+ * Y axis: Global transposition
+
+=== FFTAdsyn ===
+
+Same as FFTReader with additional control on the number and position of bins used in synthesis.
+
+ * X axis: Pointer position in the sound
+ * Y axis: Global transposition
+
+=== FFTRingMod ===
+
+Performs a ring modulation between a FFT resynthesis of the sound and a sine wave. 
+
+ * X axis: Pointer position in the sound
+ * Y axis: Pitch of the sine wave
+
+=== FMCrossSynth ===
+
+Cross synthesis between the sound and a frequency modulation.
+
+ * X axis: Pointer position in the sound
+ * Y axis: FM base pitch
+
+=== AutoModulation ===
+
+This modules performs a modulation of a sound with itself.
+
+ * X axis: Pointer position in the sound
+ * Y axis: Pointer position in the sound
+
+=== Examples ===
+
+Some example projects.
+
+= Drawing surface =
+
+ * *clic on empty space* : adds a new trajectory
+ * *left-clic on red rect* : moves a trajectory
+ * *right-clic on red rect* : deletes a trajectory
+ * *alt+clic on red rect* : duplicates a trajectory
+ * *left-clic on blue diamond* : rescales a circle or oscil trajectory
+ * *left-clic on a trajectory* : the user can drag and modify the shape of the trajectory 
