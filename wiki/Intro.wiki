@@ -6,6 +6,10 @@ Open, Save or Save as .sg files (not sound). A .sg file is a snapshot of the sta
 
 = Menu Drawing =
 
+== Undo - Redo ==
+
+There is unlimited undo and redo stage. These actions have effect only on drawing surface (trajectories).
+ 
 == Draw Waveform ==
 
 If checked, the sound waveform will be drawn behind the trajectories.
