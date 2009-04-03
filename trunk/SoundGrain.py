@@ -1187,6 +1187,7 @@ class ControlPanel(wx.Panel):
     def csoundReady(self, msg):
         print msg
         if msg == 'ready':
+            resetFlag()
             self.parent.moduleFrames[self.parent.currentModule].initControlValues()
 
     def handleOutput(self, event):

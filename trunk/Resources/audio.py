@@ -22,7 +22,9 @@ from subprocess import Popen, PIPE
 from ounk.ounklib import *
 
 systemPlatform = sys.platform
-    
+ 
+flag = [0]*8
+   
 def soundInfo(sndfile):
     setGlobalDuration(.1)
     snd = sndfile
@@ -140,16 +142,24 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
 def stopAudio():
     stopCsound()
     processNumber(1)
-       
+      
+def resetFlag():
+    global flag
+    flag = [0]*8
+
 def sendXYControls(list):
     if list:
         for i, l in enumerate(list):
             if l:
-                sendOscControl(value=1, adress='/amp%d' % i)
+                if not flag[i]:
+                    flag[i] = 1
+                    sendOscControl(value=1, adress='/amp%d' % i)
                 sendOscControl(value=l[0], adress='/x%d' % i)
                 sendOscControl(value=l[1], adress='/y%d' % i)
             else:
-                sendOscControl(value=0, adress='/amp%d' % i)
+                if flag[i]:
+                    flag[i] = 0
+                    sendOscControl(value=0, adress='/amp%d' % i)
 
 def sendRecord():
     sendOscTrigger(value = 1, adress = '/rec', port = 8001)
