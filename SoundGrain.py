@@ -317,6 +317,7 @@ class Trajectory:
 class DrawingSurface(wx.Panel):
     def __init__(self, parent, pos=(0,0), size=wx.DefaultSize):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY, pos=pos, size=size, style = wx.EXPAND)
+        self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.parent = parent
         self.numOfTrajectories(3)
         self.screenOffset = 2
@@ -675,7 +676,7 @@ class DrawingSurface(wx.Panel):
     def OnPaint(self, evt):
         x,y = (0,0)
         w,h = self.GetSize()
-        dc = wx.PaintDC(self)
+        dc = wx.AutoBufferedPaintDC(self)
 
         if not self.sndBitmap:
             dc.SetBrush(wx.Brush(self.backgroundcolor, wx.SOLID))
