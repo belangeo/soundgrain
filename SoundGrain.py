@@ -1221,8 +1221,6 @@ class MainFrame(wx.Frame):
         self.moduleFrames = {}
         self.recall = self.undos = 0
 
-        self.Bind(wx.EVT_SIZE, self.OnResize)        
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
         if wx.Platform == '__WXMAC__':
             self.MacSetMetalAppearance(True)
         self.status = wx.StatusBar(self, -1)
@@ -1300,6 +1298,9 @@ class MainFrame(wx.Frame):
         mainBox.Add(self.panel, 1, wx.EXPAND, 5)
         mainBox.Add(self.controls, 0, wx.EXPAND, 5)
         self.SetSizer(mainBox)
+
+        self.Bind(wx.EVT_SIZE, self.OnResize)        
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
 
         self.SetTitle(self.currentModule)
 
