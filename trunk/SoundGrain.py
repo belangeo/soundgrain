@@ -27,7 +27,6 @@ systemPlatform = sys.platform
 NAME = 'Sound Grain'
 VERSION = '1.0'
 
-print os.getcwd()
 if '/SoundGrain.app' in os.getcwd():
     RESOURCES_PATH = os.getcwd()
     currentw = os.getcwd()
@@ -334,7 +333,7 @@ class DrawingSurface(wx.Panel):
         self.altKey = False
         self.mode = trajTypes[0]
         self.SetColors(outline=(255,255,255), bg=(20,20,20), fill=(255,0,0), rect=(0,255,0), losa=(0,0,255), wave=(70,70,70))
-        self.currentSize = self.GetSize()
+        self.currentSize = self.GetSizeTuple()
     
         self.Bind(wx.EVT_LEFT_DOWN, self.MouseDown)
         self.Bind(wx.EVT_LEFT_UP, self.MouseUp)
@@ -350,7 +349,7 @@ class DrawingSurface(wx.Panel):
         self.currentSize = size
 
     def OnResize(self, evt):
-        w,h = self.GetSize()
+        w,h = self.GetSizeTuple()
         cX, cY = self.currentSize[0], self.currentSize[1]
         for t in self.getActiveTrajectories():
             for i, p in enumerate(t.getPoints()):
@@ -434,7 +433,7 @@ class DrawingSurface(wx.Panel):
         self.wavecolor = wx.Color(*wave)
             
     def getValues(self):
-        w,h = self.GetSize()
+        w,h = self.GetSizeTuple()
         w,h = float(w), float(h)
         vals = []
         for t in self.trajectories:
@@ -474,7 +473,7 @@ class DrawingSurface(wx.Panel):
             self.altKey = False
             
     def MouseDown(self, evt):
-        self.downPos = evt.GetPosition().Get()
+        self.downPos = evt.GetPositionTuple()
         for t in self.getActiveTrajectories():
             if t.getInsideRect(self.downPos):
                 if self.altKey:
@@ -548,7 +547,7 @@ class DrawingSurface(wx.Panel):
                     self.traj.clear()
                     return
                 if self.traj.getType() == 'free':
-                    self.traj.addFinalPoint(self.clipPos(evt.GetPosition().Get()), self.closed)
+                    self.traj.addFinalPoint(self.clipPos(evt.GetPositionTuple()), self.closed)
                     if self.parent.fillPoints:
                         self.traj.fillPoints(self.closed)
                     self.traj.setInitPoints()
@@ -576,7 +575,6 @@ class DrawingSurface(wx.Panel):
                 self.selected.setInitPoints()
                 self.selected.setType('free')
 
-            #self.OnPaint(None)      
             self.Refresh()  
             self.ReleaseMouse()
             self.parent.createTempFile()
@@ -585,12 +583,12 @@ class DrawingSurface(wx.Panel):
         if self.HasCapture() and evt.Dragging() and evt.LeftIsDown():
             if self.action == 'draw' and self.traj:
                 if self.traj.getType() == 'free':
-                    self.traj.addPoint(self.clipPos(evt.GetPosition().Get()))
+                    self.traj.addPoint(self.clipPos(evt.GetPositionTuple()))
                 elif self.traj.getType() == 'line':
                     self.traj.points = []
                     self.traj.lpx.reinit()
                     self.traj.lpy.reinit()
-                    x,y = self.clipPos(evt.GetPosition().Get())
+                    x,y = self.clipPos(evt.GetPositionTuple())
 
                     x2 = abs(x-self.downPos[0])
                     y2 = abs(y-self.downPos[1])
@@ -633,12 +631,12 @@ class DrawingSurface(wx.Panel):
 
             elif self.action == 'drag':
                 if self.selected.getType() in ['free', 'line']:
-                    x,y = evt.GetPosition()
+                    x,y = evt.GetPositionTuple()
                     offset = (self.downPos[0] - x, self.downPos[1] - y)
                     clipedOffset = self.clip(offset, self.extremeXs, self.extremeYs)
                     self.selected.move(clipedOffset)
                 else:
-                    x,y = self.clipPos(evt.GetPosition())
+                    x,y = self.clipPos(evt.GetPositionTuple())
                     offset = (self.downPos[0] - x, self.downPos[1] - y)
                     center, clipedOffset = self.clipCircleMove(self.selected.getRadius(), self.curCenter, offset)
                     self.selected.setCenter(center)
@@ -668,14 +666,14 @@ class DrawingSurface(wx.Panel):
                         y = math.sin(math.pi * self.oscilPeriod * i * scaleR) * r
                         self.selected.addCirclePoint((int(round(x + self.selected.getCenter()[0])), int(round(y + self.selected.getCenter()[1]))))
             elif self.action == 'edit':
-                x,y = evt.GetPosition()
+                x,y = evt.GetPositionTuple()
                 offset = (self.downPos[0] - x, self.downPos[1] - y)
                 self.selected.editTraj(self.pindex, offset)            
             self.Refresh()
     
     def OnPaint(self, evt):
         x,y = (0,0)
-        w,h = self.GetSize()
+        w,h = self.GetSizeTuple()
         dc = wx.AutoBufferedPaintDC(self)
 
         if not self.sndBitmap:
@@ -712,7 +710,7 @@ class DrawingSurface(wx.Panel):
         Ys = [p[1] for p in self.selected.getPoints()]
         minY, maxY = min(Ys), max(Ys)
         x,y = off
-        sizex, sizey = self.GetSize()
+        sizex, sizey = self.GetSizeTuple()
         offset = self.screenOffset   
         if exXs[0] - off[0] >= offset and exXs[1] - off[0] <= sizex - offset:
             x = x
@@ -730,7 +728,7 @@ class DrawingSurface(wx.Panel):
 
     def clipPos(self, pos):
         x,y = pos
-        sizex, sizey = self.GetSize()
+        sizex, sizey = self.GetSizeTuple()
         offset = self.screenOffset      
         if x < offset: x = offset
         elif x > (sizex-offset): x = sizex - offset
@@ -741,7 +739,7 @@ class DrawingSurface(wx.Panel):
         return (x,y)
 
     def clipCirclePos(self, rad, center, lastRad):
-        sizex, sizey = self.GetSize()
+        sizex, sizey = self.GetSizeTuple()
         offset = self.screenOffset
         flag = True 
         radius1 = radius2 = radius3 = radius4 = 1000000    
@@ -763,7 +761,7 @@ class DrawingSurface(wx.Panel):
             return min(radius1, radius2, radius3, radius4)
 
     def clipCircleMove(self, rad, center, offset):
-        sizex, sizey = self.GetSize()
+        sizex, sizey = self.GetSizeTuple()
         off = self.screenOffset
         if center[0] - offset[0] - rad >= 0 + off and center[0] - offset[0] + rad <= sizex - off: 
             cx = center[0] - offset[0]
@@ -814,7 +812,7 @@ class DrawingSurface(wx.Panel):
         self.create_bitmap()
 
     def create_bitmap(self):
-        size = self.GetSize()
+        size = self.GetSizeTuple()
         X = size[0]
         self.length = len(self.list[0])
         scalar = float(X) / (self.length - 1)
@@ -1186,7 +1184,7 @@ class ControlPanel(wx.Panel):
         self.parent.moduleFrames[self.parent.currentModule].activateWidgets(event.GetInt())
 
     def csoundReady(self, msg):
-        print msg
+        #print msg
         if msg == 'ready':
             resetFlag()
             self.parent.moduleFrames[self.parent.currentModule].initControlValues()
@@ -1489,7 +1487,7 @@ class MainFrame(wx.Frame):
         saveDict['MainFrame']['fillPoints'] = self.fillPoints
         saveDict['MainFrame']['editionLevel'] = self.editionLevel
         saveDict['MainFrame']['currentModule'] = self.currentModule
-        saveDict['MainFrame']['size'] = (self.panel.GetSize()[0], self.panel.GetSize()[1])
+        saveDict['MainFrame']['size'] = self.panel.GetSizeTuple()
 
         ### Controls Frame ###
         saveDict['ControlFrame'] = self.moduleFrames[self.currentModule].save()
@@ -1519,7 +1517,6 @@ class MainFrame(wx.Frame):
         self.SetTitle(os.path.split(self.currentFile)[1] + ' - ' + self.currentModule)
 
     def loadFile(self, path):
-        self.currentFile = path
         f = open(path, 'r')
         msg = f.read()
         f.close()
@@ -1554,27 +1551,24 @@ class MainFrame(wx.Frame):
         self.panel.setCurrentSize(dict['MainFrame']['size'])
         self.panel.OnResize(None)
 
+        self.currentFile = path
         self.SetTitle(os.path.split(self.currentFile)[1] + ' - ' + self.currentModule)
 
     def createInitTempFile(self):
-        handle, path =  tempfile.mkstemp()
-        temp = open(path, 'w')
-        for t in self.panel.getAllTrajectories():
-            temp.write(str(t.getAttributes()) + '\n')
-        temp.close()
-        self.temps.insert(0, path)
+        d = {}
+        for i, t in enumerate(self.panel.getAllTrajectories()):
+            d[i] = str(t.getAttributes())
+        self.temps.insert(0, d)
 
     def createTempFile(self):
-        handle, path =  tempfile.mkstemp()
-        temp = open(path, 'w')
-        for t in self.panel.getAllTrajectories():
-            temp.write(str(t.getAttributes()) + '\n')
-        temp.close()
-        self.temps.insert(0, path)
+        d = {}
+        for i, t in enumerate(self.panel.getAllTrajectories()):
+            d[i] = str(t.getAttributes())
+        self.temps.insert(0, d)
         self.recall = self.undos = 0
         self.menu1.Enable(110, True)
         self.menu1.Enable(111, False)
-    
+
     def recallTempFile(self, id):
         if self.temps and self.recall < len(self.temps):
             if id == 110: 
@@ -1583,11 +1577,9 @@ class MainFrame(wx.Frame):
             else: 
                 self.recall -= 1
                 self.undos -= 1
-            f = open(self.temps[self.recall],'r')
-            lines = f.readlines()
-            f.close()
+            d = self.temps[self.recall]
             for i, t in enumerate(self.panel.getAllTrajectories()):
-                t.setAttributes(eval(lines[i]))
+                t.setAttributes(eval(d[i]))
         if self.recall >= len(self.temps) - 1:
             self.menu1.Enable(110, False)
         else:
@@ -1596,13 +1588,10 @@ class MainFrame(wx.Frame):
             self.menu1.Enable(111, False)
         else:
             self.menu1.Enable(111, True) 
-      
+
     def OnClose(self, evt):
         self.panel.stopTimer()
         stopCsound()
-        for temp in self.temps:  
-            print temp
-            os.remove(temp)      
         self.Destroy()
 
     def log(self, text):
