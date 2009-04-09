@@ -21,6 +21,7 @@ from math import sin, pi, sqrt
 import os, sys, time, tempfile, xmlrpclib
 import wx
 from wx.lib.wordwrap import wordwrap
+import  wx.lib.scrolledpanel as scrolled
 
 systemPlatform = sys.platform
 
@@ -844,13 +845,12 @@ class DrawingSurface(wx.Panel):
         self.memory.DrawLineList(l)
         self.memory.SelectObject(wx.NullBitmap)
 
-class ControlPanel(wx.Panel):
+class ControlPanel(scrolled.ScrolledPanel):
     def __init__(self, parent, surface):
-        wx.Panel.__init__(self, parent, -1)
+        scrolled.ScrolledPanel.__init__(self, parent, -1)
 
         self.parent = parent
         self.surface = surface
-        
         self.type = 0
         self.numTraj = 3
         self.linLogSqrt = 0
@@ -979,6 +979,9 @@ class ControlPanel(wx.Panel):
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleRecord, self.tog_record)
 
         self.SetSizer(box)
+        self.SetAutoLayout(1)
+        self.SetBestSize()
+        self.SetupScrolling(scroll_x = False)
 
     def handleType(self, event):
         self.type = event.GetInt()
@@ -1304,7 +1307,7 @@ class MainFrame(wx.Frame):
 
         self.SetTitle(self.currentModule)
 
-        self.SetMinSize((-1,580))
+        #self.SetMinSize((-1,580))
 
         self.Show()
 
@@ -1647,7 +1650,11 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         file = sys.argv[1]
 
-    sys.setcheckinterval(0)
     app = wx.PySimpleApp()
-    f = MainFrame(None, -1, pos=(20,20), size=(800,580), file=file)
+    X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
+    if X < 800: sizex = X - 40
+    else: sizex = 800
+    if Y < 580: sizey = Y - 40
+    else: sizey = 580
+    f = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), file=file)
     app.MainLoop()
