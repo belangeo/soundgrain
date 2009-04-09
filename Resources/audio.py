@@ -171,10 +171,10 @@ def splitSnd(file):
     cschnls = {'monaural': 1, 'stereo': 2, 'quad': 4, 'oct': 8}
 
     # retreive sound infos
-    if systemPlatform == 'darwin':
-        cspipe1 = Popen('/usr/local/bin/csound --logfile=log.txt -U sndinfo "' + file + '"', shell=True, stdin=PIPE)
-    elif systemPlatform == 'win32':
+    if systemPlatform == 'win32':
         cspipe1 = Popen('start /REALTIME /WAIT csound --logfile=log.txt -U sndinfo "' + file + '"', shell=True, stdin=PIPE)
+    else:
+        cspipe1 = Popen('/usr/local/bin/csound --logfile=log.txt -U sndinfo "' + file + '"', shell=True, stdin=PIPE)
     cspipe1.wait()
     f = open('log.txt', 'r')
     text = f.read()
@@ -230,10 +230,10 @@ def splitSnd(file):
     splitter.write('</CsoundSynthesizer>\n')
     splitter.close()
 
-    if systemPlatform == 'darwin':    
-        cspipe2 = Popen('/usr/local/bin/csound splitter.csd', shell=True, stdin=PIPE)
-    elif systemPlatform == 'win32':
+    if systemPlatform == 'win32':
         cspipe2 = Popen('start /REALTIME /WAIT csound splitter.csd', shell=True, stdin=PIPE)
+    else:    
+        cspipe2 = Popen('/usr/local/bin/csound splitter.csd', shell=True, stdin=PIPE)
     cspipe2.wait()
     os.remove('splitter.csd')
     
