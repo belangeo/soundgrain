@@ -9,6 +9,10 @@
 <value><string>SoundGrain.app/Contents/Resources/examples/flute.aif</string></value>
 </member>
 <member>
+<name>globalamp</name>
+<value><double>1.</double></value>
+</member>
+<member>
 <name>cutoff</name>
 <value><int>5000</int></value>
 </member>

@@ -22,7 +22,9 @@ import os, sys, time, tempfile, xmlrpclib
 import wx
 from wx.lib.wordwrap import wordwrap
 import  wx.lib.scrolledpanel as scrolled
+import Resources.osc as osc
 
+osc.init()
 systemPlatform = sys.platform
 
 NAME = 'Sound Grain'
@@ -40,6 +42,7 @@ from Resources.audio import *
 from Resources.Biquad import BiquadLP
 from Resources.Modules import *
 from Resources.WaitCsound import WaitCsound
+from Resources.Meter import VuMeter
 
 trajTypes = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 
@@ -846,15 +849,17 @@ class DrawingSurface(wx.Panel):
         self.memory.SelectObject(wx.NullBitmap)
 
 class ControlPanel(scrolled.ScrolledPanel):
-    def __init__(self, parent, surface):
+    def __init__(self, parent, surface, meter):
         scrolled.ScrolledPanel.__init__(self, parent, -1)
 
         self.parent = parent
         self.surface = surface
+        self.meter = meter
         self.type = 0
         self.numTraj = 3
         self.linLogSqrt = 0
         self.sndPath = None
+        self.amplitude = 1
 
         box = wx.BoxSizer(wx.VERTICAL)
 
@@ -945,6 +950,14 @@ class ControlPanel(scrolled.ScrolledPanel):
 
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
 
+        box.Add(wx.StaticText(self, -1, "Global amplitude"), 0, wx.LEFT|wx.TOP, 5)
+        ampBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_amp = wx.Slider( self, -1, 100, 0, 200, size=(150, -1), style=wx.SL_HORIZONTAL)
+        ampBox.Add(self.sl_amp, 0, wx.RIGHT, 10)
+        self.ampValue = wx.StaticText(self, -1, str(self.sl_amp.GetValue() * 0.01))
+        ampBox.Add(self.ampValue, 0, wx.RIGHT, 10)
+        box.Add(ampBox, 0, wx.ALL, 5)
+
         soundBox = wx.BoxSizer(wx.HORIZONTAL)
         self.b_loadSnd = wx.Button(self, -1, "Load sound")
         soundBox.Add(self.b_loadSnd, 0, wx.ALL, 11)
@@ -973,6 +986,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)
         self.Bind(wx.EVT_SLIDER, self.handleQ, self.sl_q)
         self.Bind(wx.EVT_BUTTON, self.handleOpenFx, self.b_openFx)
+        self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)
         self.Bind(wx.EVT_BUTTON, self.handleLoad, self.b_loadSnd)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleAudio, self.tog_audio)
         self.tx_output.Bind(wx.EVT_CHAR, self.handleOutput)        
@@ -1113,6 +1127,22 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def handleOpenFx(self, event):
         self.parent.openFxWindow()
+
+    def handleAmp(self, event):
+        self.amplitude = event.GetInt() * 0.01
+        self.ampValue.SetLabel(str(self.amplitude))
+        self.sendAmp()
+
+    def getAmp(self):
+        return self.amplitude
+
+    def setAmp(self, amp):
+        self.sl_amp.SetValue(int(amp * 100))
+        self.amplitude = amp
+        self.ampValue.SetLabel(str(self.amplitude))
+
+    def sendAmp(self):
+        sendControl('/globalAmp', self.amplitude)
             
     def handleLoad(self, event):
         dlg = wx.FileDialog(self, message="Choose a sound file",
@@ -1133,6 +1163,7 @@ class ControlPanel(scrolled.ScrolledPanel):
                 chnls, samprate, dur = soundInfo(self.sndPath)
                 self.sndDur = dur
                 self.chnls = chnls
+                self.meter.setNumSliders(self.chnls)
                 self.sndInfoStr = 'Loaded sound: %s,    Sr: %s Hz,    Channels: %s,    Duration: %s sec' % (self.sndPath, samprate, chnls, dur)
                 if self.parent.draw:
                     if not self.sndPath in self.surface.bitmapDict.keys():
@@ -1187,10 +1218,10 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.parent.moduleFrames[self.parent.currentModule].activateWidgets(event.GetInt())
 
     def csoundReady(self, msg):
-        #print msg
         if msg == 'ready':
             resetFlag()
             self.parent.moduleFrames[self.parent.currentModule].initControlValues()
+            self.sendAmp()
 
     def handleOutput(self, event):
         key = event.GetKeyCode()
@@ -1297,8 +1328,10 @@ class MainFrame(wx.Frame):
         
         mainBox = wx.BoxSizer(wx.HORIZONTAL)
         self.panel = DrawingSurface(self)
-        self.controls = ControlPanel(self, self.panel)
-        mainBox.Add(self.panel, 1, wx.EXPAND, 5)
+        self.meter = VuMeter(self, size=(40,size[1]))
+        self.controls = ControlPanel(self, self.panel, self.meter)
+        mainBox.Add(self.panel, 20, wx.EXPAND, 5)
+        mainBox.Add(self.meter, 1, wx.EXPAND, 5)
         mainBox.Add(self.controls, 0, wx.EXPAND, 5)
         self.SetSizer(mainBox)
 
@@ -1507,6 +1540,7 @@ class MainFrame(wx.Frame):
         saveDict['ControlPanel']['scaling'] = self.controls.getScaling()
         saveDict['ControlPanel']['timer'] = self.controls.getTimer()
         saveDict['ControlPanel']['step'] = self.controls.getStep()
+        saveDict['ControlPanel']['globalamp'] = self.controls.getAmp()
         saveDict['ControlPanel']['sound'] = self.controls.sndPath
 
         ### Trajectories ###
@@ -1546,6 +1580,7 @@ class MainFrame(wx.Frame):
         self.controls.setScaling(dict['ControlPanel']['scaling'])
         self.controls.setTimer(dict['ControlPanel']['timer'])
         self.controls.setStep(dict['ControlPanel']['step'])
+        self.controls.setAmp(dict['ControlPanel']['globalamp'])
         self.controls.loadSound(dict['ControlPanel']['sound'])
 
         ### Trajectories ###
@@ -1595,6 +1630,7 @@ class MainFrame(wx.Frame):
 
     def OnClose(self, evt):
         self.panel.stopTimer()
+        self.meter.OnClose(evt)
         stopCsound()
         self.Destroy()
 

@@ -24,7 +24,7 @@ class WaitCsound(threading.Thread):
         self.function = function
         self.terminated = False
 
-        osc.init()
+        #osc.init()
         self.inSocket = osc.createListener("127.0.0.1", 15000)
         osc.bind(self.call, "/csound_ready")
 

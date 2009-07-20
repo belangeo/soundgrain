@@ -84,41 +84,41 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     
     if module == 'Granulator':
         overlaps, trans = args[0], args[1]
-        oscReceive(bus = ['amplitude', 'grainsize'], adress = ['/amplitude', '/grainsize'], port = 8002, portamento = 0.005)
+        oscReceive(bus = ['amplitude', 'grainsize', 'globalAmp'], adress = ['/amplitude', '/grainsize', '/globalAmp'], port = 8002, portamento = 0.005)
         randomChoice(bus='sizeVar', choice=trans, rate=50)
         busMix(bus='size', in1='sizeVar', in2='grainsize', ftype='times')
         granulator2(table=tab, overlaps=overlaps, pointerpos=frac, grainsize=0.001, amplitude=.5, 
                     grainsizeVar='size', pitch=1, pointerposVar=xlist, pitchVar=ylist, amplitudeVar=amplist, out='outgrain')
-        dcblock(input='outgrain', amplitudeVar='amplitude')                
+        dcblock(input='outgrain', amplitudeVar='amplitude', out='sndout')                
     elif module == 'FFTReader':
         fftsize, overlaps, windowsize, keepformant = args[0], args[1], args[2], args[3]
-        oscReceive(bus = ['amplitude', 'cutoff'], adress = ['/amplitude', '/cutoff'], port = 8002, portamento = 0.005)
+        oscReceive(bus = ['amplitude', 'cutoff', 'globalAmp'], adress = ['/amplitude', '/cutoff', '/globalAmp'], port = 8002, portamento = 0.005)
         soundTableRead(table=tab, duration=dur, out='snd')
         fftBufRead(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, bufferlength=dur, 
                    transpo=1, keepformant=keepformant, pointerposVar=xlist, transpoVar=ylist, amplitudeVar=amplist, out='fft')
         lowpass(input='fft', cutoff=1, cutoffVar='cutoff', out='lp')
-        dcblock(input='lp', amplitudeVar='amplitude')                
+        dcblock(input='lp', amplitudeVar='amplitude', out='sndout')                
     elif module == 'FFTRingMod':
-        oscReceive(bus = ['amplitude', 'cutoff', 'transpo'], adress = ['/amplitude', '/cutoff', '/transpo'], port = 8002, portamento = 0.005)
+        oscReceive(bus = ['amplitude', 'cutoff', 'transpo', 'globalAmp'], adress = ['/amplitude', '/cutoff', '/transpo', '/globalAmp'], port = 8002, portamento = 0.005)
         for i in range(len(xlist)):
             soundTableRead(table=tab, duration=dur, out='snd')
             fftBufRead(input='snd', fftsize=1024, overlaps=4, windowsize=1024, bufferlength=dur, 
                    transpo=1, transpoVar='transpo', keepformant=0, pointerposVar=xlist[i], amplitudeVar=amplist[i], out='fft%d' % i)
             sine(pitch = 100, pitchVar=ylist[i], out='sin%d' % i)
             ringMod(in1='fft%d' % i, in2='sin%d' % i, amplitudeVar='amplitude', out='ring')
-        lowpass(input='ring', cutoff=1, cutoffVar='cutoff')
+        lowpass(input='ring', cutoff=1, cutoffVar='cutoff', out='sndout')
     elif module == 'FFTAdsyn':
         fftsize, overlaps, windowsize, bins, first, incr = args[0], args[1], args[2], args[3], args[4], args[5]
-        oscReceive(bus = ['amplitude', 'cutoff'], adress = ['/amplitude', '/cutoff'], port = 8002, portamento = 0.005)
+        oscReceive(bus = ['amplitude', 'cutoff', 'globalAmp'], adress = ['/amplitude', '/cutoff', '/globalAmp'], port = 8002, portamento = 0.005)
         soundTableRead(table=tab, duration=dur, out='snd')
         fftBufAdsyn(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, amplitudeVar=amplist,
                    numbins=bins, firstbin=first, binincr=incr, pointerposVar=xlist, transpoVar=ylist, bufferlength=dur, out='fft')
         lowpass(input='fft', cutoff=1, cutoffVar='cutoff', out='lp')
-        dcblock(input='lp', amplitudeVar='amplitude')                
+        dcblock(input='lp', amplitudeVar='amplitude', out='sndout')                
     elif module == 'FMCrossSynth':
         fftsize, overlaps, windowsize, pitch = args[0], args[1], args[2], args[3]
-        oscReceive(bus = ['amplitude', 'cutoff', 'transpo', 'carrier', 'modulator', 'index'], 
-                   adress = ['/amplitude', '/cutoff','/transpo', '/carrier', '/modulator', '/index'], port = 8002, portamento = 0.005)
+        oscReceive(bus = ['amplitude', 'cutoff', 'transpo', 'carrier', 'modulator', 'index', 'globalAmp'], 
+                   adress = ['/amplitude', '/cutoff','/transpo', '/carrier', '/modulator', '/index', '/globalAmp'], port = 8002, portamento = 0.005)
         soundTableRead(table=tab, duration=dur, out='snd')
         for i in range(len(xlist)):
             fftBufRead(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, bufferlength=dur, 
@@ -127,16 +127,19 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
                     pitchVar=ylist[i], out='fm%d' % i)
             crossSynth(in1='fm%d' % i, in2='reader%d' % i, out='fft')
         lowpass(input='fft', cutoff=1, cutoffVar='cutoff', out='lp')
-        dcblock(input='lp', amplitudeVar='amplitude')                
+        dcblock(input='lp', amplitudeVar='amplitude', out='sndout')                
     elif module == 'AutoModulation':
-        oscReceive(bus = 'amplitude', adress = '/amplitude', port = 8002, portamento = 0.005)
+        oscReceive(bus = ['amplitude', 'globalAmp'], adress = ['/amplitude', 'globalAmp'], port = 8002, portamento = 0.005)
         tablesMod(table1=tab, table2=tab, amplitudeVar=amplist, index1Var=xlist, index2Var=ylist, out='mod')
-        dcblock(input='mod', amplitudeVar='amplitude')  
+        dcblock(input='mod', amplitudeVar='amplitude', out='sndout')  
+
+    toDac(input='sndout', amplitudeVar='globalAmp')
 
     beginTrigInst(trigbus = 'rec', trigval = 1, release = 0.05)
     recordPerf(name = outFile)
     endTrigInst()
             
+    monitor()
     startCsound()
 
 def stopAudio():
