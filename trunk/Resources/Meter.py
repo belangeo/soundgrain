@@ -16,7 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
-import wx, math, threading, time, osc, random
+import wx, math, threading, time, osc, random, os, sys
 from Biquad import BiquadLP
 
 class Listener(threading.Thread):
@@ -45,99 +45,31 @@ class Listener(threading.Thread):
         self.terminated = True
         del self.inSocket
 
-class Peaks(wx.Panel):
-    def __init__(self, parent, pos=(0,0), size=(-1,15)):
-        wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY, pos=pos, size=size, style = wx.EXPAND)
-        self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+class VuMeter(wx.Panel):
+    def __init__(self, parent, size=(200,11)):
+        wx.Panel.__init__(self, parent, -1, size=size)
         self.parent = parent
-        self.numSliders = 2
-        self.offset = 1
-        self.peaks = [0]*self.numSliders
-        self.SetColors(outline=(255,255,255), bg=(20,20,20), red=(255,0,0))
-        self.currentSize = self.GetSizeTuple()
-
-        self.Bind(wx.EVT_LEFT_DOWN, self.MouseDown)
+        self.SetMinSize((200,6))
+        self.SetBackgroundColour("#000000")
         self.Bind(wx.EVT_PAINT, self.OnPaint)
-        self.Bind(wx.EVT_SIZE, self.OnResize)
-
-    def OnResize(self, evt):
-        w,h = self.GetSizeTuple()
-        cX, cY = self.currentSize[0], self.currentSize[1]
-        self.currentSize = (w,h)
-                                  
-    def SetColors(self, outline, bg, red):
-        self.outlinecolor = wx.Color(*outline)
-        self.backgroundcolor = wx.Color(*bg)
-        self.red = wx.Color(*red)
-
-    def setPeak(self, num):
-        self.peaks[num] = 1
-        self.Refresh()
-
-    def MouseDown(self, evt):
-        pos = evt.GetPosition()  
-        x,y = (0,0)
-        off = self.offset
-        w,h = self.GetSizeTuple()
-        for i in range(self.numSliders):
-            l = x + (w * (float(i) / self.numSliders)) + off
-            r = (w * (1. / self.numSliders)) - (off * 2) # width
-            if wx.Rect(l, 0, r, h).Contains(pos):
-                self.peaks[i] = 0
-                break
-        self.Refresh()
-        evt.Skip()
-
-    def OnPaint(self, evt):
-        x,y = (0,0)
-        off = self.offset
-        w,h = self.GetSizeTuple()
-        dc = wx.AutoBufferedPaintDC(self)
-
-        dc.SetBrush(wx.Brush(self.backgroundcolor, wx.SOLID))
-        dc.Clear()
-        
-        dc.SetPen(wx.Pen(self.outlinecolor, width=1, style=wx.SOLID))
-        dc.DrawRectangle(x, y, w, h)
-
-        dc.SetBrush(wx.Brush(self.red, wx.SOLID))
-        dc.SetPen(wx.Pen(self.red, width=1, style=wx.SOLID))
-
-        for i in range(self.numSliders):
-            if self.peaks[i]:
-                l = x + (w * (float(i) / self.numSliders)) + off
-                r = (w * (1. / self.numSliders)) - (off * 2) # width
-                dc.DrawRoundedRectangle(l, 0, r, h, 1)
-        evt.Skip()
-
-class Meter(wx.Panel):
-    def __init__(self, parent, pos=(0,0), size=wx.DefaultSize, func=None):
-        wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY, pos=pos, size=size, style = wx.EXPAND)
-        self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
-        self.parent = parent
-        self.function = func
+        self.old_nchnls = 2
         self.numSliders = 2
-        self.biquad = [BiquadLP(freq=2000)]*self.numSliders
-        self.offset = 1
         self.timeSpeed = 60
-        self.count = 0
-        self.amp = [0]*self.numSliders
-        self.SetColors(outline=(255,255,255), bg=(20,20,20), red=(255,0,0), green=(0,255,0), yellow=(200,200,0))
-        self.currentSize = self.GetSizeTuple()
-
+        self.SetSize((200, 5*self.numSliders+1))
+        self.bitmap = wx.Bitmap(os.path.join('Resources', 'vu-metre.png'))
+        self.backBitmap = wx.Bitmap(os.path.join('Resources', 'vu-metre-dark.png'))
+        self.amplitude = [0] * self.numSliders
         self.listener = Listener()
         self.listener.start()
 
-        self.Bind(wx.EVT_CLOSE, self.OnClose)    
-        self.Bind(wx.EVT_PAINT, self.OnPaint)
-        self.Bind(wx.EVT_SIZE, self.OnResize)
+        self.Bind(wx.EVT_CLOSE, self.OnClose)   
+        self.Bind(wx.EVT_SIZE, self.OnResize)   
+ 
         self.startTimer()
 
     def OnResize(self, evt):
-        w,h = self.GetSizeTuple()
-        cX, cY = self.currentSize[0], self.currentSize[1]
-        self.currentSize = (w,h)
-        
+        self.setNumSliders(self.numSliders)
+
     def startTimer(self):
         self.timer = wx.PyTimer(self.clock)
         self.timer.Start(self.timeSpeed)
@@ -147,93 +79,49 @@ class Meter(wx.Panel):
         del self.timer
 
     def clock(self):
-        self.amp = [math.sqrt(amp) for amp in self.listener.getAmps()]
-        for i in range(len(self.amp)):
-            if self.amp[i] > 1:
-                self.function(i)
-        self.count += 1
+        self.setAmplitude([math.sqrt(amp) for amp in self.listener.getAmps()])
         self.Refresh()
-                                  
-    def SetColors(self, outline, bg, red, green, yellow):
-        self.outlinecolor = wx.Color(*outline)
-        self.backgroundcolor = wx.Color(*bg)
-        self.red = wx.Color(*red)
-        self.green = wx.Color(*green)
-        self.yellow = wx.Color(*yellow)
-      
-    def OnPaint(self, evt):
-        x,y = (0,0)
-        off = self.offset
-        w,h = self.GetSizeTuple()
-        dc = wx.AutoBufferedPaintDC(self)
 
-        dc.SetBrush(wx.Brush(self.backgroundcolor, wx.SOLID))
-        dc.Clear()
+    def setNumSliders(self, numSliders):
+        oldChnls = self.old_nchnls
+        self.numSliders = numSliders
+        self.amplitude = [0] * self.numSliders
+        gap = (self.numSliders - oldChnls) * 5
+        parentSize = self.parent.GetSize()
+        if sys.platform == 'linux2':
+            self.SetMinSize((200, 5*self.numSliders+1))
+            self.parent.SetMinSize((parentSize[0], parentSize[1]+gap))
+        else:
+            self.SetSize((200, 5*self.numSliders+1))
+            self.parent.SetSize((parentSize[0], parentSize[1]+gap))
+        self.Refresh()
+
+    def setAmplitude(self, amplitudeList=[]):
+        if amplitudeList[0] < 0: 
+            return
+        if not amplitudeList:
+            self.amplitude = [0 for i in range(self.numSliders)]                
+        else:
+            self.amplitude = amplitudeList
         
-        dc.SetPen(wx.Pen(self.outlinecolor, width=1, style=wx.SOLID))
-        dc.DrawRectangle(x, y, w, h)
-
-        dc.SetBrush(wx.Brush(self.red, wx.SOLID))
-        dc.SetPen(wx.Pen(self.red, width=1, style=wx.SOLID))
-
+    def OnPaint(self, event):
+        w,h = self.GetSize()
+        dc = wx.PaintDC(self)
+        dc.SetBrush(wx.Brush("#000000"))
+        dc.Clear()
+        dc.DrawRectangle(0,0,w,h)
         for i in range(self.numSliders):
-            l = x + (w * (float(i) / self.numSliders)) + off
-            r = (w * (1. / self.numSliders)) - (off * 2) # width
-            if self.amp[i] < .5:
-                rect = wx.Rect(l, h-(h*self.amp[i]), r, h*self.amp[i])
-                dc.GradientFillLinear(rect, self.green, self.green, wx.NORTH)
-            elif self.amp[i] < .85:
-                rect1 = wx.Rect(l, h-(h*.5), r, h*.5)
-                rect2 = wx.Rect(l, h-(h*self.amp[i]), r, h*(self.amp[i]-.49))
-                dc.GradientFillLinear(rect1, self.green, self.green, wx.NORTH)
-                dc.GradientFillLinear(rect2, self.green, self.yellow, wx.NORTH)
-            else:    
-                rect1 = wx.Rect(l, h-(h*.5), r, h*.5)
-                rect2 = wx.Rect(l, h-(h*.85), r, h*(.85-.49))
-                rect3 = wx.Rect(l, h-(h*self.amp[i]), r, h*(self.amp[i]-.84))
-                dc.GradientFillLinear(rect1, self.green, self.green, wx.NORTH)
-                dc.GradientFillLinear(rect2, self.green, self.yellow, wx.NORTH)
-                dc.GradientFillLinear(rect3, self.yellow, self.red, wx.NORTH)
-        evt.Skip()
+            width = int(self.amplitude[i] * w)
+            dc.DrawBitmap(self.backBitmap, 0, i*5)
+            dc.SetClippingRegion(0, i*5, width, 5)
+            dc.DrawBitmap(self.bitmap, 0, i*5)
+            dc.DestroyClippingRegion()
 
     def OnClose(self, evt):
         self.stopTimer()
         self.listener.stop()
         self.Destroy()
 
-class VuMeter(wx.Panel):
-    def __init__(self, parent, id=-1, size=(40,250)):
-        wx.Panel.__init__(self, parent, id, size=size)
-        mainBox = wx.BoxSizer(wx.VERTICAL)
-        self.peaker = Peaks(self)
-        mainBox.Add(self.peaker, 0, wx.EXPAND, 5)
-        self.panel = Meter(self, func=self.peaker.setPeak)  
-        mainBox.Add(self.panel, 1, wx.EXPAND, 5)
-        self.SetSizer(mainBox)
 
-    def setNumSliders(self, num):
-        self.peaker.numSliders = num  
-        self.peaker.peaks = [0]*num  
-        self.panel.numSliders = num    
-
-    def OnClose(self, evt):
-        self.panel.OnClose(None)
-        self.Destroy()
-
-class MainFrame(wx.Frame):
-    def __init__(self, parent, id, pos, size):
-        wx.Frame.__init__(self, parent, id, "", pos, size)
-        self.Bind(wx.EVT_CLOSE, self.OnClose)    
-        self.pane = VuMeter(self, -1, size=(40,250))
-
-    def OnClose(self, evt):
-        self.pane.OnClose(None)
-        self.Destroy()
-
-if __name__ == '__main__':
-    app = wx.PySimpleApp()
-    f = MainFrame(None, id=-1, pos=(20,20), size=(40,250))
-    f.Show()
-    app.MainLoop()
     
 
