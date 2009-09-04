@@ -787,7 +787,7 @@ class DrawingSurface(wx.Panel):
         for i in range(chnls):
             monofile = os.path.join(os.path.expanduser('~'), os.path.split(file)[1].rsplit('.',1)[0] + '-' + str(i) + '.aif')
             if systemPlatform == 'win32':
-                cspipe3 = Popen('start /REALTIME /WAIT /B csound -U envext -o "%s/anal%s" -w .001 "%s"' % (os.path.expanduser('~'),i,monofile), shell=True)
+                cspipe3 = Popen('start /REALTIME /WAIT csound -U envext -o "%s/anal%s" -w .001 "%s"' % (os.path.expanduser('~'),i,monofile), shell=True, stdin=PIPE)
             else:    
                 cspipe3 = Popen('/usr/local/bin/csound -U envext -o "%s/anal%s" -w .001 "%s"' % (os.path.expanduser('~'),i,monofile), shell=True, stdin=PIPE)
             cspipe3.wait()  
