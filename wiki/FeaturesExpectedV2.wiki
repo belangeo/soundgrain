@@ -11,8 +11,6 @@ This is a short list of features that I want to add before releasing version 2.0
 
 - Amplitude meter and global volume control. (Done)
 
-- Reading of trajectories should be done directly by Csound. The interface will serve only to edit trajectories. Not sure...
-
 - Each trajectory will have its own speed and point step.
 
 - Mapping of Y axis on more than one parameter (choice, mix and axis range will be edited by the user). Each trajectory must have its own FX window.
