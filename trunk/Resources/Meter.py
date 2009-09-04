@@ -33,7 +33,7 @@ class Listener(threading.Thread):
     def run(self):
         while not self.terminated:
             osc.getOSC(self.inSocket)
-            time.sleep(.05)
+            time.sleep(.06)
 
     def monitor(self, *msg):
         self.amps = msg[0][2:]
@@ -119,7 +119,7 @@ class Meter(wx.Panel):
         self.numSliders = 2
         self.biquad = [BiquadLP(freq=2000)]*self.numSliders
         self.offset = 1
-        self.timeSpeed = 50
+        self.timeSpeed = 60
         self.count = 0
         self.amp = [0]*self.numSliders
         self.SetColors(outline=(255,255,255), bg=(20,20,20), red=(255,0,0), green=(0,255,0), yellow=(200,200,0))

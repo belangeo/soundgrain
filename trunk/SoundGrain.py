@@ -23,6 +23,7 @@ import wx
 from wx.lib.wordwrap import wordwrap
 import  wx.lib.scrolledpanel as scrolled
 import Resources.osc as osc
+from Resources.Preferences import Preferences
 
 osc.init()
 systemPlatform = sys.platform
@@ -334,7 +335,6 @@ class DrawingSurface(wx.Panel):
         self.ymin = 0
         self.ymax = 1
         self.ymethod = 0
-        self.altKey = False
         self.mode = trajTypes[0]
         self.SetColors(outline=(255,255,255), bg=(20,20,20), fill=(255,0,0), rect=(0,255,0), losa=(0,0,255), wave=(70,70,70))
         self.currentSize = self.GetSizeTuple()
@@ -344,8 +344,6 @@ class DrawingSurface(wx.Panel):
         self.Bind(wx.EVT_RIGHT_DOWN, self.deleteTraj)
         self.Bind(wx.EVT_MOTION, self.MouseMotion)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
-        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
-        self.Bind(wx.EVT_KEY_UP, self.OnKeyUp)
         self.Bind(wx.EVT_SIZE, self.OnResize)
         self.startTimer()
 
@@ -468,19 +466,11 @@ class DrawingSurface(wx.Panel):
                 self.Refresh()
                 return
      
-    def OnKeyDown(self, evt):
-        if evt.GetKeyCode() == wx.WXK_ALT:
-            self.altKey = True
-
-    def OnKeyUp(self, evt):
-        if evt.GetKeyCode() == wx.WXK_ALT:
-            self.altKey = False
-            
     def MouseDown(self, evt):
         self.downPos = evt.GetPositionTuple()
         for t in self.getActiveTrajectories():
             if t.getInsideRect(self.downPos):
-                if self.altKey:
+                if evt.AltDown():
                     for new_t in self.trajectories:
                         if not new_t.getActive():
                             self.selected = new_t
@@ -1268,6 +1258,8 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.handleSave, id=2)
         self.menu.Append(3, "Save as...\tShift+Ctrl+S")
         self.Bind(wx.EVT_MENU, self.handleSaveAs, id=3)
+        self.menu.Append(4, "OSC Settings\tCtrl+;")
+        self.Bind(wx.EVT_MENU, self.showOSCSettings, id=4)
         menuBar.Append(self.menu, "&File")
 
         self.menu1 = wx.Menu()
@@ -1628,6 +1620,10 @@ class MainFrame(wx.Frame):
         else:
             self.menu1.Enable(111, True) 
 
+    def showOSCSettings(self, evt):
+        self.pref = Preferences(self)
+        self.pref.SetPosition((50,50))
+
     def OnClose(self, evt):
         self.panel.stopTimer()
         self.meter.OnClose(evt)
@@ -1690,7 +1686,7 @@ if __name__ == '__main__':
     X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
     if X < 800: sizex = X - 40
     else: sizex = 800
-    if Y < 580: sizey = Y - 40
-    else: sizey = 580
+    if Y < 625: sizey = Y - 40
+    else: sizey = 625
     f = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), file=file)
     app.MainLoop()
