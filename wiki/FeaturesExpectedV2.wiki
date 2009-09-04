@@ -9,7 +9,7 @@ This is a short list of features that I want to add before releasing version 2.0
 
 - Minimal documentation (trajectories manipulation shortcuts).
 
-- Amplitude meter and global volume control.
+- Amplitude meter and global volume control. (Done)
 
 - Reading of trajectories should be done directly by Csound. The interface will serve only to edit trajectories.
 
@@ -19,4 +19,4 @@ This is a short list of features that I want to add before releasing version 2.0
 
 - Trajectories presets system with interpolation.
 
-- Create a preferences file to set manually OSC host and port. This will allow sharing of trajectories with others apps and computers.
+- Create a preferences file to set manually OSC host and port. This will allow sharing of trajectories with others apps and computers. (Done)
