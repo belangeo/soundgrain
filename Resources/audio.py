@@ -183,7 +183,8 @@ def splitSnd(file):
     f = open('log.txt', 'r')
     text = f.read()
     f.close()
-    os.remove('log.txt')
+    if systemPlatform != 'win32':
+        os.remove('log.txt')
     sp = text.split('srate')[-1]
     sp = sp.replace(',', '').replace('(', '').replace(')', '').replace('\n', ' ').replace('\t', '').strip()
     sp = sp.split(' ')           
