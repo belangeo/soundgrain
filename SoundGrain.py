@@ -533,6 +533,7 @@ class DrawingSurface(wx.Panel):
                 break  
             else:
                 self.traj = None
+        evt.Skip()
 
     def MouseUp(self, evt):
         if self.HasCapture():
@@ -572,6 +573,7 @@ class DrawingSurface(wx.Panel):
             self.Refresh()  
             self.ReleaseMouse()
             self.parent.createTempFile()
+        evt.Skip()
 
     def MouseMotion(self, evt):
         if self.HasCapture() and evt.Dragging() and evt.LeftIsDown():
@@ -664,6 +666,7 @@ class DrawingSurface(wx.Panel):
                 offset = (self.downPos[0] - x, self.downPos[1] - y)
                 self.selected.editTraj(self.pindex, offset)            
             self.Refresh()
+        evt.Skip()
     
     def OnPaint(self, evt):
         x,y = (0,0)
