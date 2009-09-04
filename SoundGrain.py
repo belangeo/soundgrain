@@ -339,6 +339,7 @@ class DrawingSurface(wx.Panel):
         self.SetColors(outline=(255,255,255), bg=(20,20,20), fill=(255,0,0), rect=(0,255,0), losa=(0,0,255), wave=(70,70,70))
         self.currentSize = self.GetSizeTuple()
     
+        self.Bind(wx.EVT_KEY_DOWN, self.KeyDown)
         self.Bind(wx.EVT_LEFT_DOWN, self.MouseDown)
         self.Bind(wx.EVT_LEFT_UP, self.MouseUp)
         self.Bind(wx.EVT_RIGHT_DOWN, self.deleteTraj)
@@ -390,7 +391,6 @@ class DrawingSurface(wx.Panel):
     def clock(self):
         for traj in self.getActiveTrajectories():
             traj.clock()
-        #self.OnPaint(None)
         self.Refresh()
 
     def setYMin(self, ymin):
@@ -465,6 +465,38 @@ class DrawingSurface(wx.Panel):
                 t.clear()
                 self.Refresh()
                 return
+
+    def KeyDown(self, evt):
+        if evt.GetKeyCode() == wx.WXK_UP:
+            for traj in self.getActiveTrajectories():
+                if traj.getType() in ['circle', 'oscil']:
+                    center = traj.getCenter()
+                    traj.setCenter((center[0], center[1]-1))
+                traj.move([0,1])
+                traj.setInitPoints()
+        elif evt.GetKeyCode() == wx.WXK_DOWN:
+            for traj in self.getActiveTrajectories():
+                if traj.getType() in ['circle', 'oscil']:
+                    center = traj.getCenter()
+                    traj.setCenter((center[0], center[1]+1))
+                traj.move([0,-1])
+                traj.setInitPoints()
+        elif evt.GetKeyCode() == wx.WXK_LEFT:
+            for traj in self.getActiveTrajectories():
+                if traj.getType() in ['circle', 'oscil']:
+                    center = traj.getCenter()
+                    traj.setCenter((center[0]-1, center[1]))
+                traj.move([1,0])
+                traj.setInitPoints()
+        elif evt.GetKeyCode() == wx.WXK_RIGHT:
+            for traj in self.getActiveTrajectories():
+                if traj.getType() in ['circle', 'oscil']:
+                    center = traj.getCenter()
+                    traj.setCenter((center[0]+1, center[1]))
+                traj.move([-1,0])
+                traj.setInitPoints()
+        self.Refresh()
+
      
     def MouseDown(self, evt):
         self.downPos = evt.GetPositionTuple()
@@ -842,12 +874,11 @@ class DrawingSurface(wx.Panel):
         self.memory.SelectObject(wx.NullBitmap)
 
 class ControlPanel(scrolled.ScrolledPanel):
-    def __init__(self, parent, surface, meter):
+    def __init__(self, parent, surface):
         scrolled.ScrolledPanel.__init__(self, parent, -1)
 
         self.parent = parent
         self.surface = surface
-        self.meter = meter
         self.type = 0
         self.numTraj = 3
         self.linLogSqrt = 0
@@ -950,6 +981,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.ampValue = wx.StaticText(self, -1, str(self.sl_amp.GetValue() * 0.01))
         ampBox.Add(self.ampValue, 0, wx.RIGHT, 10)
         box.Add(ampBox, 0, wx.ALL, 5)
+
+        self.meter = VuMeter(self, size=(200,11))
+        box.Add(self.meter, 0, wx.ALL, 5)
 
         soundBox = wx.BoxSizer(wx.HORIZONTAL)
         self.b_loadSnd = wx.Button(self, -1, "Load sound")
@@ -1323,10 +1357,8 @@ class MainFrame(wx.Frame):
         
         mainBox = wx.BoxSizer(wx.HORIZONTAL)
         self.panel = DrawingSurface(self)
-        self.meter = VuMeter(self, size=(40,size[1]))
-        self.controls = ControlPanel(self, self.panel, self.meter)
+        self.controls = ControlPanel(self, self.panel)
         mainBox.Add(self.panel, 20, wx.EXPAND, 5)
-        mainBox.Add(self.meter, 1, wx.EXPAND, 5)
         mainBox.Add(self.controls, 0, wx.EXPAND, 5)
         self.SetSizer(mainBox)
 
@@ -1334,8 +1366,6 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
         self.SetTitle(self.currentModule)
-
-        #self.SetMinSize((-1,580))
 
         self.Show()
 
@@ -1629,7 +1659,7 @@ class MainFrame(wx.Frame):
 
     def OnClose(self, evt):
         self.panel.stopTimer()
-        self.meter.OnClose(evt)
+        self.controls.meter.OnClose(evt)
         stopCsound()
         self.Destroy()
 
@@ -1689,7 +1719,7 @@ if __name__ == '__main__':
     X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
     if X < 800: sizex = X - 40
     else: sizex = 800
-    if Y < 625: sizey = Y - 40
-    else: sizey = 625
+    if Y < 650: sizey = Y - 40
+    else: sizey = 650
     f = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), file=file)
     app.MainLoop()
