@@ -1215,6 +1215,10 @@
 <value><boolean>1</boolean></value>
 </member>
 <member>
+<name>freeze</name>
+<value><boolean>0</boolean></value>
+</member>
+<member>
 <name>type</name>
 <value><string>line</string></value>
 </member>
@@ -2395,6 +2399,10 @@
 <value><boolean>1</boolean></value>
 </member>
 <member>
+<name>freeze</name>
+<value><boolean>0</boolean></value>
+</member>
+<member>
 <name>type</name>
 <value><string>line</string></value>
 </member>
@@ -3568,6 +3576,10 @@
 <member>
 <name>activeLp</name>
 <value><boolean>1</boolean></value>
+</member>
+<member>
+<name>freeze</name>
+<value><boolean>0</boolean></value>
 </member>
 <member>
 <name>type</name>
