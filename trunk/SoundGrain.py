@@ -23,8 +23,6 @@ import wx
 from wx.lib.wordwrap import wordwrap
 import  wx.lib.scrolledpanel as scrolled
 import Resources.osc as osc
-from Resources.Preferences import Preferences
-from Resources.Selector import Selector
 
 osc.init()
 systemPlatform = sys.platform
@@ -40,6 +38,8 @@ if '/SoundGrain.app' in os.getcwd():
 else:
     RESOURCES_PATH = os.path.join(os.getcwd(), 'Resources')
 
+from Resources.Preferences import Preferences
+from Resources.Selector import Selector
 from Resources.audio import *
 from Resources.Biquad import BiquadLP
 from Resources.Modules import *
@@ -96,6 +96,7 @@ class Trajectory:
         self.center = None
         self.radius = None
         self.active = False
+        self.freeze = False
         self.initPoints = []
         self.points = []
         self.circlePos = None
@@ -123,6 +124,7 @@ class Trajectory:
                 'center': self.center, 
                 'radius': self.radius, 
                 'active': self.active, 
+                'freeze': self.freeze,
                 'circlePos': self.circlePos, 
                 'counter': self.counter,
                 'filterCut': self.filterCut,
@@ -137,10 +139,17 @@ class Trajectory:
         self.center = dict['center']
         self.radius = dict['radius']
         self.active = dict['active']
+        self.freeze = dict['freeze']
         self.circlePos = dict['circlePos']
         self.counter = dict['counter']
         self.filterCut = dict['filterCut']
         self.setPoints(dict['points'])
+
+    def getFreeze(self):
+        return self.freeze
+
+    def setFreeze(self, freeze):
+        self.freeze = freeze
 
     def getLabel(self):
         return self.label
@@ -309,10 +318,11 @@ class Trajectory:
         self.counter = 0
 
     def clock(self):
-        if self.points and (self._timeStep % self.timeMul) == 0:
-            self.circlePos = self.points[self.counter % len(self.points)]
-            self.counter += self.step
-        self._timeStep += 1
+        if not self.freeze:
+            if self.points and (self._timeStep % self.timeMul) == 0:
+                self.circlePos = self.points[self.counter % len(self.points)]
+                self.counter += self.step
+            self._timeStep += 1
 
     ### Circle functions ###
     def addCirclePoint(self, point):
@@ -513,6 +523,13 @@ class DrawingSurface(wx.Panel):
                     traj.setCenter((center[0]+1, center[1]))
                 traj.move([-1,0])
                 traj.setInitPoints()
+        elif evt.GetKeyCode() < 256:
+            c = chr(evt.GetKeyCode())
+            if c in ['1', '2', '3', '4', '5', '6', '7', '8']:
+                if self.trajectoriesBank[int(c)-1].getFreeze():
+                    self.trajectoriesBank[int(c)-1].setFreeze(False)
+                else:
+                    self.trajectoriesBank[int(c)-1].setFreeze(True)
         self.Refresh()
      
     def MouseDown(self, evt):
@@ -1348,6 +1365,8 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.handleSaveAs, id=3)
         self.menu.Append(4, "OSC Settings\tCtrl+;")
         self.Bind(wx.EVT_MENU, self.showOSCSettings, id=4)
+        self.menu.Append(5, "Quit\tCtrl+Q")  
+        self.Bind(wx.EVT_MENU, self.OnClose, id=5)
         menuBar.Append(self.menu, "&File")
 
         self.menu1 = wx.Menu()
