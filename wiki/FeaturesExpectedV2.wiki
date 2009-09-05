@@ -17,10 +17,11 @@ This is a short list of features that I want to add before releasing version 2.0
 
 - Ctrl-Q. (Done)
 
+
+- Freeze key per trajectory. (Done)
+
 - Mapping of Y axis on more than one parameter (choice, mix and axis range will be edited by the user). Each trajectory must have its own FX window.
 
 - Trajectories presets system with interpolation.
-
-- Freeze key per trajectory.
 
 - Input recorder.
