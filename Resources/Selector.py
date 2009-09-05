@@ -1,0 +1,80 @@
+import wx
+
+class Selector(wx.Panel):
+    def __init__(self, parent, size=(160,20), outFunction=None):
+        wx.Panel.__init__(self, parent, -1, size=size)
+        self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+        self.SetBackgroundColour("#cccccc")
+        self.parent = parent
+        self.SetSize((160,20))
+        self.SetMaxSize(self.GetSize())
+        self.rectList = []
+        for i in range(8):
+            self.rectList.append(wx.Rect(i*20, 0, 20, self.GetSize()[1]))
+        self.overs = [False] * 8
+        self.oversWait = [True] * 8
+        self.selected = 0
+        self.outFunction = outFunction
+
+        self.Bind(wx.EVT_PAINT, self.OnPaint)
+        self.Bind(wx.EVT_LEFT_DOWN, self.MouseDown)
+        self.Bind(wx.EVT_MOTION, self.OnMotion)
+        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeave)
+
+    def setOverWait(self, which):
+        self.oversWait[which] = False
+
+    def checkForOverReady(self, pos):
+        for i, rec in enumerate(self.rectList):
+            if not rec.Contains(pos):
+                self.oversWait[i] = True
+                        
+    def OnMotion(self, event):
+        pos = event.GetPosition()
+        self.overs = [False] * 8
+        for i, rec in enumerate(self.rectList):
+            if rec.Contains(pos) and self.oversWait[i]:
+                self.overs[i] = True
+        self.checkForOverReady(pos)
+        self.Refresh()
+        event.Skip()
+
+    def OnLeave(self, event):
+        self.overs = [False] * 8
+        self.oversWait = [True] * 8
+        self.Refresh()
+
+    def OnPaint(self, event):
+        w,h = self.GetSize()
+        dc = wx.AutoBufferedPaintDC(self)
+
+        dc.SetBrush(wx.Brush("#AAAAAA", wx.SOLID))
+        dc.Clear()
+
+        # Draw background
+        dc.SetPen(wx.Pen("#000000", width=1, style=wx.SOLID))
+        dc.DrawRectangle(0, 0, w, h)
+
+        for i in range(self.parent.getMax()):
+            if i == self.selected:
+                dc.SetBrush(wx.Brush("#CCCCCC", wx.SOLID))
+                dc.DrawRoundedRectangleRect(self.rectList[i], 2)
+            dc.SetTextForeground("#000000")
+            dc.DrawLabel(str(i+1), self.rectList[i], wx.ALIGN_CENTER)
+            dc.SetBrush(wx.Brush("#AAAAAA", wx.SOLID))
+
+    def MouseDown(self, event):
+        pos = event.GetPosition()
+        for i, rec in enumerate(self.rectList):
+            if rec.Contains(pos) and i < self.parent.getMax():
+                self.selected = i
+                self.setOverWait(i)
+                break
+        if self.outFunction:
+            self.outFunction(self.selected+1)
+        self.Refresh()
+        event.Skip()
+
+    def setSelected(self, selected):
+        self.selected = selected - 1
+        self.Refresh()
