@@ -965,11 +965,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         box.Add(self.meter, 0, wx.ALL, 5)
 
         soundBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.b_loadSnd = wx.Button(self, -1, "Load sound", size=(100,25))
-        if systemPlatform in ['win32', 'linux2']:
-            self.b_loadSnd.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
+        self.b_loadSnd = wx.Button(self, -1, "Load sound")
         soundBox.Add(self.b_loadSnd, 0, wx.ALL, 11)
-        self.tog_audio = wx.ToggleButton(self, -1, "Start Audio", size=(80,25))
+        self.tog_audio = wx.ToggleButton(self, -1, "Start Audio", size=(80,-1))
         if systemPlatform in ['win32', 'linux2']:
             self.tog_audio.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
         soundBox.Add(self.tog_audio, 0, wx.TOP | wx.LEFT, 12)
