@@ -1813,7 +1813,9 @@ if __name__ == '__main__':
     X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
     if X < 900: sizex = X - 40
     else: sizex = 900
-    if Y < 540: sizey = Y - 40
-    else: sizey = 540
+    if systemPlatform == 'linux2': defaultY = 550
+    else: defaultY = 520
+    if Y < defaultY: sizey = Y - 40
+    else: sizey = defaultY
     f = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), file=file)
     app.MainLoop()
