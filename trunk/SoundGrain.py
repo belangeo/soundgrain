@@ -766,7 +766,6 @@ class DrawingSurface(wx.Panel):
                     dc.DrawRoundedRectanglePointSize((t.getLosangePoint()[0]-5,t.getLosangePoint()[1]-5), (10,10), 1)
  
         sendXYControls(self.getValues())
-        evt.Skip()
 
     def clip(self, off, exXs, exYs):
         Xs = [p[0] for p in self.selected.getPoints()]
@@ -974,7 +973,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         soundBox = wx.BoxSizer(wx.HORIZONTAL)
         self.b_loadSnd = wx.Button(self, -1, "Load sound")
         soundBox.Add(self.b_loadSnd, 0, wx.ALL, 11)
-        self.tog_audio = wx.ToggleButton(self, -1, "Start Audio", size=(80,20))
+        self.tog_audio = wx.ToggleButton(self, -1, "Start Audio", size=(80,-1))
+        if systemPlatform in ['win32', 'linux2']:
+            self.tog_audio.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
         soundBox.Add(self.tog_audio, 0, wx.TOP | wx.LEFT, 12)
         box.Add(soundBox, 0, wx.ALL, 5)
 
