@@ -978,7 +978,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         recBox.Add(wx.StaticText(self, -1, "File: "), 0, wx.TOP, 4)
         self.tx_output = wx.TextCtrl( self, -1, "snd", size=(120, -1))
         recBox.Add(self.tx_output, 0, wx.RIGHT, 12)
-        self.tog_record = wx.ToggleButton(self, -1, "Start", size=(50,20))
+        self.tog_record = wx.ToggleButton(self, -1, "Start", size=(50,-1))
+        if systemPlatform in ['win32', 'linux2']:
+            self.tog_record.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
         self.tog_record.Disable()
         recBox.Add(self.tog_record, 0, wx.TOP, 2)
         box.Add(recBox, 0, wx.ALL, 5)
@@ -1811,7 +1813,7 @@ if __name__ == '__main__':
     X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
     if X < 900: sizex = X - 40
     else: sizex = 900
-    if Y < 520: sizey = Y - 40
-    else: sizey = 520
+    if Y < 540: sizey = Y - 40
+    else: sizey = 540
     f = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), file=file)
     app.MainLoop()
