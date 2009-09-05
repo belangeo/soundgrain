@@ -359,6 +359,10 @@ class DrawingSurface(wx.Panel):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY, pos=pos, size=size, style = wx.EXPAND)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.parent = parent
+        if systemPlatform in ['win32', 'linux2']:
+            self.font = wx.Font(7, wx.NORMAL, wx.NORMAL, wx.NORMAL)
+        else:
+            self.font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)
         self.trajectoriesBank = [Trajectory(i+1) for i in range(8)]
         self.numOfTrajectories(3)
         self.screenOffset = 2
@@ -758,7 +762,7 @@ class DrawingSurface(wx.Panel):
                     dc.DrawCirclePoint(t.circlePos, 4)
                 dc.DrawRoundedRectanglePointSize((t.getFirstPoint()[0],t.getFirstPoint()[1]), (10,10), 2)
                 dc.SetTextForeground("#FFFFFF")
-                dc.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
+                dc.SetFont(self.font)
                 dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0],t.getFirstPoint()[1], 10, 10), wx.ALIGN_CENTER)
                 if t.getType() not in ['free', 'line']:
                     dc.SetBrush(wx.Brush(self.losacolor, wx.SOLID))
