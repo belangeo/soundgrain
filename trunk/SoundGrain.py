@@ -982,7 +982,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         if systemPlatform in ['win32', 'linux2']:
             self.tog_record.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
         self.tog_record.Disable()
-        recBox.Add(self.tog_record, 0, wx.TOP, 2)
+        recBox.Add(self.tog_record, 0, wx.ALIGN_CENTER)
         box.Add(recBox, 0, wx.ALL, 5)
 
 
