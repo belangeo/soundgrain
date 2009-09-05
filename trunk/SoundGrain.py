@@ -24,6 +24,7 @@ from wx.lib.wordwrap import wordwrap
 import  wx.lib.scrolledpanel as scrolled
 import Resources.osc as osc
 from Resources.Preferences import Preferences
+from Resources.Selector import Selector
 
 osc.init()
 systemPlatform = sys.platform
@@ -85,9 +86,12 @@ met : 0 = linear, 1 = log, 2 = sqrt
 ###########################
 
 class Trajectory:
-    def __init__(self, firstTime):
+    def __init__(self, label):
+        self.label = label
         self.activeLp = True
         self.editLevel = 2
+        self.timeMul = 1
+        self._timeStep = 0
         self.type = None
         self.center = None
         self.radius = None
@@ -97,14 +101,24 @@ class Trajectory:
         self.circlePos = None
         self.counter = 0
         self.filterCut = 5000
-        if firstTime:
-            self.step = 1
-            self.lpx = BiquadLP()
-            self.lpy = BiquadLP()
+        self.step = 1
+        self.lpx = BiquadLP()
+        self.lpy = BiquadLP()
+
+    def clear(self):
+        self.type = None
+        self.center = None
+        self.radius = None
+        self.active = False
+        self.initPoints = []
+        self.points = []
+        self.circlePos = None
 
     def getAttributes(self):
         return {'activeLp': self.activeLp, 
                 'editLevel': self.editLevel, 
+                'timeMul': self.timeMul,
+                'step': self.step,
                 'type': self.type, 
                 'center': self.center, 
                 'radius': self.radius, 
@@ -117,6 +131,8 @@ class Trajectory:
     def setAttributes(self, dict):
         self.activeLp = dict['activeLp']
         self.editLevel = dict['editLevel']
+        self.timeMul = dict['timeMul']
+        self.step = dict['step']
         self.type = dict['type']
         self.center = dict['center']
         self.radius = dict['radius']
@@ -125,6 +141,15 @@ class Trajectory:
         self.counter = dict['counter']
         self.filterCut = dict['filterCut']
         self.setPoints(dict['points'])
+
+    def getLabel(self):
+        return self.label
+
+    def setTimeMul(self, mul):
+        self.timeMul = mul
+
+    def getTimeMul(self):
+        return self.timeMul
 
     def setEditionLevel(self, level):
         self.editLevel = level
@@ -146,9 +171,6 @@ class Trajectory:
 
     def getType(self):
         return self.type
-
-    def clear(self):
-        self.__init__(False)
 
     def setActive(self, state):
         self.active = state
@@ -280,13 +302,17 @@ class Trajectory:
     def setStep(self, step):
         self.step = step
 
+    def getStep(self):
+        return self.step
+
     def initCounter(self):
         self.counter = 0
 
     def clock(self):
-        if self.points:
+        if self.points and (self._timeStep % self.timeMul) == 0:
             self.circlePos = self.points[self.counter % len(self.points)]
             self.counter += self.step
+        self._timeStep += 1
 
     ### Circle functions ###
     def addCirclePoint(self, point):
@@ -323,6 +349,7 @@ class DrawingSurface(wx.Panel):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY, pos=pos, size=size, style = wx.EXPAND)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.parent = parent
+        self.trajectoriesBank = [Trajectory(i+1) for i in range(8)]
         self.numOfTrajectories(3)
         self.screenOffset = 2
         self.sndBitmap = None
@@ -371,9 +398,6 @@ class DrawingSurface(wx.Panel):
     def getTimerSpeed(self):
         return self.timeSpeed
 
-    def setStep(self, step):
-        self.step = step
-
     def setTimerSpeed(self, speed):
         self.timeSpeed = speed
         if self.timer.IsRunning():
@@ -415,16 +439,7 @@ class DrawingSurface(wx.Panel):
         return self.oscilScaling
         
     def numOfTrajectories(self, num):
-        try:
-            current = len(self.trajectories)
-            if num < current:
-                del self.trajectories[num-current:]
-            elif num > current:    
-                self.trajectories.extend([Trajectory(True) for i in range(num-current)])
-            else:
-                pass
-        except:
-            self.trajectories = [Trajectory(True) for i in range(num)]        
+        self.trajectories = self.trajectoriesBank[0:num]
                 
     def SetColors(self, outline, bg, fill, rect, losa, wave):
         self.outlinecolor = wx.Color(*outline)
@@ -452,6 +467,9 @@ class DrawingSurface(wx.Panel):
 
     def setClosed(self, closed):
         self.closed = closed
+
+    def getTrajectory(self, which):
+        return self.trajectoriesBank[which-1]
 
     def getAllTrajectories(self):
         return self.trajectories
@@ -496,7 +514,6 @@ class DrawingSurface(wx.Panel):
                 traj.move([-1,0])
                 traj.setInitPoints()
         self.Refresh()
-
      
     def MouseDown(self, evt):
         self.downPos = evt.GetPositionTuple()
@@ -512,7 +529,6 @@ class DrawingSurface(wx.Panel):
                             self.selected.lpy.reinit()
                             self.selected.activateLp(self.parent.lowpass)
                             self.selected.setEditionLevel(self.parent.editionLevel)
-                            self.selected.setStep(self.step)
                             self.selected.setPoints(t.getPoints())
                             self.selected.setInitPoints()
                             if self.selected.getType() not in  ['free', 'line']:
@@ -554,7 +570,6 @@ class DrawingSurface(wx.Panel):
                 self.traj.lpy.reinit()
                 self.traj.activateLp(self.parent.lowpass)
                 self.traj.setEditionLevel(self.parent.editionLevel)
-                self.traj.setStep(self.step)
                 if self.traj.getType() == 'free':
                     self.traj.addPoint(self.clipPos(self.downPos))
                 else:
@@ -725,6 +740,9 @@ class DrawingSurface(wx.Panel):
                 if t.circlePos:
                     dc.DrawCirclePoint(t.circlePos, 4)
                 dc.DrawRoundedRectanglePointSize((t.getFirstPoint()[0],t.getFirstPoint()[1]), (10,10), 2)
+                dc.SetTextForeground("#FFFFFF")
+                dc.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
+                dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0],t.getFirstPoint()[1], 10, 10), wx.ALIGN_CENTER)
                 if t.getType() not in ['free', 'line']:
                     dc.SetBrush(wx.Brush(self.losacolor, wx.SOLID))
                     dc.SetPen(wx.Pen(self.losacolor, width=1, style=wx.SOLID))
@@ -881,6 +899,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.surface = surface
         self.type = 0
         self.numTraj = 3
+        self.selected = 1
         self.linLogSqrt = 0
         self.sndPath = None
         self.amplitude = 1
@@ -953,15 +972,28 @@ class ControlPanel(scrolled.ScrolledPanel):
         
         box.Add(wx.StaticText(self, -1, "Timer speed"), 0, wx.LEFT|wx.TOP, 5)
         speedBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_speed = wx.Slider( self, 100, 25, 5, 250, size=(150, -1), style=wx.SL_HORIZONTAL)
+        self.sl_speed = wx.Slider( self, -1, 25, 5, 250, size=(150, -1), style=wx.SL_HORIZONTAL)
         speedBox.Add(self.sl_speed, 0, wx.RIGHT, 10)
         self.speedValue = wx.StaticText(self, -1, str(self.sl_speed.GetValue()) + ' ms')
         speedBox.Add(self.speedValue, 0, wx.RIGHT, 10)
         box.Add(speedBox, 0, wx.ALL, 5)
 
+
+        box.Add(wx.StaticText(self, -1, "Selected trajectory"), 0, wx.LEFT|wx.TOP, 5)
+        self.tog_traj = Selector(self, outFunction=self.handleSelected)
+        box.Add(self.tog_traj, 0, wx.ALL, 5)
+
+        box.Add(wx.StaticText(self, -1, "Timer multiplier"), 0, wx.LEFT, 5)
+        timemulBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_timemul = wx.Slider( self, -1, 1, 1, 50, size=(150, -1), style=wx.SL_HORIZONTAL)
+        timemulBox.Add(self.sl_timemul, 0, wx.RIGHT, 10)
+        self.timemulValue = wx.StaticText(self, -1, str(self.sl_timemul.GetValue()))
+        timemulBox.Add(self.timemulValue, 0, wx.RIGHT, 10)
+        box.Add(timemulBox, 0, wx.ALL, 5)
+
         box.Add(wx.StaticText(self, -1, "Point step"), 0, wx.LEFT, 5)
         stepBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_step = wx.Slider( self, 101, 1, 1, 50, size=(150, -1), style=wx.SL_HORIZONTAL)
+        self.sl_step = wx.Slider( self, -1, 1, 1, 50, size=(150, -1), style=wx.SL_HORIZONTAL)
         stepBox.Add(self.sl_step, 0, wx.RIGHT, 10)
         self.stepValue = wx.StaticText(self, -1, str(self.sl_step.GetValue()))
         stepBox.Add(self.stepValue, 0, wx.RIGHT, 10)
@@ -1009,6 +1041,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.Bind(wx.EVT_SLIDER, self.handlePeriod, self.sl_period)
         self.Bind(wx.EVT_SLIDER, self.handleScaling, self.sl_scaling)
         self.Bind(wx.EVT_SLIDER, self.handleTimer, self.sl_speed)
+        self.Bind(wx.EVT_SLIDER, self.handleTimerMul, self.sl_timemul)
         self.Bind(wx.EVT_SLIDER, self.handleStep, self.sl_step)
         self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)
         self.Bind(wx.EVT_SLIDER, self.handleQ, self.sl_q)
@@ -1019,8 +1052,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.tx_output.Bind(wx.EVT_CHAR, self.handleOutput)        
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleRecord, self.tog_record)
 
+        self.SetAutoLayout(True)
+
         self.SetSizer(box)
-        self.SetAutoLayout(1)
         self.SetBestSize()
         self.SetupScrolling(scroll_x = False)
 
@@ -1053,6 +1087,7 @@ class ControlPanel(scrolled.ScrolledPanel):
     def handleMax(self, event):
         self.numTraj = event.GetInt() + 1
         self.surface.numOfTrajectories(self.numTraj)
+        self.setSelected(1)
         
     def getMax(self):
         return self.numTraj
@@ -1061,6 +1096,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.numTraj = max
         self.trajMax.SetSelection(max-1)
         self.surface.numOfTrajectories(max)
+        self.setSelected(1)
 
     def handleClosed(self, event):
         self.surface.setClosed(event.GetInt())
@@ -1135,22 +1171,37 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.sl_speed.SetValue(time)
         self.surface.setTimerSpeed(time)
         self.speedValue.SetLabel(str(time) + ' ms')
-        
-    def handleStep(self, event):
-        self.surface.setStep(event.GetInt())
-        for traj in self.surface.getAllTrajectories():
-            traj.setStep(event.GetInt())
-            self.stepValue.SetLabel(str(event.GetInt()))
 
-    def getStep(self):
-        return self.sl_step.GetValue()
+    def handleSelected(self, selected):
+        self.selected = selected
+        timeMul = self.surface.getTrajectory(selected).getTimeMul()
+        step = self.surface.getTrajectory(selected).getStep()
+        self.setTimerMul(timeMul)
+        self.setStep(step)
+
+    def setSelected(self, selected):
+        self.tog_traj.setSelected(selected)
+        self.selected = 1
+        timeMul = self.surface.getTrajectory(selected).getTimeMul()
+        step = self.surface.getTrajectory(selected).getStep()
+        self.setTimerMul(timeMul)
+        self.setStep(step)
+
+    def handleTimerMul(self, event):
+        self.surface.getTrajectory(self.selected).setTimeMul(event.GetInt())
+        self.timemulValue.SetLabel(str(event.GetInt()))
+  
+    def setTimerMul(self, timeMul):
+        self.sl_timemul.SetValue(timeMul)
+        self.timemulValue.SetLabel(str(timeMul))
+      
+    def handleStep(self, event):
+        self.surface.getTrajectory(self.selected).setStep(event.GetInt())
+        self.stepValue.SetLabel(str(event.GetInt()))
 
     def setStep(self, step):
-        self.surface.setStep(step)
         self.sl_step.SetValue(step)
-        for traj in self.surface.getAllTrajectories():
-            traj.setStep(step)
-            self.stepValue.SetLabel(str(step))
+        self.stepValue.SetLabel(str(step))
 
     def handleOpenFx(self, event):
         self.parent.openFxWindow()
@@ -1564,7 +1615,6 @@ class MainFrame(wx.Frame):
         saveDict['ControlPanel']['period'] = self.controls.getPeriod()
         saveDict['ControlPanel']['scaling'] = self.controls.getScaling()
         saveDict['ControlPanel']['timer'] = self.controls.getTimer()
-        saveDict['ControlPanel']['step'] = self.controls.getStep()
         saveDict['ControlPanel']['globalamp'] = self.controls.getAmp()
         saveDict['ControlPanel']['sound'] = self.controls.sndPath
 
@@ -1604,7 +1654,6 @@ class MainFrame(wx.Frame):
         self.controls.setPeriod(dict['ControlPanel']['period'])
         self.controls.setScaling(dict['ControlPanel']['scaling'])
         self.controls.setTimer(dict['ControlPanel']['timer'])
-        self.controls.setStep(dict['ControlPanel']['step'])
         self.controls.setAmp(dict['ControlPanel']['globalamp'])
         self.controls.loadSound(dict['ControlPanel']['sound'])
 
@@ -1717,9 +1766,9 @@ if __name__ == '__main__':
 
     app = wx.PySimpleApp()
     X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
-    if X < 800: sizex = X - 40
-    else: sizex = 800
-    if Y < 650: sizey = Y - 40
-    else: sizey = 650
+    if X < 900: sizex = X - 40
+    else: sizex = 900
+    if Y < 740: sizey = Y - 40
+    else: sizey = 740
     f = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), file=file)
     app.MainLoop()
