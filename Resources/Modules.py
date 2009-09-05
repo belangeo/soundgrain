@@ -362,7 +362,7 @@ class Module(wx.Frame):
         textBox.Add(wx.StaticText(self, -1, "Max: "), 0, wx.TOP, 4)
         self.tx_ymax = wx.TextCtrl( self, -1, "1.", size=(40, -1))
         textBox.Add(self.tx_ymax, 0, wx.RIGHT, 20)
-        self.b_linlog = wx.Button(self, -1, 'Lin', size=(50,20))
+        self.b_linlog = wx.Button(self, -1, 'Lin', size=(50,-1))
         if sys.platform in ['win32', 'linux2']:
             self.b_linlog.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
         textBox.Add(self.b_linlog, 0, wx.TOP, 1 )
