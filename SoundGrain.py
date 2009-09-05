@@ -953,12 +953,6 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.notebook.AddPage(self.playback, "Playback")
         box.Add(self.notebook, 0, wx.ALL, 5)
 
-
-        self.b_openFx = wx.Button(self, -1, "Open FX window")
-        box.Add(self.b_openFx, 0, wx.CENTER|wx.ALL, 10)
-
-        box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
-
         box.Add(wx.StaticText(self, -1, "Global amplitude"), 0, wx.LEFT|wx.TOP, 5)
         ampBox = wx.BoxSizer(wx.HORIZONTAL)
         self.sl_amp = wx.Slider( self, -1, 100, 0, 200, size=(150, -1), style=wx.SL_HORIZONTAL)
@@ -993,7 +987,6 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.Bind(wx.EVT_CHOICE, self.handleType, self.trajType)
         self.Bind(wx.EVT_CHOICE, self.handleMax, self.trajMax)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleClosed, self.closedToggle)
-        self.Bind(wx.EVT_BUTTON, self.handleOpenFx, self.b_openFx)
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)
         self.Bind(wx.EVT_BUTTON, self.handleLoad, self.b_loadSnd)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleAudio, self.tog_audio)
@@ -1150,9 +1143,6 @@ class ControlPanel(scrolled.ScrolledPanel):
     def setStep(self, step):
         self.playback.sl_step.SetValue(step)
         self.playback.stepValue.SetLabel(str(step))
-
-    def handleOpenFx(self, event):
-        self.parent.openFxWindow()
 
     def handleAmp(self, event):
         self.amplitude = event.GetInt() * 0.01
@@ -1390,10 +1380,14 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.handleSave, id=2)
         self.menu.Append(3, "Save as...\tShift+Ctrl+S")
         self.Bind(wx.EVT_MENU, self.handleSaveAs, id=3)
+        self.menu.AppendSeparator()
         self.menu.Append(4, "OSC Settings\tCtrl+;")
         self.Bind(wx.EVT_MENU, self.showOSCSettings, id=4)
-        self.menu.Append(5, "Quit\tCtrl+Q")  
-        self.Bind(wx.EVT_MENU, self.OnClose, id=5)
+        self.menu.Append(5, "Open FX Window\tCtrl+P")
+        self.Bind(wx.EVT_MENU, self.openFxWindow, id=5)
+        self.menu.AppendSeparator()
+        self.menu.Append(6, "Quit\tCtrl+Q")  
+        self.Bind(wx.EVT_MENU, self.OnClose, id=6)
         menuBar.Append(self.menu, "&File")
 
         self.menu1 = wx.Menu()
@@ -1581,9 +1575,12 @@ class MainFrame(wx.Frame):
         self.currentFile = None
         self.SetTitle(self.currentModule)
         
-    def openFxWindow(self):
-        self.moduleFrames[self.currentModule].SetTitle(self.currentModule + ' controls')
-        self.moduleFrames[self.currentModule].Show()
+    def openFxWindow(self, evt):
+        if self.moduleFrames[self.currentModule].IsShown():
+            self.moduleFrames[self.currentModule].Hide()
+        else:
+            self.moduleFrames[self.currentModule].SetTitle(self.currentModule + ' controls')
+            self.moduleFrames[self.currentModule].Show()
 
     def OnResize(self, evt):
         self.controls.drawWaveform()
@@ -1814,7 +1811,7 @@ if __name__ == '__main__':
     X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
     if X < 900: sizex = X - 40
     else: sizex = 900
-    if Y < 560: sizey = Y - 40
-    else: sizey = 560
+    if Y < 520: sizey = Y - 40
+    else: sizey = 520
     f = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), file=file)
     app.MainLoop()

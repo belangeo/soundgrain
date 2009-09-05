@@ -29,6 +29,7 @@ class Module(wx.Frame):
         menuBar = wx.MenuBar()
         self.menu1 = wx.Menu()
         self.menu1.Append(1, 'Close\tCtrl+W', "")
+        self.menu1.Append(1, 'Close\tCtrl+P', "")
         menuBar.Append(self.menu1, "&File")
 
         self.SetMenuBar(menuBar)
