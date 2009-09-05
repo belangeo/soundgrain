@@ -940,83 +940,20 @@ class ControlPanel(scrolled.ScrolledPanel):
         popup2Box.Add(self.trajMax)
         typeBox.Add(popup2Box, 0, wx.RIGHT, 5)
         
-        self.closedToggle = wx.ToggleButton(self, -1, 'Closed', size=(50,20))
+        self.closedToggle = wx.ToggleButton(self, -1, 'Closed', size=(55,-1))
+        if systemPlatform in ['win32', 'linux2']:
+            self.closedToggle.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
         typeBox.Add(self.closedToggle, 0, wx.TOP, 21 )
 
         box.Add(typeBox, 0, wx.ALL, 5)
 
-        box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
+        self.notebook = wx.Notebook(self, -1, style=wx.BK_DEFAULT | wx.EXPAND)
+        self.drawing = DrawingParameters(self.notebook)
+        self.playback = PlaybackParameters(self.notebook)
+        self.notebook.AddPage(self.drawing, "Drawing")
+        self.notebook.AddPage(self.playback, "Playback")
+        box.Add(self.notebook, 0, wx.ALL, 5)
 
-        box.Add(wx.StaticText(self, -1, "Drawing parameters"), 0, wx.CENTER|wx.TOP, 5)
-
-        box.Add(wx.StaticText(self, -1, "Lowpass cutoff"), 0, wx.LEFT|wx.TOP, 5)
-        cutoffBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_cutoff = wx.Slider( self, 102, 50, 1, 150, size=(150, -1), style=wx.SL_HORIZONTAL)
-        cutoffBox.Add(self.sl_cutoff, 0, wx.RIGHT, 10)
-        self.cutoffValue = wx.StaticText(self, -1, str(self.sl_cutoff.GetValue() * 100) + ' Hz')
-        cutoffBox.Add(self.cutoffValue, 0, wx.RIGHT, 10)
-        box.Add(cutoffBox, 0, wx.ALL, 5)
-
-        box.Add(wx.StaticText(self, -1, "Lowpass Q"), 0, wx.LEFT, 5)
-        qBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_q = wx.Slider( self, 103, 0, 0, 1000, size=(150, -1), style=wx.SL_HORIZONTAL)
-        qBox.Add(self.sl_q, 0, wx.RIGHT, 10)
-        self.qValue = wx.StaticText(self, -1, str(self.sl_q.GetValue() + 0.5))
-        qBox.Add(self.qValue, 0, wx.RIGHT, 10)
-        box.Add(qBox, 0, wx.ALL, 5)
-        
-        box.Add(wx.StaticText(self, -1, "Oscil period"), 0, wx.LEFT, 5)
-        periodBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_period = wx.Slider( self, -1, 40, 0, 100, size=(150, -1), style=wx.SL_HORIZONTAL)
-        periodBox.Add(self.sl_period, 0, wx.RIGHT, 10)
-        self.periodValue = wx.StaticText(self, -1, str(self.sl_period.GetValue() * 0.05))
-        self.sl_period.Disable()
-        periodBox.Add(self.periodValue, 0, wx.RIGHT, 10)
-        box.Add(periodBox, 0, wx.ALL, 5)
-
-        box.Add(wx.StaticText(self, -1, "Oscil scaling"), 0, wx.LEFT, 5)
-        scalingBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_scaling = wx.Slider( self, -1, 100, 0, 400, size=(150, -1), style=wx.SL_HORIZONTAL)
-        scalingBox.Add(self.sl_scaling, 0, wx.RIGHT, 10)
-        self.scalingValue = wx.StaticText(self, -1, str(self.sl_scaling.GetValue() * 0.01))
-        self.sl_scaling.Disable()
-        scalingBox.Add(self.scalingValue, 0, wx.RIGHT, 10)
-        box.Add(scalingBox, 0, wx.ALL, 5)
-        
-        box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
-        
-        box.Add(wx.StaticText(self, -1, "Playback parameters"), 0, wx.CENTER|wx.TOP, 5)
-        
-        box.Add(wx.StaticText(self, -1, "Timer speed"), 0, wx.LEFT|wx.TOP, 5)
-        speedBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_speed = wx.Slider( self, -1, 25, 5, 250, size=(150, -1), style=wx.SL_HORIZONTAL)
-        speedBox.Add(self.sl_speed, 0, wx.RIGHT, 10)
-        self.speedValue = wx.StaticText(self, -1, str(self.sl_speed.GetValue()) + ' ms')
-        speedBox.Add(self.speedValue, 0, wx.RIGHT, 10)
-        box.Add(speedBox, 0, wx.ALL, 5)
-
-
-        box.Add(wx.StaticText(self, -1, "Selected trajectory"), 0, wx.LEFT|wx.TOP, 5)
-        self.tog_traj = Selector(self, outFunction=self.handleSelected)
-        box.Add(self.tog_traj, 0, wx.ALL, 5)
-
-        box.Add(wx.StaticText(self, -1, "Timer multiplier"), 0, wx.LEFT, 5)
-        timemulBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_timemul = wx.Slider( self, -1, 1, 1, 50, size=(150, -1), style=wx.SL_HORIZONTAL)
-        timemulBox.Add(self.sl_timemul, 0, wx.RIGHT, 10)
-        self.timemulValue = wx.StaticText(self, -1, str(self.sl_timemul.GetValue()))
-        timemulBox.Add(self.timemulValue, 0, wx.RIGHT, 10)
-        box.Add(timemulBox, 0, wx.ALL, 5)
-
-        box.Add(wx.StaticText(self, -1, "Point step"), 0, wx.LEFT, 5)
-        stepBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_step = wx.Slider( self, -1, 1, 1, 50, size=(150, -1), style=wx.SL_HORIZONTAL)
-        stepBox.Add(self.sl_step, 0, wx.RIGHT, 10)
-        self.stepValue = wx.StaticText(self, -1, str(self.sl_step.GetValue()))
-        stepBox.Add(self.stepValue, 0, wx.RIGHT, 10)
-        box.Add(stepBox, 0, wx.ALL, 5)
-
-        box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
 
         self.b_openFx = wx.Button(self, -1, "Open FX window")
         box.Add(self.b_openFx, 0, wx.CENTER|wx.ALL, 10)
@@ -1055,13 +992,6 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.Bind(wx.EVT_CHOICE, self.handleType, self.trajType)
         self.Bind(wx.EVT_CHOICE, self.handleMax, self.trajMax)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleClosed, self.closedToggle)
-        self.Bind(wx.EVT_SLIDER, self.handlePeriod, self.sl_period)
-        self.Bind(wx.EVT_SLIDER, self.handleScaling, self.sl_scaling)
-        self.Bind(wx.EVT_SLIDER, self.handleTimer, self.sl_speed)
-        self.Bind(wx.EVT_SLIDER, self.handleTimerMul, self.sl_timemul)
-        self.Bind(wx.EVT_SLIDER, self.handleStep, self.sl_step)
-        self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)
-        self.Bind(wx.EVT_SLIDER, self.handleQ, self.sl_q)
         self.Bind(wx.EVT_BUTTON, self.handleOpenFx, self.b_openFx)
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)
         self.Bind(wx.EVT_BUTTON, self.handleLoad, self.b_loadSnd)
@@ -1075,22 +1005,22 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.SetBestSize()
         self.SetupScrolling(scroll_x = False)
 
-    def handleType(self, event):
-        self.type = event.GetInt()
-        self.surface.setMode(self.type)
-        self.checkEnableWidgets()
-
     def checkEnableWidgets(self):
         if self.type == 0:
             self.closedToggle.Enable()
         else:
             self.closedToggle.Disable()
         if self.type == 2:
-            self.sl_period.Enable()
-            self.sl_scaling.Enable()
+            self.drawing.sl_period.Enable()
+            self.drawing.sl_scaling.Enable()
         else:
-            self.sl_period.Disable()
-            self.sl_scaling.Disable()
+            self.drawing.sl_period.Disable()
+            self.drawing.sl_scaling.Disable()
+
+    def handleType(self, event):
+        self.type = event.GetInt()
+        self.surface.setMode(self.type)
+        self.checkEnableWidgets()
 
     def getType(self):
         return self.type
@@ -1128,66 +1058,66 @@ class ControlPanel(scrolled.ScrolledPanel):
     def handleCutoff(self, event):
         for traj in self.surface.getAllTrajectories():
             traj.setFilterFreq(event.GetInt() * 100)
-            self.cutoffValue.SetLabel(str(event.GetInt() * 100) + ' Hz')
+            self.drawing.cutoffValue.SetLabel(str(event.GetInt() * 100) + ' Hz')
 
     def getCutoff(self):
-        return self.sl_cutoff.GetValue() * 100
+        return self.drawing.sl_cutoff.GetValue() * 100
 
     def setCutoff(self, cutoff):
-        self.sl_cutoff.SetValue(int(cutoff * 0.01))
+        self.drawing.sl_cutoff.SetValue(int(cutoff * 0.01))
         for traj in self.surface.getAllTrajectories():
             traj.setFilterFreq(cutoff)
-            self.cutoffValue.SetLabel(str(cutoff) + ' Hz')
+            self.drawing.cutoffValue.SetLabel(str(cutoff) + ' Hz')
 
     def handleQ(self, event):
         for traj in self.surface.getAllTrajectories():
             traj.setFilterQ(event.GetInt() + 0.5)
-            self.qValue.SetLabel(str(event.GetInt() + 0.5))
+            self.drawing.qValue.SetLabel(str(event.GetInt() + 0.5))
 
     def getQ(self):
-        return self.sl_q.GetValue() + 0.5
+        return self.drawing.sl_q.GetValue() + 0.5
 
     def setQ(self, q):
-        self.sl_q.SetValue(int(q - 0.5))  
+        self.drawing.sl_q.SetValue(int(q - 0.5))  
         for traj in self.surface.getAllTrajectories():
             traj.setFilterQ(q)
-            self.qValue.SetLabel(str(q))
+            self.drawing.qValue.SetLabel(str(q))
       
     def handlePeriod(self, event):
         self.surface.setOscilPeriod(event.GetInt() * 0.05)
-        self.periodValue.SetLabel(str(event.GetInt() * 0.05))
+        self.drawing.periodValue.SetLabel(str(event.GetInt() * 0.05))
 
     def getPeriod(self):
         return self.surface.getOscilPeriod()
 
     def setPeriod(self, period):
-        self.sl_period.SetValue(int(period * 20))
-        self.periodValue.SetLabel(str(period))
+        self.drawing.sl_period.SetValue(int(period * 20))
+        self.drawing.periodValue.SetLabel(str(period))
         self.surface.setOscilPeriod(period)
 
     def handleScaling(self, event):
         self.surface.setOscilScaling(event.GetInt() * 0.01)
-        self.scalingValue.SetLabel(str(event.GetInt() * 0.01))
+        self.drawing.scalingValue.SetLabel(str(event.GetInt() * 0.01))
 
     def getScaling(self):
         return self.surface.getOscilScaling()
 
     def setScaling(self, scaling):
-        self.sl_scaling.SetValue(int(scaling * 100))
-        self.scalingValue.SetLabel(str(scaling))
+        self.drawing.sl_scaling.SetValue(int(scaling * 100))
+        self.drawing.scalingValue.SetLabel(str(scaling))
         self.surface.setOscilScaling(scaling)
 
     def handleTimer(self, event):
         self.surface.setTimerSpeed(event.GetInt())
-        self.speedValue.SetLabel(str(event.GetInt()) + ' ms')
+        self.playback.speedValue.SetLabel(str(event.GetInt()) + ' ms')
 
     def getTimer(self):
         return self.surface.getTimerSpeed()
 
     def setTimer(self, time):
-        self.sl_speed.SetValue(time)
+        self.playback.sl_speed.SetValue(time)
         self.surface.setTimerSpeed(time)
-        self.speedValue.SetLabel(str(time) + ' ms')
+        self.playback.speedValue.SetLabel(str(time) + ' ms')
 
     def handleSelected(self, selected):
         self.selected = selected
@@ -1206,19 +1136,19 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def handleTimerMul(self, event):
         self.surface.getTrajectory(self.selected).setTimeMul(event.GetInt())
-        self.timemulValue.SetLabel(str(event.GetInt()))
+        self.playback.timemulValue.SetLabel(str(event.GetInt()))
   
     def setTimerMul(self, timeMul):
-        self.sl_timemul.SetValue(timeMul)
-        self.timemulValue.SetLabel(str(timeMul))
+        self.playback.sl_timemul.SetValue(timeMul)
+        self.playback.timemulValue.SetLabel(str(timeMul))
       
     def handleStep(self, event):
         self.surface.getTrajectory(self.selected).setStep(event.GetInt())
-        self.stepValue.SetLabel(str(event.GetInt()))
+        self.playback.stepValue.SetLabel(str(event.GetInt()))
 
     def setStep(self, step):
-        self.sl_step.SetValue(step)
-        self.stepValue.SetLabel(str(step))
+        self.playback.sl_step.SetValue(step)
+        self.playback.stepValue.SetLabel(str(step))
 
     def handleOpenFx(self, event):
         self.parent.openFxWindow()
@@ -1333,7 +1263,103 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def logSndInfo(self):
         self.parent.log(self.sndInfoStr)
-                   
+
+class DrawingParameters(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
+
+        self.parent = parent
+        box = wx.BoxSizer(wx.VERTICAL)
+
+        box.Add(wx.StaticText(self, -1, "Lowpass cutoff"), 0, wx.LEFT|wx.TOP, 5)
+        cutoffBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_cutoff = wx.Slider( self, 102, 50, 1, 150, size=(150, -1), style=wx.SL_HORIZONTAL)
+        cutoffBox.Add(self.sl_cutoff, 0, wx.RIGHT, 10)
+        self.cutoffValue = wx.StaticText(self, -1, str(self.sl_cutoff.GetValue() * 100) + ' Hz')
+        cutoffBox.Add(self.cutoffValue, 0, wx.RIGHT, 10)
+        box.Add(cutoffBox, 0, wx.ALL, 5)
+
+        box.Add(wx.StaticText(self, -1, "Lowpass Q"), 0, wx.LEFT, 5)
+        qBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_q = wx.Slider( self, 103, 0, 0, 1000, size=(150, -1), style=wx.SL_HORIZONTAL)
+        qBox.Add(self.sl_q, 0, wx.RIGHT, 10)
+        self.qValue = wx.StaticText(self, -1, str(self.sl_q.GetValue() + 0.5))
+        qBox.Add(self.qValue, 0, wx.RIGHT, 10)
+        box.Add(qBox, 0, wx.ALL, 5)
+        
+        box.Add(wx.StaticText(self, -1, "Oscil period"), 0, wx.LEFT, 5)
+        periodBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_period = wx.Slider( self, -1, 40, 0, 100, size=(150, -1), style=wx.SL_HORIZONTAL)
+        periodBox.Add(self.sl_period, 0, wx.RIGHT, 10)
+        self.periodValue = wx.StaticText(self, -1, str(self.sl_period.GetValue() * 0.05))
+        self.sl_period.Disable()
+        periodBox.Add(self.periodValue, 0, wx.RIGHT, 10)
+        box.Add(periodBox, 0, wx.ALL, 5)
+
+        box.Add(wx.StaticText(self, -1, "Oscil scaling"), 0, wx.LEFT, 5)
+        scalingBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_scaling = wx.Slider( self, -1, 100, 0, 400, size=(150, -1), style=wx.SL_HORIZONTAL)
+        scalingBox.Add(self.sl_scaling, 0, wx.RIGHT, 10)
+        self.scalingValue = wx.StaticText(self, -1, str(self.sl_scaling.GetValue() * 0.01))
+        self.sl_scaling.Disable()
+        scalingBox.Add(self.scalingValue, 0, wx.RIGHT, 10)
+        box.Add(scalingBox, 0, wx.ALL, 5)                   
+
+        self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handleCutoff, self.sl_cutoff)
+        self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handleQ, self.sl_q)
+        self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handlePeriod, self.sl_period)
+        self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handleScaling, self.sl_scaling)
+
+        self.SetAutoLayout(True)
+
+        self.SetSizer(box)
+
+class PlaybackParameters(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
+
+        self.parent = parent
+        box = wx.BoxSizer(wx.VERTICAL)
+
+        box.Add(wx.StaticText(self, -1, "Timer speed"), 0, wx.LEFT|wx.TOP, 5)
+        speedBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_speed = wx.Slider( self, -1, 25, 5, 250, size=(150, -1), style=wx.SL_HORIZONTAL)
+        speedBox.Add(self.sl_speed, 0, wx.RIGHT, 10)
+        self.speedValue = wx.StaticText(self, -1, str(self.sl_speed.GetValue()) + ' ms')
+        speedBox.Add(self.speedValue, 0, wx.RIGHT, 10)
+        box.Add(speedBox, 0, wx.ALL, 5)
+
+        box.Add(wx.StaticText(self, -1, "Selected trajectory"), 0, wx.LEFT|wx.TOP, 5)
+        self.tog_traj = Selector(self, outFunction=self.parent.GetParent().handleSelected)
+        box.Add(self.tog_traj, 0, wx.ALL, 5)
+
+        box.Add(wx.StaticText(self, -1, "Timer multiplier"), 0, wx.LEFT, 5)
+        timemulBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_timemul = wx.Slider( self, -1, 1, 1, 50, size=(150, -1), style=wx.SL_HORIZONTAL)
+        timemulBox.Add(self.sl_timemul, 0, wx.RIGHT, 10)
+        self.timemulValue = wx.StaticText(self, -1, str(self.sl_timemul.GetValue()))
+        timemulBox.Add(self.timemulValue, 0, wx.RIGHT, 10)
+        box.Add(timemulBox, 0, wx.ALL, 5)
+
+        box.Add(wx.StaticText(self, -1, "Point step"), 0, wx.LEFT, 5)
+        stepBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_step = wx.Slider( self, -1, 1, 1, 50, size=(150, -1), style=wx.SL_HORIZONTAL)
+        stepBox.Add(self.sl_step, 0, wx.RIGHT, 10)
+        self.stepValue = wx.StaticText(self, -1, str(self.sl_step.GetValue()))
+        stepBox.Add(self.stepValue, 0, wx.RIGHT, 10)
+        box.Add(stepBox, 0, wx.ALL, 5)
+
+        self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handleTimer, self.sl_speed)
+        self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handleTimerMul, self.sl_timemul)
+        self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handleStep, self.sl_step)
+
+        self.SetAutoLayout(True)
+
+        self.SetSizer(box)
+
+    def getMax(self):
+        return self.parent.GetParent().getMax()
+
 class MainFrame(wx.Frame):
     def __init__(self, parent, id, pos, size, file):
         wx.Frame.__init__(self, parent, id, "", pos, size)
@@ -1787,7 +1813,7 @@ if __name__ == '__main__':
     X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
     if X < 900: sizex = X - 40
     else: sizex = 900
-    if Y < 740: sizey = Y - 40
-    else: sizey = 740
+    if Y < 560: sizey = Y - 40
+    else: sizey = 560
     f = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), file=file)
     app.MainLoop()
