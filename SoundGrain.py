@@ -288,7 +288,9 @@ class Trajectory:
 
     def move(self, offset):
         self.points = [(p[0]-offset[0], p[1]-offset[1]) for p in self.initPoints]
-        
+        if self.getFreeze():
+            self.circlePos = self.points[(self.counter-self.step) % len(self.points)]
+
     def getInsideRect(self, point):
         return wx.Rect(self.getFirstPoint()[0], self.getFirstPoint()[1], 10, 10).Contains(point)
         
@@ -499,41 +501,30 @@ class DrawingSurface(wx.Panel):
                 return
 
     def KeyDown(self, evt):
-        if evt.GetKeyCode() == wx.WXK_UP:
+        off = {wx.WXK_UP: [0,1], wx.WXK_DOWN: [0,-1], wx.WXK_LEFT: [1,0], wx.WXK_RIGHT: [-1,0]}.get(evt.GetKeyCode(), [0,0])
+        if evt.ShiftDown() and off != [0,0]:
+            traj = self.trajectoriesBank[self.parent.controls.getSelected()-1]
+            if traj.getType() in ['circle', 'oscil']:
+                center = traj.getCenter()
+                traj.setCenter((center[0]-off[0], center[1]-off[1]))
+            traj.move(off)
+            traj.setInitPoints()
+        elif off != [0,0]:
             for traj in self.getActiveTrajectories():
                 if traj.getType() in ['circle', 'oscil']:
                     center = traj.getCenter()
-                    traj.setCenter((center[0], center[1]-1))
-                traj.move([0,1])
+                    traj.setCenter((center[0]-off[0], center[1]-off[1]))
+                traj.move(off)
                 traj.setInitPoints()
-        elif evt.GetKeyCode() == wx.WXK_DOWN:
-            for traj in self.getActiveTrajectories():
-                if traj.getType() in ['circle', 'oscil']:
-                    center = traj.getCenter()
-                    traj.setCenter((center[0], center[1]+1))
-                traj.move([0,-1])
-                traj.setInitPoints()
-        elif evt.GetKeyCode() == wx.WXK_LEFT:
-            for traj in self.getActiveTrajectories():
-                if traj.getType() in ['circle', 'oscil']:
-                    center = traj.getCenter()
-                    traj.setCenter((center[0]-1, center[1]))
-                traj.move([1,0])
-                traj.setInitPoints()
-        elif evt.GetKeyCode() == wx.WXK_RIGHT:
-            for traj in self.getActiveTrajectories():
-                if traj.getType() in ['circle', 'oscil']:
-                    center = traj.getCenter()
-                    traj.setCenter((center[0]+1, center[1]))
-                traj.move([-1,0])
-                traj.setInitPoints()
-        elif evt.GetKeyCode() < 256:
+
+        if evt.GetKeyCode() < 256:
             c = chr(evt.GetKeyCode())
             if c in ['1', '2', '3', '4', '5', '6', '7', '8']:
                 if self.trajectoriesBank[int(c)-1].getFreeze():
                     self.trajectoriesBank[int(c)-1].setFreeze(False)
                 else:
                     self.trajectoriesBank[int(c)-1].setFreeze(True)
+        evt.Skip()
         self.Refresh()
      
     def MouseDown(self, evt):
@@ -1138,6 +1129,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         step = self.surface.getTrajectory(selected).getStep()
         self.setTimerMul(timeMul)
         self.setStep(step)
+
+    def getSelected(self):
+        return self.selected
 
     def handleTimerMul(self, event):
         self.surface.getTrajectory(self.selected).setTimeMul(event.GetInt())
