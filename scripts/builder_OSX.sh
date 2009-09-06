@@ -1,6 +1,6 @@
 rm -rf build dist
 py2applet --make-setup SoundGrain.py Resources/*
-python setup.py py2app
+python2.5 setup.py py2app
 rm -f setup.py
 rm -rf build
 #cp scripts/README.txt dist/

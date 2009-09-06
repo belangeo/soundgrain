@@ -96,6 +96,7 @@ class Module(wx.Frame):
 
     def handleTrans(self, event):
         key = event.GetKeyCode()
+        self.trans = [float(value) for value in self.tx_trans.GetValue().split(',') if value not in [" ", ""]]
         if key == wx.WXK_TAB or key == wx.WXK_RETURN:
             self.trans = [float(value) for value in self.tx_trans.GetValue().split(',') if value not in [" ", ""]]
             self.surface.SetFocus()
@@ -514,7 +515,7 @@ class GranulatorFrame(Module):
         self.SetMaxSize(self.GetSize())
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
 
-        self.widgets = [self.sl_overlaps, self.tx_trans]
+        self.widgets = [self.sl_overlaps]
         self.controls = {'/amplitude': self.getAmp, '/grainsize': self.getGrainSize}
 
         self.Show(False)
