@@ -96,7 +96,6 @@ class Module(wx.Frame):
 
     def handleTrans(self, event):
         key = event.GetKeyCode()
-        self.trans = [float(value) for value in self.tx_trans.GetValue().split(',') if value not in [" ", ""]]
         if key == wx.WXK_TAB or key == wx.WXK_RETURN:
             self.trans = [float(value) for value in self.tx_trans.GetValue().split(',') if value not in [" ", ""]]
             self.surface.SetFocus()

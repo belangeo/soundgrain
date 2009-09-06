@@ -46,7 +46,7 @@ class Listener(threading.Thread):
         del self.inSocket
 
 class VuMeter(wx.Panel):
-    def __init__(self, parent, size=(200,11)):
+    def __init__(self, parent, RESOURCES_PATH, size=(200,11)):
         wx.Panel.__init__(self, parent, -1, size=size)
         self.parent = parent
         self.SetMinSize((200,6))
@@ -56,8 +56,8 @@ class VuMeter(wx.Panel):
         self.numSliders = 2
         self.timeSpeed = 60
         self.SetSize((200, 5*self.numSliders+1))
-        self.bitmap = wx.Bitmap(os.path.join('Resources', 'vu-metre.png'))
-        self.backBitmap = wx.Bitmap(os.path.join('Resources', 'vu-metre-dark.png'))
+        self.bitmap = wx.Bitmap(os.path.join(RESOURCES_PATH, 'vu-metre.png'))
+        self.backBitmap = wx.Bitmap(os.path.join(RESOURCES_PATH, 'vu-metre-dark.png'))
         self.amplitude = [0] * self.numSliders
         self.listener = Listener()
         self.listener.start()

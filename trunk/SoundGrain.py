@@ -28,7 +28,7 @@ osc.init()
 systemPlatform = sys.platform
 
 NAME = 'Sound Grain'
-VERSION = '1.0'
+VERSION = '2.0'
 
 if '/SoundGrain.app' in os.getcwd():
     RESOURCES_PATH = os.getcwd()
@@ -965,7 +965,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         ampBox.Add(self.ampValue, 0, wx.RIGHT, 10)
         box.Add(ampBox, 0, wx.ALL, 5)
 
-        self.meter = VuMeter(self, size=(200,11))
+        self.meter = VuMeter(self, RESOURCES_PATH, size=(200,11))
         box.Add(self.meter, 0, wx.ALL, 5)
 
         soundBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -1129,7 +1129,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.setStep(step)
 
     def setSelected(self, selected):
-        self.tog_traj.setSelected(selected)
+        self.playback.tog_traj.setSelected(selected)
         self.selected = 1
         timeMul = self.surface.getTrajectory(selected).getTimeMul()
         step = self.surface.getTrajectory(selected).getStep()
@@ -1545,11 +1545,11 @@ class MainFrame(wx.Frame):
         for t in self.panel.getAllTrajectories():
             t.activateLp(self.lowpass)
         if self.lowpass:
-            self.controls.sl_cutoff.Enable()
-            self.controls.sl_q.Enable()
+            self.controls.drawing.sl_cutoff.Enable()
+            self.controls.drawing.sl_q.Enable()
         else:
-            self.controls.sl_cutoff.Disable()
-            self.controls.sl_q.Disable()
+            self.controls.drawing.sl_cutoff.Disable()
+            self.controls.drawing.sl_q.Disable()
 
     def handleActivateFill(self, evt):
         self.fillPoints = self.menu1.IsChecked(102)
@@ -1808,7 +1808,7 @@ class MainFrame(wx.Frame):
 
         info.SetIcon(wx.Icon(os.path.join(RESOURCES_PATH, 'SoundGrain.png'), wx.BITMAP_TYPE_PNG))
         info.SetName('Sound Grain')
-        info.SetVersion('1.0')
+        info.SetVersion('%s' % VERSION)
         info.SetDescription(description)
         info.SetCopyright('(C) 2009 Olivier Belanger')
         info.SetWebSite('http://code.google.com/p/soundgrain')
@@ -1832,7 +1832,7 @@ if __name__ == '__main__':
     if X < 900: sizex = X - 40
     else: sizex = 900
     if systemPlatform == 'linux2': defaultY = 550
-    else: defaultY = 520
+    else: defaultY = 530
     if Y < defaultY: sizey = Y - 40
     else: sizey = defaultY
     f = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), file=file)
