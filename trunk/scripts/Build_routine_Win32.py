@@ -1,0 +1,17 @@
+import os
+
+os.system("python ..\pyinstaller-1.3\Configure.py")
+os.system('python ..\pyinstaller-1.3\Makespec.py -F -c --icon=Resources\SoundGrain.ico "SoundGrain.py"')
+os.system('python ..\pyinstaller-1.3\Build.py "SoundGrain.spec"')
+os.system("svn export . SoundGrain_Win")
+os.system("copy SoundGrain.exe SoundGrain_Win /Y")
+os.system("copy scripts\README.txt SoundGrain_Win /Y")
+os.remove("SoundGrain.exe")
+os.system("rmdir /Q /S SoundGrain_Win\scripts")
+os.remove("SoundGrain_Win/Ounk.py")
+os.remove("SoundGrain_Win/Resources/SoundGrain.icns")
+os.remove("SoundGrain.spec")
+os.remove("warnSoundGrain.txt")
+os.system("rmdir /Q /S buildSoundGrain")
+os.system("PAComp -r -p SoundGrain.zip SoundGrain\*")
+os.system("rmdir /Q /S SoundGrain")
