@@ -242,3 +242,14 @@ def splitSnd(file):
     cspipe2.wait()
     os.remove('splitter.csd')
     
+def recordInput(audioDriver):
+    if audioDriver != None:
+        setAudioDevice(onumber = audioDriver)
+        
+    setGlobalDuration(-1)
+    setChannels(1)
+
+    inputMic()
+    recordPerf(os.path.join(os.path.expanduser('~'), '.ounk', 'sndtemp'), nameinc=False)
+
+    startCsound(nosound=True)

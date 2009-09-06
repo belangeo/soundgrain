@@ -969,12 +969,14 @@ class ControlPanel(scrolled.ScrolledPanel):
         box.Add(self.meter, 0, wx.ALL, 5)
 
         soundBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.b_loadSnd = wx.Button(self, -1, "Load sound")
-        soundBox.Add(self.b_loadSnd, 0, wx.ALL, 11)
+        self.tog_inrec = wx.ToggleButton(self, -1, "Rec Source", size=(80,-1))
+        if systemPlatform in ['win32', 'linux2']:
+            self.tog_inrec.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
+        soundBox.Add(self.tog_inrec, 0, wx.ALL, 10)
         self.tog_audio = wx.ToggleButton(self, -1, "Start Audio", size=(80,-1))
         if systemPlatform in ['win32', 'linux2']:
             self.tog_audio.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
-        soundBox.Add(self.tog_audio, 0, wx.TOP | wx.LEFT, 12)
+        soundBox.Add(self.tog_audio, 0, wx.ALL, 10)
         box.Add(soundBox, 0, wx.ALL, 5)
 
         box.Add(wx.StaticText(self, -1, "Record to disk"), 0, wx.CENTER, 5)
@@ -994,7 +996,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.Bind(wx.EVT_CHOICE, self.handleMax, self.trajMax)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleClosed, self.closedToggle)
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)
-        self.Bind(wx.EVT_BUTTON, self.handleLoad, self.b_loadSnd)
+        self.Bind(wx.EVT_TOGGLEBUTTON, self.handleInputRec, self.tog_inrec)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleAudio, self.tog_audio)
         self.tx_output.Bind(wx.EVT_CHAR, self.handleOutput)        
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleRecord, self.tog_record)
@@ -1166,7 +1168,7 @@ class ControlPanel(scrolled.ScrolledPanel):
     def sendAmp(self):
         sendControl('/globalAmp', self.amplitude)
             
-    def handleLoad(self, event):
+    def handleLoad(self):
         dlg = wx.FileDialog(self, message="Choose a sound file",
                             defaultDir=os.path.expanduser('~'), 
                             defaultFile="",
@@ -1178,7 +1180,7 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.loadSound(sndPath)
         dlg.Destroy()
 
-    def loadSound(self, sndPath):
+    def loadSound(self, sndPath, force=False):
         self.sndPath = sndPath
         if self.sndPath:
             if os.path.isfile(self.sndPath):
@@ -1188,7 +1190,7 @@ class ControlPanel(scrolled.ScrolledPanel):
                 self.meter.setNumSliders(self.chnls)
                 self.sndInfoStr = 'Loaded sound: %s,    Sr: %s Hz,    Channels: %s,    Duration: %s sec' % (self.sndPath, samprate, chnls, dur)
                 if self.parent.draw:
-                    if not self.sndPath in self.surface.bitmapDict.keys():
+                    if not self.sndPath in self.surface.bitmapDict.keys() or force:
                         self.parent.log("Drawing waveform...")
                         self.surface.analyse(self.sndPath, self.chnls)
                     else:
@@ -1200,6 +1202,13 @@ class ControlPanel(scrolled.ScrolledPanel):
         if self.surface.sndBitmap and self.parent.draw:
             self.surface.create_bitmap()
 
+    def handleInputRec(self, event):
+        if event.GetInt() == 1:
+            recordInput(self.parent.audioDriver)
+        else:
+            stopAudio()
+            wx.CallLater(250, self.loadSound, os.path.join(os.path.expanduser('~'), '.ounk', 'sndtemp.aif'), True)
+
     def handleAudio(self, event):
         if event.GetInt() == 1:
             if not self.sndPath:
@@ -1207,7 +1216,7 @@ class ControlPanel(scrolled.ScrolledPanel):
                 self.tog_audio.SetValue(0)
             else:    
                 self.tog_audio.SetLabel('Stop audio')
-                self.b_loadSnd.Disable()
+                self.tog_inrec.Disable()
                 self.trajMax.Disable()
                 self.tx_output.Disable()
                 self.tog_record.Enable()
@@ -1226,7 +1235,7 @@ class ControlPanel(scrolled.ScrolledPanel):
                     wx.CallLater(self.sndDur * 1000, self.logSndInfo)
         else:    
             self.tog_audio.SetLabel('Start audio')
-            self.b_loadSnd.Enable()
+            self.tog_inrec.Enable()
             self.trajMax.Enable()
             self.tx_output.Enable()
             self.tog_record.SetValue(0)
@@ -1382,18 +1391,20 @@ class MainFrame(wx.Frame):
         self.menu = wx.Menu()
         self.menu.Append(1, "Open...\tCtrl+O")
         self.Bind(wx.EVT_MENU, self.handleOpen, id=1)
-        self.menu.Append(2, "Save\tCtrl+S")
-        self.Bind(wx.EVT_MENU, self.handleSave, id=2)
-        self.menu.Append(3, "Save as...\tShift+Ctrl+S")
-        self.Bind(wx.EVT_MENU, self.handleSaveAs, id=3)
+        self.menu.Append(2, "Open Soundfile...\tShift+Ctrl+O")
+        self.Bind(wx.EVT_MENU, self.handleLoad, id=2)
+        self.menu.Append(3, "Save\tCtrl+S")
+        self.Bind(wx.EVT_MENU, self.handleSave, id=3)
+        self.menu.Append(4, "Save as...\tShift+Ctrl+S")
+        self.Bind(wx.EVT_MENU, self.handleSaveAs, id=4)
         self.menu.AppendSeparator()
-        self.menu.Append(4, "OSC Settings\tCtrl+;")
-        self.Bind(wx.EVT_MENU, self.showOSCSettings, id=4)
-        self.menu.Append(5, "Open FX Window\tCtrl+P")
-        self.Bind(wx.EVT_MENU, self.openFxWindow, id=5)
+        self.menu.Append(5, "OSC Settings\tCtrl+;")
+        self.Bind(wx.EVT_MENU, self.showOSCSettings, id=5)
+        self.menu.Append(6, "Open FX Window\tCtrl+P")
+        self.Bind(wx.EVT_MENU, self.openFxWindow, id=6)
         self.menu.AppendSeparator()
-        self.menu.Append(6, "Quit\tCtrl+Q")  
-        self.Bind(wx.EVT_MENU, self.OnClose, id=6)
+        self.menu.Append(7, "Quit\tCtrl+Q")  
+        self.Bind(wx.EVT_MENU, self.OnClose, id=7)
         menuBar.Append(self.menu, "&File")
 
         self.menu1 = wx.Menu()
@@ -1608,6 +1619,9 @@ class MainFrame(wx.Frame):
             path = dlg.GetPath()
             self.loadFile(path)
         dlg.Destroy()
+
+    def handleLoad(self, evt):
+        self.controls.handleLoad()
 
     def handleSave(self, evt):
         if self.currentFile:
