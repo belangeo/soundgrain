@@ -524,7 +524,6 @@ class DrawingSurface(wx.Panel):
                     self.trajectoriesBank[int(c)-1].setFreeze(False)
                 else:
                     self.trajectoriesBank[int(c)-1].setFreeze(True)
-        evt.Skip()
         self.Refresh()
      
     def MouseDown(self, evt):
