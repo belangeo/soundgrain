@@ -946,7 +946,10 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.closedToggle = wx.ToggleButton(self, -1, 'Closed', size=(55,-1))
         if systemPlatform in ['win32', 'linux2']:
             self.closedToggle.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
-        typeBox.Add(self.closedToggle, 0, wx.TOP, 21 )
+        if systemPlatform == 'win32':
+            typeBox.Add(self.closedToggle, 0, wx.TOP, 15 )
+        else:    
+            typeBox.Add(self.closedToggle, 0, wx.TOP, 21 )
 
         box.Add(typeBox, 0, wx.ALL, 5)
 
@@ -1831,7 +1834,7 @@ if __name__ == '__main__':
     X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
     if X < 900: sizex = X - 40
     else: sizex = 900
-    if systemPlatform == 'linux2': defaultY = 550
+    if systemPlatform in ['win32', 'linux2']: defaultY = 550
     else: defaultY = 530
     if Y < defaultY: sizey = Y - 40
     else: sizey = defaultY

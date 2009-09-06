@@ -243,6 +243,8 @@ def splitSnd(file):
     os.remove('splitter.csd')
     
 def recordInput(audioDriver):
+    setAudioAttributes(samplingrate=44100, controlrate=4410, softbuffer=500, hardbuffer=2000)
+    
     if audioDriver != None:
         setAudioDevice(onumber = audioDriver)
         
