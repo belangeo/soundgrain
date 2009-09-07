@@ -176,18 +176,26 @@ def splitSnd(file):
 
     # retreive sound infos
     if systemPlatform == 'win32':
-        cspipe1 = Popen('start /REALTIME /WAIT /B csound --logfile=log.txt -U sndinfo "' + file + '"', shell=True, stdin=PIPE)
+        cspipe1 = Popen('start /REALTIME /WAIT csound --logfile=log.txt -U sndinfo "' + file + '"', shell=True, stdin=PIPE)
     else:
         cspipe1 = Popen('/usr/local/bin/csound --logfile=log.txt -U sndinfo "' + file + '"', shell=True, stdin=PIPE)
     cspipe1.wait()
     f = open('log.txt', 'r')
-    text = f.read()
+    if systemPlatform == 'win32':
+        lines = [line for i, line in enumerate(f.readlines()) if i%2 == 0]
+        text = ''
+        for line in lines:
+            text += line
+            text += '\n'
+    else:        
+        text = f.read()
     f.close()
     if systemPlatform != 'win32':
         os.remove('log.txt')
     sp = text.split('srate')[-1]
     sp = sp.replace(',', '').replace('(', '').replace(')', '').replace('\n', ' ').replace('\t', '').strip()
-    sp = sp.split(' ')           
+    sp = sp.split(' ')
+
     samprate = eval(sp[0])
     chnls = cschnls[sp[1]]
     dur = eval(sp[sp.index('seconds')-1])
@@ -236,7 +244,7 @@ def splitSnd(file):
     splitter.close()
 
     if systemPlatform == 'win32':
-        cspipe2 = Popen('start /REALTIME /WAIT /B csound splitter.csd', shell=True)
+        cspipe2 = Popen('start /REALTIME /WAIT csound splitter.csd', shell=True)
     else:    
         cspipe2 = Popen('/usr/local/bin/csound splitter.csd', shell=True, stdin=PIPE)
     cspipe2.wait()
