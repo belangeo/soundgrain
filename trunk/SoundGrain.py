@@ -851,7 +851,7 @@ class DrawingSurface(wx.Panel):
             else:    
                 cspipe3 = Popen('/usr/local/bin/csound -U envext -o "%s/anal%s" -w .001 "%s"' % (os.path.expanduser('~'),i,monofile), shell=True, stdin=PIPE)
             cspipe3.wait()  
-            os.remove(os.path.join(os.path.expanduser('~'), monofile))      
+            #os.remove(os.path.join(os.path.expanduser('~'), monofile))      
         self.make_list()        
 
     def make_list(self):
