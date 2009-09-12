@@ -25,19 +25,8 @@ import  wx.lib.scrolledpanel as scrolled
 import Resources.osc as osc
 
 osc.init()
-systemPlatform = sys.platform
 
-NAME = 'Sound Grain'
-VERSION = '2.0'
-
-if '/SoundGrain.app' in os.getcwd():
-    RESOURCES_PATH = os.getcwd()
-    currentw = os.getcwd()
-    spindex = currentw.index('/SoundGrain.app')
-    os.chdir(currentw[:spindex])
-else:
-    RESOURCES_PATH = os.path.join(os.getcwd(), 'Resources')
-
+from Resources.constants import *
 from Resources.Preferences import Preferences
 from Resources.Selector import Selector
 from Resources.audio import *
@@ -361,7 +350,7 @@ class DrawingSurface(wx.Panel):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY, pos=pos, size=size, style = wx.EXPAND)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.parent = parent
-        if systemPlatform in ['win32', 'linux2']:
+        if PLATFORM in ['win32', 'linux2']:
             self.font = wx.Font(7, wx.NORMAL, wx.NORMAL, wx.NORMAL)
         else:
             self.font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)
@@ -375,9 +364,6 @@ class DrawingSurface(wx.Panel):
         self.step = 1
         self.oscilPeriod = 2
         self.oscilScaling = 1
-        self.ymin = 0
-        self.ymax = 1
-        self.ymethod = 0
         self.mode = trajTypes[0]
         self.SetColors(outline=(255,255,255), bg=(20,20,20), fill=(255,0,0), rect=(0,255,0), losa=(0,0,255), wave=(70,70,70))
         self.currentSize = self.GetSizeTuple()
@@ -433,15 +419,6 @@ class DrawingSurface(wx.Panel):
             traj.clock()
         self.Refresh()
 
-    def setYMin(self, ymin):
-        self.ymin = ymin
-        
-    def setYMax(self, ymax):
-        self.ymax = ymax
-        
-    def setYMethod(self, met):
-        self.ymethod = met
-                
     def setOscilPeriod(self, period):
         self.oscilPeriod = period
 
@@ -472,7 +449,7 @@ class DrawingSurface(wx.Panel):
         for t in self.trajectories:
             if t.getPointPos() != None:
                 x = t.getPointPos()[0]/w
-                y = mapper(1-(t.getPointPos()[1]/h), 0, 1, self.ymin, self.ymax, self.ymethod)
+                y = 1 - t.getPointPos()[1]/h
                 vals.append([x,y])
             else:
                 vals.append([])
@@ -845,25 +822,24 @@ class DrawingSurface(wx.Panel):
         self.chnls = chnls
         splitSnd(file)
         for i in range(chnls):
-            monofile = os.path.join(os.path.expanduser('~'), os.path.split(file)[1].rsplit('.',1)[0] + '-' + str(i) + '.aif')
-            if systemPlatform == 'win32':
-                cspipe3 = Popen('start /REALTIME /WAIT csound -U envext -o "%s/anal%s" -w .001 "%s"' % (os.path.expanduser('~'),i,monofile), shell=True, stdin=PIPE)
+            monofile = os.path.join(TEMP_PATH, os.path.split(file)[1].rsplit('.',1)[0] + '-' + str(i) + '.aif')
+            if PLATFORM == 'win32':
+                cspipe3 = Popen('start /REALTIME /WAIT csound -U envext -o "%s/anal%s" -w .001 "%s"' % (TEMP_PATH,i,monofile), shell=True, stdin=PIPE)
+            elif PLATFORM == 'linux2':    
+                cspipe3 = Popen('csound -U envext -o "%s/anal%s" -w .001 "%s"' % (TEMP_PATH,i,monofile), shell=True, stdin=PIPE)
             else:    
-                cspipe3 = Popen('/usr/local/bin/csound -U envext -o "%s/anal%s" -w .001 "%s"' % (os.path.expanduser('~'),i,monofile), shell=True, stdin=PIPE)
-            cspipe3.wait()  
-            #os.remove(os.path.join(os.path.expanduser('~'), monofile))      
+                cspipe3 = Popen('/usr/local/bin/csound -U envext -o "%s/anal%s" -w .001 "%s"' % (TEMP_PATH,i,monofile), shell=True, stdin=PIPE)
+            cspipe3.wait()
         self.make_list()        
 
     def make_list(self):
         list = []
         for i in range(self.chnls):
-            file = "%s/anal%s" % (os.path.expanduser('~'),i)
+            file = "%s/anal%s" % (TEMP_PATH,i)
             f = open(file, "r")
             self.l = [li.strip('\n').split('\t') for li in f.readlines()]
             f.close()
-            os.remove(file)
             list.append([[eval(i[0]), eval(i[1])] for i in self.l])
-        #self.length = len(list[0])
         self.bitmapDict[self.file] = list
         self.list = list
         self.create_bitmap()
@@ -910,7 +886,6 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.type = 0
         self.numTraj = 3
         self.selected = 1
-        self.linLogSqrt = 0
         self.sndPath = None
         self.amplitude = 1
 
@@ -934,9 +909,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         typeBox.Add(popup2Box, 0, wx.RIGHT, 5)
         
         self.closedToggle = wx.ToggleButton(self, -1, 'Closed', size=(55,-1))
-        if systemPlatform in ['win32', 'linux2']:
+        if PLATFORM in ['win32', 'linux2']:
             self.closedToggle.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
-        if systemPlatform == 'win32':
+        if PLATFORM == 'win32':
             typeBox.Add(self.closedToggle, 0, wx.TOP, 15 )
         else:    
             typeBox.Add(self.closedToggle, 0, wx.TOP, 21 )
@@ -963,11 +938,11 @@ class ControlPanel(scrolled.ScrolledPanel):
 
         soundBox = wx.BoxSizer(wx.HORIZONTAL)
         self.tog_inrec = wx.ToggleButton(self, -1, "Rec Source", size=(80,-1))
-        if systemPlatform in ['win32', 'linux2']:
+        if PLATFORM in ['win32', 'linux2']:
             self.tog_inrec.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
         soundBox.Add(self.tog_inrec, 0, wx.ALL, 10)
         self.tog_audio = wx.ToggleButton(self, -1, "Start Audio", size=(80,-1))
-        if systemPlatform in ['win32', 'linux2']:
+        if PLATFORM in ['win32', 'linux2']:
             self.tog_audio.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
         soundBox.Add(self.tog_audio, 0, wx.ALL, 10)
         box.Add(soundBox, 0, wx.ALL, 5)
@@ -978,7 +953,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.tx_output = wx.TextCtrl( self, -1, "snd", size=(120, -1))
         recBox.Add(self.tx_output, 0, wx.RIGHT, 12)
         self.tog_record = wx.ToggleButton(self, -1, "Start", size=(50,-1))
-        if systemPlatform in ['win32', 'linux2']:
+        if PLATFORM in ['win32', 'linux2']:
             self.tog_record.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
         self.tog_record.Disable()
         recBox.Add(self.tog_record, 0, wx.ALIGN_CENTER)
@@ -1203,7 +1178,7 @@ class ControlPanel(scrolled.ScrolledPanel):
             recordInput(self.parent.audioDriver)
         else:
             stopAudio()
-            wx.CallLater(250, self.loadSound, os.path.join(os.path.expanduser('~'), '.ounk', 'sndtemp.aif'), True)
+            wx.CallLater(250, self.loadSound, os.path.join(TEMP_PATH, 'sndtemp.aif'), True)
 
     def handleAudio(self, event):
         if event.GetInt() == 1:
@@ -1374,7 +1349,7 @@ class MainFrame(wx.Frame):
         self.editionLevels = [2, 4, 8, 12, 16, 24, 32, 50]
         self.editionLevel = 2
         self.audioDriver = None
-        self.modules = ['Granulator', 'FFTReader', 'FFTAdsyn', 'FFTRingMod', 'FMCrossSynth', 'AutoModulation']
+        self.modules = ['Granulator', 'FFTReader', 'FFTAdsyn', 'FFTRingMod', 'FMCrossSynth']
         self.moduleFrames = {}
         self.recall = self.undos = 0
 
@@ -1483,8 +1458,6 @@ class MainFrame(wx.Frame):
         self.moduleFrames['FFTRingMod'] = self.fftringmodControls
         self.fftadsynControls = FFTAdsynFrame(self, self.panel, sendControl)
         self.moduleFrames['FFTAdsyn'] = self.fftadsynControls
-        self.automodulationControls = AutoModulationFrame(self, self.panel, sendControl)
-        self.moduleFrames['AutoModulation'] = self.automodulationControls
         self.fmcrosssynthControls = FMCrossSynthFrame(self, self.panel, sendControl)
         self.moduleFrames['FMCrossSynth'] = self.fmcrosssynthControls
         
@@ -1769,6 +1742,9 @@ class MainFrame(wx.Frame):
         self.panel.stopTimer()
         self.controls.meter.OnClose(evt)
         stopCsound()
+        tmpFiles = os.listdir(TEMP_PATH)
+        for file in tmpFiles:
+            os.remove(os.path.join(TEMP_PATH, file))
         self.Destroy()
 
     def log(self, text):
@@ -1827,7 +1803,7 @@ if __name__ == '__main__':
     X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
     if X < 900: sizex = X - 40
     else: sizex = 900
-    if systemPlatform in ['win32', 'linux2']: defaultY = 550
+    if PLATFORM in ['win32', 'linux2']: defaultY = 550
     else: defaultY = 530
     if Y < defaultY: sizey = Y - 40
     else: sizey = defaultY

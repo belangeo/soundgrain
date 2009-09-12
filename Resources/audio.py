@@ -20,17 +20,13 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 import time, os, sys
 from subprocess import Popen, PIPE
 from ounk.ounklib import *
+from constants import *
 import Settings
-
-systemPlatform = sys.platform
  
 flag = [0]*8
    
 def soundInfo(sndfile):
-    setGlobalDuration(.1)
-    snd = sndfile
-    chans, samprate, dur, frac, samps, bitrate = getSoundInfo(snd)
-    startCsound()
+    chans, samprate, dur, frac, samps, bitrate = getSoundInfo(sndfile)
     return (chans, samprate, dur)
     
 def checkForDrivers():
@@ -41,9 +37,9 @@ def checkForDrivers():
         os.wait()
     else:
         time.sleep(3)
-    f = open(os.path.join(os.path.expanduser('~'), '.ounk', 'csoundlog.txt'), 'r')
+    f = open(os.path.join(OUNK_PATH, 'csoundlog.txt'), 'r')
     lines = f.readlines()
-    if systemPlatform == 'win32':
+    if PLATFORM == 'win32':
         lines = [line for i, line in enumerate(lines) if (i % 2) == 0]
     f.close()
     
@@ -84,13 +80,33 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     oscReceive(bus = 'rec', address = '/rec', port = 8001)
     
     if module == 'Granulator':
-        overlaps, trans = args[0], args[1]
+        overlaps, trans, tr_check, tr_ymin, tr_ymax, cut_check, cut_ymin, cut_ymax = args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]
         oscReceive(bus = ['amplitude', 'grainsize', 'globalAmp'], address = ['/amplitude', '/grainsize', '/globalAmp'], port = 8002, portamento = 0.005)
         randomChoice(bus='sizeVar', choice=trans, rate=50)
         busMix(bus='size', in1='sizeVar', in2='grainsize', ftype='times')
-        granulator2(table=tab, overlaps=overlaps, pointerpos=frac, grainsize=0.001, amplitude=.5, 
-                    grainsizeVar='size', pitch=1, pointerposVar=xlist, pitchVar=ylist, amplitudeVar=amplist, out='outgrain')
-        dcblock(input='outgrain', amplitudeVar='amplitude', out='sndout')                
+        if tr_check == 0:
+            pitVarlist = None
+        else:
+            pitVarlist = ['pitVar'+ele for ele in ylist]
+            busMapper(pitVarlist, ylist, 0, 1, tr_ymin, tr_ymax)
+        for i in range(len(amplist)):
+            if tr_check == 0:
+                pitVar = None
+            else:
+                pitVar = pitVarlist[i]
+            granulator2(table=tab, overlaps=overlaps, pointerpos=frac, grainsize=0.001, amplitude=.5, 
+                    grainsizeVar='size', pitch=1, pointerposVar=xlist[i], pitchVar=pitVar, amplitudeVar=amplist[i], out='outgrain%d' % i)
+        if cut_check == 0:
+            outbus = 'outgrain'
+        else:
+            cutVarlist = ['cutVar'+ele for ele in ylist]
+            busMapper(cutVarlist, ylist, 0, 1, cut_ymin, cut_ymax)
+            for i in range(len(amplist)):
+                lowpass(input='outgrain%d' % i, cutoff=1, cutoffVar=cutVarlist[i], out='outlp%d' % i)
+            outbus = 'outlp'
+        for i in range(len(amplist)):
+            dcblock(input=outbus+str(i), amplitudeVar='amplitude', out='sndout') 
+               
     elif module == 'FFTReader':
         fftsize, overlaps, windowsize, keepformant = args[0], args[1], args[2], args[3]
         oscReceive(bus = ['amplitude', 'cutoff', 'globalAmp'], address = ['/amplitude', '/cutoff', '/globalAmp'], port = 8002, portamento = 0.005)
@@ -98,7 +114,8 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
         fftBufRead(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, bufferlength=dur, 
                    transpo=1, keepformant=keepformant, pointerposVar=xlist, transpoVar=ylist, amplitudeVar=amplist, out='fft')
         lowpass(input='fft', cutoff=1, cutoffVar='cutoff', out='lp')
-        dcblock(input='lp', amplitudeVar='amplitude', out='sndout')                
+        dcblock(input='lp', amplitudeVar='amplitude', out='sndout') 
+               
     elif module == 'FFTRingMod':
         oscReceive(bus = ['amplitude', 'cutoff', 'transpo', 'globalAmp'], address = ['/amplitude', '/cutoff', '/transpo', '/globalAmp'], port = 8002, portamento = 0.005)
         for i in range(len(xlist)):
@@ -129,10 +146,6 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
             crossSynth(in1='fm%d' % i, in2='reader%d' % i, out='fft')
         lowpass(input='fft', cutoff=1, cutoffVar='cutoff', out='lp')
         dcblock(input='lp', amplitudeVar='amplitude', out='sndout')                
-    elif module == 'AutoModulation':
-        oscReceive(bus = ['amplitude', 'globalAmp'], address = ['/amplitude', 'globalAmp'], port = 8002, portamento = 0.005)
-        tablesMod(table1=tab, table2=tab, amplitudeVar=amplist, index1Var=xlist, index2Var=ylist, out='mod')
-        dcblock(input='mod', amplitudeVar='amplitude', out='sndout')  
 
     toDac(input='sndout', amplitudeVar='globalAmp')
 
@@ -163,7 +176,7 @@ def sendXYControls(list):
             else:
                 if flag[i]:
                     flag[i] = 0
-                    sendOscControl(value=0, address='/amp%d' % i)
+                    sendOscControl(value=0, host=Settings.getHost(), port=Settings.getPort(), address='/amp%d' % i)
 
 def sendRecord():
     sendOscTrigger(value = 1, address = '/rec', port = 8001)
@@ -175,12 +188,15 @@ def splitSnd(file):
     cschnls = {'monaural': 1, 'stereo': 2, 'quad': 4, 'oct': 8}
 
     # retreive sound infos
-    if systemPlatform == 'win32':
-        cspipe1 = Popen('start /REALTIME /WAIT csound --logfile=log.txt -U sndinfo "' + file + '"', shell=True, stdin=PIPE)
+    logPath = os.path.join(TEMP_PATH, 'log.txt')
+    if PLATFORM == 'win32':
+        cspipe1 = Popen('start /REALTIME /WAIT /B csound --logfile="%s" -U sndinfo "' % logPath + file + '"', shell=True, stdin=PIPE)
+    elif PLATFORM == 'linux2':
+        cspipe1 = Popen('csound --logfile="%s" -U sndinfo "' % logPath + file + '"', shell=True, stdin=PIPE)
     else:
-        cspipe1 = Popen('/usr/local/bin/csound --logfile=log.txt -U sndinfo "' + file + '"', shell=True, stdin=PIPE)
+        cspipe1 = Popen('/usr/local/bin/csound --logfile="%s" -U sndinfo "' % logPath + file + '"', shell=True, stdin=PIPE)
     cspipe1.wait()
-    f = open('log.txt', 'r')
+    f = open(logPath, 'r')
     if systemPlatform == 'win32':
         lines = [line for i, line in enumerate(f.readlines()) if i%2 == 0]
         text = ''
@@ -190,8 +206,6 @@ def splitSnd(file):
     else:        
         text = f.read()
     f.close()
-    if systemPlatform != 'win32':
-        os.remove('log.txt')
     sp = text.split('srate')[-1]
     sp = sp.replace(',', '').replace('(', '').replace(')', '').replace('\n', ' ').replace('\t', '').strip()
     sp = sp.split(' ')
@@ -205,7 +219,8 @@ def splitSnd(file):
     total_time = eval(sp[sp.index('seconds')-1])
 
     # create splitter.csd file
-    splitter = open("splitter.csd", "w")
+    splitterPath = os.path.join(TEMP_PATH, 'splitter.csd')
+    splitter = open(splitterPath, "w")
     splitter.write('<CsoundSynthesizer>\n')
     splitter.write('<CsOptions>\n')
     splitter.write('-A -d -n -b256 -B1024\n')
@@ -217,12 +232,10 @@ def splitSnd(file):
     splitter.write('nchnls = 1\n')
     
     splitter.write('instr 1\n')
-    
-    path = os.path.split(file)[0]
-    outPath = os.path.expanduser('~')
+
+    outPath = TEMP_PATH
     sndName = os.path.split(file)[1].rsplit('.',1)[0]
-    sndInFileName = os.path.split(file)[1]
-    sndFileInput = os.path.join(path, sndInFileName).replace('\\', '/')
+    sndFileInput = file.replace('\\', '/')
     
     splitter.write('idur filelen "%s"\n' % sndFileInput)
     splitter.write('p3 = idur\n')
@@ -243,12 +256,13 @@ def splitSnd(file):
     splitter.write('</CsoundSynthesizer>\n')
     splitter.close()
 
-    if systemPlatform == 'win32':
-        cspipe2 = Popen('start /REALTIME /WAIT csound splitter.csd', shell=True)
+    if PLATFORM == 'win32':
+        cspipe2 = Popen('start /REALTIME /WAIT /B csound %s' % splitterPath, shell=True)
+    elif PLATFORM == 'linux2':    
+        cspipe2 = Popen('csound %s' % splitterPath, shell=True, stdin=PIPE)
     else:    
-        cspipe2 = Popen('/usr/local/bin/csound splitter.csd', shell=True, stdin=PIPE)
+        cspipe2 = Popen('/usr/local/bin/csound %s' % splitterPath, shell=True, stdin=PIPE)
     cspipe2.wait()
-    os.remove('splitter.csd')
     
 def recordInput(audioDriver):
     setAudioAttributes(samplingrate=44100, controlrate=4410, softbuffer=500, hardbuffer=2000)
@@ -260,6 +274,6 @@ def recordInput(audioDriver):
     setChannels(1)
 
     inputMic()
-    recordPerf(os.path.join(os.path.expanduser('~'), '.ounk', 'sndtemp'), nameinc=False)
+    recordPerf(os.path.join(TEMP_PATH, 'sndtemp'), nameinc=False)
 
     startCsound(nosound=True)
