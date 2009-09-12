@@ -190,7 +190,7 @@ def splitSnd(file):
     # retreive sound infos
     logPath = os.path.join(TEMP_PATH, 'log.txt')
     if PLATFORM == 'win32':
-        cspipe1 = Popen('start /REALTIME /WAIT /B csound --logfile="%s" -U sndinfo "' % logPath + file + '"', shell=True, stdin=PIPE)
+        cspipe1 = Popen('start /REALTIME /WAIT csound --logfile="%s" -U sndinfo "' % logPath + file + '"', shell=True, stdin=PIPE)
     elif PLATFORM == 'linux2':
         cspipe1 = Popen('csound --logfile="%s" -U sndinfo "' % logPath + file + '"', shell=True, stdin=PIPE)
     else:
@@ -257,7 +257,7 @@ def splitSnd(file):
     splitter.close()
 
     if PLATFORM == 'win32':
-        cspipe2 = Popen('start /REALTIME /WAIT /B csound "%s"' % splitterPath, shell=True)
+        cspipe2 = Popen('start /REALTIME /WAIT csound "%s"' % splitterPath, shell=True)
     elif PLATFORM == 'linux2':    
         cspipe2 = Popen('csound "%s"' % splitterPath, shell=True, stdin=PIPE)
     else:    
