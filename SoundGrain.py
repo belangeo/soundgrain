@@ -1446,10 +1446,6 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
         self.SetTitle(self.currentModule)
-
-        self.Show()
-
-        wx.CallAfter(self.check)
         
         self.granulatorControls = GranulatorFrame(self, self.panel, sendControl)
         self.moduleFrames['Granulator'] = self.granulatorControls
@@ -1466,6 +1462,9 @@ class MainFrame(wx.Frame):
 
         if file:
             self.loadFile(file)
+
+        self.Show()
+        wx.CallAfter(self.check)
             
     def check(self):
         self.status.SetStatusText('Scanning audio drivers...')
