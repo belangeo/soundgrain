@@ -822,20 +822,21 @@ class DrawingSurface(wx.Panel):
         self.chnls = chnls
         splitSnd(file)
         for i in range(chnls):
+            analfile = os.path.join(TEMP_PATH, 'anal%d' % i)
             monofile = os.path.join(TEMP_PATH, os.path.split(file)[1].rsplit('.',1)[0] + '-' + str(i) + '.aif')
             if PLATFORM == 'win32':
-                cspipe3 = Popen('start /REALTIME /WAIT csound -U envext -o "%s/anal%s" -w .001 "%s"' % (TEMP_PATH,i,monofile), shell=True, stdin=PIPE)
+                cspipe3 = Popen('start /REALTIME /WAIT csound -U envext -o "%s" -w .001 "%s"' % (analfile, monofile), shell=True, stdin=PIPE)
             elif PLATFORM == 'linux2':    
-                cspipe3 = Popen('csound -U envext -o "%s/anal%s" -w .001 "%s"' % (TEMP_PATH,i,monofile), shell=True, stdin=PIPE)
+                cspipe3 = Popen('csound -U envext -o "%s" -w .001 "%s"' % (analfile, monofile), shell=True, stdin=PIPE)
             else:    
-                cspipe3 = Popen('/usr/local/bin/csound -U envext -o "%s/anal%s" -w .001 "%s"' % (TEMP_PATH,i,monofile), shell=True, stdin=PIPE)
+                cspipe3 = Popen('/usr/local/bin/csound -U envext -o "%s" -w .001 "%s"' % (analfile, monofile), shell=True, stdin=PIPE)
             cspipe3.wait()
         self.make_list()        
 
     def make_list(self):
         list = []
         for i in range(self.chnls):
-            file = "%s/anal%s" % (TEMP_PATH,i)
+            file = os.path.join(TEMP_PATH, 'anal%d' % i)
             f = open(file, "r")
             self.l = [li.strip('\n').split('\t') for li in f.readlines()]
             f.close()
