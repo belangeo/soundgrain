@@ -899,6 +899,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         popupBox = wx.BoxSizer(wx.VERTICAL)
         popupBox.Add(wx.StaticText(self, -1, "Type"), 0, wx.CENTER|wx.ALL, 2)
         self.trajType = wx.Choice(self, -1, choices = ['Free', 'Circle', 'Oscil', 'Line'])
+        self.trajType.SetSelection(0)
         popupBox.Add(self.trajType)
         typeBox.Add(popupBox, 0, wx.RIGHT, 5)
 
