@@ -257,11 +257,11 @@ def splitSnd(file):
     splitter.close()
 
     if PLATFORM == 'win32':
-        cspipe2 = Popen('start /REALTIME /WAIT /B csound %s' % splitterPath, shell=True)
+        cspipe2 = Popen('start /REALTIME /WAIT /B csound "%s"' % splitterPath, shell=True)
     elif PLATFORM == 'linux2':    
-        cspipe2 = Popen('csound %s' % splitterPath, shell=True, stdin=PIPE)
+        cspipe2 = Popen('csound "%s"' % splitterPath, shell=True, stdin=PIPE)
     else:    
-        cspipe2 = Popen('/usr/local/bin/csound %s' % splitterPath, shell=True, stdin=PIPE)
+        cspipe2 = Popen('/usr/local/bin/csound "%s"' % splitterPath, shell=True, stdin=PIPE)
     cspipe2.wait()
     
 def recordInput(audioDriver):
