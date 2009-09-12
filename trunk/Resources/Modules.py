@@ -107,48 +107,51 @@ class Module(wx.Frame):
     def setTrans(self, trans):
         self.trans = trans
         self.tx_trans.SetValue(", ".join(str(t) for t in self.trans))
+
+    def handleTransCheck(self, event):
+        self.transCheck = event.GetInt()
+
+    def getTransCheck(self):
+        return self.transCheck
+
+    def setTransCheck(self, value):
+        self.transCheck = value
+        self.tx_ytrans_ch.SetValue(value)
                         
-    def handleYMin(self, event):
-        key = event.GetKeyCode()
-        if key == wx.WXK_TAB or key == wx.WXK_RETURN:
-            self.surface.setYMin(float(self.tx_ymin.GetValue()))
-            self.surface.SetFocus()
-        event.Skip()
+    def getTransYMin(self):
+        return float(self.tx_tr_ymin.GetValue())
 
-    def getYMin(self):
-        return float(self.tx_ymin.GetValue())
-
-    def setYMin(self, ymin):
-        self.tx_ymin.SetValue(str(ymin))
-        self.surface.setYMin(ymin)
+    def setTransYMin(self, ymin):
+        self.tx_tr_ymin.SetValue(str(ymin))
     
-    def handleYMax(self, event):
-        key = event.GetKeyCode()
-        if key == wx.WXK_TAB or key == wx.WXK_RETURN:
-            self.surface.setYMax(float(self.tx_ymax.GetValue()))
-            self.surface.SetFocus()
-        event.Skip()
+    def getTransYMax(self):
+        return float(self.tx_tr_ymax.GetValue())
 
-    def getYMax(self):
-        return float(self.tx_ymax.GetValue())
+    def setTransYMax(self, ymax):
+        self.tx_tr_ymax.SetValue(str(ymax))
 
-    def setYMax(self, ymax):
-        self.tx_ymax.SetValue(str(ymax))
-        self.surface.setYMax(ymax)
+    def handleCutoffCheck(self, event):
+        self.cutoffCheck = event.GetInt()
+
+    def getCutoffCheck(self):
+        return self.cutoffCheck
+
+    def setCutoffCheck(self, value):
+        self.cutoffCheck = value
+        self.tx_ycutoff_ch.SetValue(value)
                         
-    def handleLinLog(self, event):
-        self.linLogSqrt = (self.linLogSqrt + 1) % 3
-        self.b_linlog.SetLabel(['Lin', 'Log', 'Sqrt'][self.linLogSqrt])
-        self.surface.setYMethod(self.linLogSqrt)
+    def getCutoffYMin(self):
+        return float(self.tx_cut_ymin.GetValue())
 
-    def getLinLog(self):
-        return self.linLogSqrt
+    def setCutoffYMin(self, ymin):
+        self.tx_cut_ymin.SetValue(str(ymin))
+    
+    def getCutoffYMax(self):
+        return float(self.tx_cut_ymax.GetValue())
 
-    def setLinLog(self, val):
-        self.linLogSqrt = val
-        self.b_linlog.SetLabel(['Lin', 'Log', 'Sqrt'][self.linLogSqrt])
-        self.surface.setYMethod(self.linLogSqrt)
-
+    def setCutoffYMax(self, ymax):
+        self.tx_cut_ymax.SetValue(str(ymax))
+                        
     def handleFFTSize(self, event):
         self.fftsize = 2 ** event.GetInt()
         self.fftsizeValue.SetLabel(str(self.fftsize))
@@ -356,16 +359,31 @@ class Module(wx.Frame):
         else: lab = label
         box.Add(wx.StaticText(self, -1, lab), 0, wx.CENTER|wx.TOP, 5)
         textBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.tx_ytrans_ch = wx.CheckBox(self, -1, "")
+        self.tx_ytrans_ch.SetValue(1)
+        textBox.Add(self.tx_ytrans_ch, 0, wx.LEFT | wx.RIGHT, 10)
         textBox.Add(wx.StaticText(self, -1, "Min: "), 0, wx.TOP, 4)
-        self.tx_ymin = wx.TextCtrl( self, -1, "0.", size=(40, -1))
-        textBox.Add(self.tx_ymin, 0, wx.RIGHT, 20)
+        self.tx_tr_ymin = wx.TextCtrl( self, -1, "0.", size=(50, -1))
+        textBox.Add(self.tx_tr_ymin, 0, wx.RIGHT, 20)
         textBox.Add(wx.StaticText(self, -1, "Max: "), 0, wx.TOP, 4)
-        self.tx_ymax = wx.TextCtrl( self, -1, "1.", size=(40, -1))
-        textBox.Add(self.tx_ymax, 0, wx.RIGHT, 20)
-        self.b_linlog = wx.Button(self, -1, 'Lin', size=(50,20))
-        if sys.platform in ['win32', 'linux2']:
-            self.b_linlog.SetFont(wx.Font(7, wx.NORMAL, wx.NORMAL, wx.NORMAL))
-        textBox.Add(self.b_linlog, 0, wx.TOP, 1 )
+        self.tx_tr_ymax = wx.TextCtrl( self, -1, "1.", size=(50, -1))
+        textBox.Add(self.tx_tr_ymax, 0, wx.RIGHT, 20)
+        box.Add(textBox, 0, wx.ALL, 10)
+
+    def makeYaxisCutoffBox(self, box, label=None):
+        if label == None: lab = "Y axis (lowpass cutoff)"
+        else: lab = label
+        box.Add(wx.StaticText(self, -1, lab), 0, wx.CENTER|wx.TOP, 5)
+        textBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.tx_ycutoff_ch = wx.CheckBox(self, -1, "")
+        self.tx_ycutoff_ch.SetValue(0)
+        textBox.Add(self.tx_ycutoff_ch, 0, wx.LEFT | wx.RIGHT, 10)
+        textBox.Add(wx.StaticText(self, -1, "Min: "), 0, wx.TOP, 4)
+        self.tx_cut_ymin = wx.TextCtrl( self, -1, "100", size=(50, -1))
+        textBox.Add(self.tx_cut_ymin, 0, wx.RIGHT, 20)
+        textBox.Add(wx.StaticText(self, -1, "Max: "), 0, wx.TOP, 4)
+        self.tx_cut_ymax = wx.TextCtrl( self, -1, "10000", size=(50, -1))
+        textBox.Add(self.tx_cut_ymax, 0, wx.RIGHT, 20)
         box.Add(textBox, 0, wx.ALL, 10)
 
     def makeFFTSizeBox(self, box):
@@ -489,7 +507,8 @@ class GranulatorFrame(Module):
         self.grainsize = 200
         self.amplitude = 0.7
         self.trans = [1.]
-        self.linLogSqrt = 0
+        self.transCheck = 1
+        self.cutoffCheck = 0
 
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeGrainOverlapsBox(box)
@@ -499,46 +518,53 @@ class GranulatorFrame(Module):
         self.makeTransBox(box)
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
         self.makeYaxisTranspoBox(box)
+        self.makeYaxisCutoffBox(box)
         self.SetSizer(box)
         
         self.Bind(wx.EVT_SLIDER, self.handleGrainOverlaps, self.sl_overlaps)        
         self.Bind(wx.EVT_SLIDER, self.handleGrainSize, self.sl_size)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
-        self.tx_trans.Bind(wx.EVT_CHAR, self.handleTrans)        
-        self.tx_ymin.Bind(wx.EVT_CHAR, self.handleYMin)        
-        self.tx_ymax.Bind(wx.EVT_CHAR, self.handleYMax)        
-        self.Bind(wx.EVT_BUTTON, self.handleLinLog, self.b_linlog)
+        self.tx_trans.Bind(wx.EVT_CHAR, self.handleTrans)  
+        self.tx_ytrans_ch.Bind(wx.EVT_CHECKBOX, self.handleTransCheck)      
+        self.tx_ycutoff_ch.Bind(wx.EVT_CHECKBOX, self.handleCutoffCheck)      
         
         self.Fit()
         self.SetMinSize(self.GetSize())
         self.SetMaxSize(self.GetSize())
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
 
-        self.widgets = [self.sl_overlaps]
+        self.widgets = [self.sl_overlaps, self.tx_ytrans_ch, self.tx_ycutoff_ch]
         self.controls = {'/amplitude': self.getAmp, '/grainsize': self.getGrainSize}
 
         self.Show(False)
 
     def getFixedValues(self):
-        return [self.grainoverlaps, self.trans]
+        return [self.grainoverlaps, self.trans, self.transCheck, self.getTransYMin(), self.getTransYMax(),
+                self.cutoffCheck, self.getCutoffYMin(), self.getCutoffYMax()]
 
     def save(self):
         return {'grainoverlaps': self.getGrainOverlaps(),
                 'grainsize': self.getGrainSize(),
                 'amp': self.getAmp(),
                 'trans': self.getTrans(),
-                'ymin': self.getYMin(),
-                'ymax': self.getYMax(),
-                'linlog': self.getLinLog()}
+                'transCheck': self.getTransCheck(),
+                'transYmin': self.getTransYMin(),
+                'transYmax': self.getTransYMax(),
+                'cutoffCheck': self.getCutoffCheck(),
+                'cutoffYmin': self.getCutoffYMin(),
+                'cutoffYmax': self.getCutoffYMax()}
 
     def load(self, dict):
         self.setGrainOverlaps(dict['grainoverlaps'])
         self.setGrainSize(dict['grainsize'])
         self.setAmp(dict['amp'])
         self.setTrans(dict['trans'])
-        self.setYMin(dict['ymin'])
-        self.setYMax(dict['ymax'])
-        self.setLinLog(dict['linlog'])
+        self.setTransCheck(['transCheck'])
+        self.setTransYMin(dict['transYmin'])
+        self.setTransYMax(dict['transYmax'])
+        self.setCutoffCheck(['cutoffCheck'])
+        self.setCutoffYMin(dict['cutoffYmin'])
+        self.setCutoffYMax(dict['cutoffYmax'])
 
 class FFTReaderFrame(Module): 
     def __init__(self, parent, surface, continuousControl):
@@ -551,7 +577,6 @@ class FFTReaderFrame(Module):
         self.formant = 0
         self.cutoff = 10000
         self.amplitude = 0.7
-        self.linLogSqrt = 0
 
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeFFTSizeBox(box)
@@ -572,9 +597,6 @@ class FFTReaderFrame(Module):
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleKeepFormant, self.tog_formant)        
         self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
-        self.tx_ymin.Bind(wx.EVT_CHAR, self.handleYMin)        
-        self.tx_ymax.Bind(wx.EVT_CHAR, self.handleYMax)        
-        self.Bind(wx.EVT_BUTTON, self.handleLinLog, self.b_linlog)
         
         self.Fit()
         self.SetMinSize(self.GetSize())
@@ -596,9 +618,8 @@ class FFTReaderFrame(Module):
                 'formant': self.getKeepFormant(),
                 'cutoff': self.getCutoff(),
                 'amp': self.getAmp(),
-                'ymin': self.getYMin(),
-                'ymax': self.getYMax(),
-                'linlog': self.getLinLog()}
+                'transYmin': self.getTransYMin(),
+                'transYmax': self.getTransYMax()}
 
     def load(self, dict):
         self.setFFTSize(dict['fftsize'])
@@ -607,9 +628,8 @@ class FFTReaderFrame(Module):
         self.setKeepFormant(dict['formant'])
         self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
-        self.setYMin(dict['ymin'])
-        self.setYMax(dict['ymax'])
-        self.setLinLog(dict['linlog'])
+        self.setTransYMin(dict['transYmin'])
+        self.setTransYMax(dict['transYmax'])
 
 class FFTAdsynFrame(Module): 
     def __init__(self, parent, surface, continuousControl):
@@ -625,7 +645,6 @@ class FFTAdsynFrame(Module):
         self.incr = 3        
         self.cutoff = 10000
         self.amplitude = 0.7
-        self.linLogSqrt = 0
 
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeFFTSizeBox(box)
@@ -650,9 +669,6 @@ class FFTAdsynFrame(Module):
         self.Bind(wx.EVT_SLIDER, self.handleIncr, self.sl_incr)                
         self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
-        self.tx_ymin.Bind(wx.EVT_CHAR, self.handleYMin)        
-        self.tx_ymax.Bind(wx.EVT_CHAR, self.handleYMax)        
-        self.Bind(wx.EVT_BUTTON, self.handleLinLog, self.b_linlog)
         
         self.Fit()
         self.SetMinSize(self.GetSize())
@@ -676,9 +692,8 @@ class FFTAdsynFrame(Module):
                 'incr': self.getIncr(),
                 'cutoff': self.getCutoff(),
                 'amp': self.getAmp(),
-                'ymin': self.getYMin(),
-                'ymax': self.getYMax(),
-                'linlog': self.getLinLog()}
+                'transYmin': self.getTransYMin(),
+                'transYmax': self.getTransYMax()}
 
     def load(self, dict):
         self.setFFTSize(dict['fftsize'])
@@ -689,9 +704,8 @@ class FFTAdsynFrame(Module):
         self.setIncr(dict['incr'])
         self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
-        self.setYMin(dict['ymin'])
-        self.setYMax(dict['ymax'])
-        self.setLinLog(dict['linlog'])
+        self.setTransYMin(dict['transYmin'])
+        self.setTransYMax(dict['transYmax'])
 
 class FFTRingModFrame(Module): 
     def __init__(self, parent, surface, continuousControl):
@@ -704,7 +718,6 @@ class FFTRingModFrame(Module):
         self.cutoff = 10000
         self.amplitude = 0.7
         self.transpo = 1
-        self.linLogSqrt = 0
 
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeFFTSizeBox(box)
@@ -724,9 +737,6 @@ class FFTRingModFrame(Module):
         self.Bind(wx.EVT_SLIDER, self.handleTranspo, self.sl_transpo)        
         self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
-        self.tx_ymin.Bind(wx.EVT_CHAR, self.handleYMin)        
-        self.tx_ymax.Bind(wx.EVT_CHAR, self.handleYMax)        
-        self.Bind(wx.EVT_BUTTON, self.handleLinLog, self.b_linlog)
         
         self.Fit()
         self.SetMinSize(self.GetSize())
@@ -748,9 +758,8 @@ class FFTRingModFrame(Module):
                 'transpo': self.getTranspo(),
                 'cutoff': self.getCutoff(),
                 'amp': self.getAmp(),
-                'ymin': self.getYMin(),
-                'ymax': self.getYMax(),
-                'linlog': self.getLinLog()}
+                'transYmin': self.getTransYMin(),
+                'transYmax': self.getTransYMax()}
 
     def load(self, dict):
         self.setFFTSize(dict['fftsize'])
@@ -759,9 +768,8 @@ class FFTRingModFrame(Module):
         self.setTranspo(dict['transpo'])
         self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
-        self.setYMin(dict['ymin'])
-        self.setYMax(dict['ymax'])
-        self.setLinLog(dict['linlog'])
+        self.setTransYMin(dict['transYmin'])
+        self.setTransYMax(dict['transYmax'])
 
 class FMCrossSynthFrame(Module): 
     def __init__(self, parent, surface, continuousControl):
@@ -778,7 +786,6 @@ class FMCrossSynthFrame(Module):
         self.index = 5
         self.cutoff = 10000
         self.amplitude = 0.7
-        self.linLogSqrt = 0
 
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeFFTSizeBox(box)
@@ -809,9 +816,6 @@ class FMCrossSynthFrame(Module):
         self.Bind(wx.EVT_SLIDER, self.handleIndex, self.sl_index)        
         self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
-        self.tx_ymin.Bind(wx.EVT_CHAR, self.handleYMin)        
-        self.tx_ymax.Bind(wx.EVT_CHAR, self.handleYMax)        
-        self.Bind(wx.EVT_BUTTON, self.handleLinLog, self.b_linlog)
         
         self.Fit()
         self.SetMinSize(self.GetSize())
@@ -838,9 +842,8 @@ class FMCrossSynthFrame(Module):
                 'index': self.getIndex(),
                 'cutoff': self.getCutoff(),
                 'amp': self.getAmp(),
-                'ymin': self.getYMin(),
-                'ymax': self.getYMax(),
-                'linlog': self.getLinLog()}
+                'transYmin': self.getTransYMin(),
+                'transYmax': self.getTransYMax()}
 
     def load(self, dict):
         self.setFFTSize(dict['fftsize'])
@@ -853,37 +856,5 @@ class FMCrossSynthFrame(Module):
         self.setIndex(dict['index'])
         self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
-        self.setYMin(dict['ymin'])
-        self.setYMax(dict['ymax'])
-        self.setLinLog(dict['linlog'])
-
-class AutoModulationFrame(Module): 
-    def __init__(self, parent, surface, continuousControl):
-        Module.__init__(self, parent, surface, continuousControl)
-        
-        self.amplitude = 0.7
-
-        box = wx.BoxSizer(wx.VERTICAL)
-        self.makeAmplitudeBox(box)
-        self.SetSizer(box)
-        
-        self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
-        
-        self.Fit()
-        self.SetMinSize(self.GetSize())
-        self.SetMaxSize(self.GetSize())
-        self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
-
-        self.widgets = []
-        self.controls = {'/amplitude': self.getAmp}
-
-        self.Show(False)
-
-    def getFixedValues(self):
-        return []
-
-    def save(self):
-        return {'amp': self.getAmp()}
-
-    def load(self, dict):
-        self.setAmp(dict['amp'])
+        self.setTransYMin(dict['transYmin'])
+        self.setTransYMax(dict['transYmax'])

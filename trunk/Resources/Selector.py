@@ -67,11 +67,11 @@ class Selector(wx.Panel):
         w,h = self.GetSize()
         dc = wx.AutoBufferedPaintDC(self)
 
-        dc.SetBrush(wx.Brush("#AAAAAA", wx.SOLID))
+        dc.SetBrush(wx.Brush("#999999", wx.SOLID))
         dc.Clear()
 
         # Draw background
-        dc.SetPen(wx.Pen("#000000", width=1, style=wx.SOLID))
+        dc.SetPen(wx.Pen("#555555", width=1, style=wx.SOLID))
         dc.DrawRectangle(0, 0, w, h)
 
         for i in range(self.parent.getMax()):
@@ -80,7 +80,7 @@ class Selector(wx.Panel):
                 dc.DrawRoundedRectangleRect(self.rectList[i], 2)
             dc.SetTextForeground("#000000")
             dc.DrawLabel(str(i+1), self.rectList[i], wx.ALIGN_CENTER)
-            dc.SetBrush(wx.Brush("#AAAAAA", wx.SOLID))
+            dc.SetBrush(wx.Brush("#999999", wx.SOLID))
 
     def MouseDown(self, event):
         pos = event.GetPosition()
