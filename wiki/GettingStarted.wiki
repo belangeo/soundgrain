@@ -73,12 +73,6 @@ Cross synthesis between the sound and a frequency modulation.
  * X axis: Pointer position in the sound
  * Y axis: FM base pitch
 
-=== AutoModulation ===
-
-This modules performs a modulation of a sound with itself.
-
- * X axis: Pointer position in the sound
- * Y axis: Pointer position in the sound
 
 === Examples ===
 
