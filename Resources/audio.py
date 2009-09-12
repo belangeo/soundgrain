@@ -62,6 +62,18 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     oscylist = ['/y%d' % i for i in range(_NUM)]
     amplist = ['amp%d' % i for i in range(_NUM)]
     oscamplist = ['/amp%d' % i for i in range(_NUM)]
+    reclist = ['rec']
+    oscreclist = ['/rec']
+    paramslist = {  'Granulator': ['amplitude', 'grainsize', 'globalAmp'],
+                    'FFTReader': ['amplitude', 'cutoff', 'globalAmp'],
+                    'FFTRingMod': ['amplitude', 'cutoff', 'transpo', 'globalAmp'],
+                    'FFTAdsyn': ['amplitude', 'cutoff', 'globalAmp'],
+                    'FMCrossSynth': ['amplitude', 'cutoff', 'transpo', 'carrier', 'modulator', 'index', 'globalAmp']}[module]
+    oscparamslist = {'Granulator': ['/amplitude', '/grainsize', '/globalAmp'],
+                    'FFTReader': ['/amplitude', '/cutoff', '/globalAmp'],
+                    'FFTRingMod': ['/amplitude', '/cutoff', '/transpo', '/globalAmp'],
+                    'FFTAdsyn': ['/amplitude', '/cutoff', '/globalAmp'],
+                    'FMCrossSynth': ['/amplitude', '/cutoff', '/transpo', '/carrier', '/modulator', '/index', '/globalAmp']}[module]
     
     if audioDriver != None:
         setAudioDevice(onumber = audioDriver)
@@ -76,12 +88,12 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     setChannels(chans)
     tab = genSoundTable(snd)
 
-    oscReceive( bus=xlist + ylist + amplist, address=oscxlist + oscylist + oscamplist, port=8000, portamento=0.002)
-    oscReceive(bus = 'rec', address = '/rec', port = 8001)
+    oscReceive( bus=xlist + ylist + amplist + reclist + paramslist, 
+                address=oscxlist + oscylist + oscamplist + oscreclist + oscparamslist, 
+                port=8000, portamento=0.002)
     
     if module == 'Granulator':
         overlaps, trans, tr_check, tr_ymin, tr_ymax, cut_check, cut_ymin, cut_ymax = args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]
-        oscReceive(bus = ['amplitude', 'grainsize', 'globalAmp'], address = ['/amplitude', '/grainsize', '/globalAmp'], port = 8002, portamento = 0.005)
         randomChoice(bus='sizeVar', choice=trans, rate=50)
         busMix(bus='size', in1='sizeVar', in2='grainsize', ftype='times')
         if tr_check == 0:
@@ -109,7 +121,6 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
                
     elif module == 'FFTReader':
         fftsize, overlaps, windowsize, keepformant = args[0], args[1], args[2], args[3]
-        oscReceive(bus = ['amplitude', 'cutoff', 'globalAmp'], address = ['/amplitude', '/cutoff', '/globalAmp'], port = 8002, portamento = 0.005)
         soundTableRead(table=tab, duration=dur, out='snd')
         fftBufRead(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, bufferlength=dur, 
                    transpo=1, keepformant=keepformant, pointerposVar=xlist, transpoVar=ylist, amplitudeVar=amplist, out='fft')
@@ -117,7 +128,6 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
         dcblock(input='lp', amplitudeVar='amplitude', out='sndout') 
                
     elif module == 'FFTRingMod':
-        oscReceive(bus = ['amplitude', 'cutoff', 'transpo', 'globalAmp'], address = ['/amplitude', '/cutoff', '/transpo', '/globalAmp'], port = 8002, portamento = 0.005)
         for i in range(len(xlist)):
             soundTableRead(table=tab, duration=dur, out='snd')
             fftBufRead(input='snd', fftsize=1024, overlaps=4, windowsize=1024, bufferlength=dur, 
@@ -125,18 +135,17 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
             sine(pitch = 100, pitchVar=ylist[i], out='sin%d' % i)
             ringMod(in1='fft%d' % i, in2='sin%d' % i, amplitudeVar='amplitude', out='ring')
         lowpass(input='ring', cutoff=1, cutoffVar='cutoff', out='sndout')
+
     elif module == 'FFTAdsyn':
         fftsize, overlaps, windowsize, bins, first, incr = args[0], args[1], args[2], args[3], args[4], args[5]
-        oscReceive(bus = ['amplitude', 'cutoff', 'globalAmp'], address = ['/amplitude', '/cutoff', '/globalAmp'], port = 8002, portamento = 0.005)
         soundTableRead(table=tab, duration=dur, out='snd')
         fftBufAdsyn(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, amplitudeVar=amplist,
                    numbins=bins, firstbin=first, binincr=incr, pointerposVar=xlist, transpoVar=ylist, bufferlength=dur, out='fft')
         lowpass(input='fft', cutoff=1, cutoffVar='cutoff', out='lp')
-        dcblock(input='lp', amplitudeVar='amplitude', out='sndout')                
+        dcblock(input='lp', amplitudeVar='amplitude', out='sndout') 
+               
     elif module == 'FMCrossSynth':
         fftsize, overlaps, windowsize, pitch = args[0], args[1], args[2], args[3]
-        oscReceive(bus = ['amplitude', 'cutoff', 'transpo', 'carrier', 'modulator', 'index', 'globalAmp'], 
-                   address = ['/amplitude', '/cutoff','/transpo', '/carrier', '/modulator', '/index', '/globalAmp'], port = 8002, portamento = 0.005)
         soundTableRead(table=tab, duration=dur, out='snd')
         for i in range(len(xlist)):
             fftBufRead(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, bufferlength=dur, 
@@ -154,7 +163,7 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     endTrigInst()
             
     monitor()
-    startCsound()
+    startCsound(withevents=False)
 
 def stopAudio():
     stopCsound()
@@ -179,10 +188,10 @@ def sendXYControls(list):
                     sendOscControl(value=0, host=Settings.getHost(), port=Settings.getPort(), address='/amp%d' % i)
 
 def sendRecord():
-    sendOscTrigger(value = 1, address = '/rec', port = 8001)
+    sendOscTrigger(value = 1, host=Settings.getHost(), port=Settings.getPort(), address = '/rec')
     
 def sendControl(address, val):
-    sendOscControl(value=float(val), address=address, port=8002)
+    sendOscControl(value=float(val), host=Settings.getHost(), port=Settings.getPort(), address=address)
         
 def splitSnd(file):
     cschnls = {'monaural': 1, 'stereo': 2, 'quad': 4, 'oct': 8}
@@ -276,4 +285,4 @@ def recordInput(audioDriver):
     inputMic()
     recordPerf(os.path.join(TEMP_PATH, 'sndtemp'), nameinc=False)
 
-    startCsound(nosound=True)
+    startCsound(nosound=True, withevents=False)
