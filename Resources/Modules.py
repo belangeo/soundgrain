@@ -27,20 +27,26 @@ class Module(wx.Frame):
             self.MacSetMetalAppearance(True)
 
         menuBar = wx.MenuBar()
-        self.menu1 = wx.Menu()
-        self.menu1.Append(1, 'Close\tCtrl+W', "")
-        self.menu1.Append(1, 'Close\tCtrl+P', "")
-        menuBar.Append(self.menu1, "&File")
+        self.menu = wx.Menu()
+        self.menu.Append(200, 'Close\tCtrl+W', "")
+        self.menu.Append(200, 'Close\tCtrl+P', "")
+        self.menu.AppendSeparator()
+        self.menu.Append(201, "Run\tCtrl+R", "", wx.ITEM_CHECK)
+        menuBar.Append(self.menu, "&File")
 
         self.SetMenuBar(menuBar)
 
         self.Bind(wx.EVT_CLOSE, self.handleClose)
-        self.Bind(wx.EVT_MENU, self.handleClose, id=1)
+        self.Bind(wx.EVT_MENU, self.handleClose, id=200)
+        self.Bind(wx.EVT_MENU, self.onRun, id=201)
 
         self.parent = parent
         self.surface = surface
         self.continuousControl = continuousControl
 
+    def onRun(self, event):
+        self.parent.onRun(event)
+        
     def handleClose(self, event):
         self.Show(False)
 
@@ -139,6 +145,16 @@ class Module(wx.Frame):
     def setCutoffCheck(self, value):
         self.cutoffCheck = value
         self.tx_ycutoff_ch.SetValue(value)
+
+    def handleFilterType(self, event):
+        self.filterType = event.GetInt()
+
+    def getFilterType(self):
+        return self.filterType
+
+    def setFilterType(self, filtype):
+        self.filterType = filtype
+        self.tx_filtype.SetSelection(filtype)
                         
     def getCutoffYMin(self):
         return float(self.tx_cut_ymin.GetValue())
@@ -340,7 +356,7 @@ class Module(wx.Frame):
     def makeAmplitudeBox(self, box):
         box.Add(wx.StaticText(self, -1, "Amplitude"), 0, wx.LEFT|wx.TOP, 5)
         ampBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_amp = wx.Slider( self, -1, int(self.amplitude*100), 0, 200, size=(200, -1), style=wx.SL_HORIZONTAL)
+        self.sl_amp = wx.Slider( self, -1, int(self.amplitude*100), 0, 400, size=(200, -1), style=wx.SL_HORIZONTAL)
         ampBox.Add(self.sl_amp, 0, wx.RIGHT, 10)
         self.ampValue = wx.StaticText(self, -1, str(self.sl_amp.GetValue() * 0.01))
         ampBox.Add(self.ampValue, 0, wx.RIGHT, 10)
@@ -374,6 +390,9 @@ class Module(wx.Frame):
         if label == None: lab = "Y axis (lowpass cutoff)"
         else: lab = label
         box.Add(wx.StaticText(self, -1, lab), 0, wx.CENTER|wx.TOP, 5)
+        self.tx_filtype = wx.Choice(self, -1, choices = ['Lowpass', 'Highpass', 'Bandpass', 'Bandreject'])
+        self.tx_filtype.SetSelection(0)
+        box.Add(self.tx_filtype, 0, wx.CENTER | wx.TOP, 5)
         textBox = wx.BoxSizer(wx.HORIZONTAL)
         self.tx_ycutoff_ch = wx.CheckBox(self, -1, "")
         self.tx_ycutoff_ch.SetValue(0)
@@ -509,6 +528,7 @@ class GranulatorFrame(Module):
         self.trans = [1.]
         self.transCheck = 1
         self.cutoffCheck = 0
+        self.filterType = 0
 
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeGrainOverlapsBox(box)
@@ -527,20 +547,21 @@ class GranulatorFrame(Module):
         self.tx_trans.Bind(wx.EVT_CHAR, self.handleTrans)  
         self.tx_ytrans_ch.Bind(wx.EVT_CHECKBOX, self.handleTransCheck)      
         self.tx_ycutoff_ch.Bind(wx.EVT_CHECKBOX, self.handleCutoffCheck)      
+        self.tx_filtype.Bind(wx.EVT_CHOICE, self.handleFilterType)      
         
         self.Fit()
         self.SetMinSize(self.GetSize())
         self.SetMaxSize(self.GetSize())
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
 
-        self.widgets = [self.sl_overlaps, self.tx_ytrans_ch, self.tx_ycutoff_ch]
+        self.widgets = [self.sl_overlaps, self.tx_ytrans_ch, self.tx_ycutoff_ch, self.tx_filtype]
         self.controls = {'/amplitude': self.getAmp, '/grainsize': self.getGrainSize}
 
         self.Show(False)
 
     def getFixedValues(self):
         return [self.grainoverlaps, self.trans, self.transCheck, self.getTransYMin(), self.getTransYMax(),
-                self.cutoffCheck, self.getCutoffYMin(), self.getCutoffYMax()]
+                self.cutoffCheck, self.getCutoffYMin(), self.getCutoffYMax(), self.getFilterType()]
 
     def save(self):
         return {'grainoverlaps': self.getGrainOverlaps(),
@@ -552,7 +573,8 @@ class GranulatorFrame(Module):
                 'transYmax': self.getTransYMax(),
                 'cutoffCheck': self.getCutoffCheck(),
                 'cutoffYmin': self.getCutoffYMin(),
-                'cutoffYmax': self.getCutoffYMax()}
+                'cutoffYmax': self.getCutoffYMax(),
+                'filterType': self.getFilterType()}
 
     def load(self, dict):
         self.setGrainOverlaps(dict['grainoverlaps'])
@@ -565,6 +587,7 @@ class GranulatorFrame(Module):
         self.setCutoffCheck(['cutoffCheck'])
         self.setCutoffYMin(dict['cutoffYmin'])
         self.setCutoffYMax(dict['cutoffYmax'])
+        self.setFilterType(dict['filterType'])
 
 class FFTReaderFrame(Module): 
     def __init__(self, parent, surface, continuousControl):
@@ -577,6 +600,8 @@ class FFTReaderFrame(Module):
         self.formant = 0
         self.cutoff = 10000
         self.amplitude = 0.7
+        self.cutoffCheck = 0
+        self.filterType = 0
 
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeFFTSizeBox(box)
@@ -589,6 +614,7 @@ class FFTReaderFrame(Module):
         self.makeAmplitudeBox(box)
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
         self.makeYaxisTranspoBox(box)
+        self.makeYaxisCutoffBox(box)
         self.SetSizer(box)
         
         self.Bind(wx.EVT_SLIDER, self.handleFFTSize, self.sl_fftsize)        
@@ -597,19 +623,24 @@ class FFTReaderFrame(Module):
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleKeepFormant, self.tog_formant)        
         self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
-        
+        self.tx_ytrans_ch.Bind(wx.EVT_CHECKBOX, self.handleTransCheck)      
+        self.tx_ycutoff_ch.Bind(wx.EVT_CHECKBOX, self.handleCutoffCheck)      
+        self.tx_filtype.Bind(wx.EVT_CHOICE, self.handleFilterType)      
+       
         self.Fit()
         self.SetMinSize(self.GetSize())
         self.SetMaxSize(self.GetSize())
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
 
-        self.widgets = [self.sl_fftsize, self.sl_overlaps, self.sl_winsize, self.tog_formant]
+        self.widgets = [self.sl_fftsize, self.sl_overlaps, self.sl_winsize, self.tog_formant,
+                        self.tx_ytrans_ch, self.tx_ycutoff_ch, self.tx_filtype]
         self.controls = {'/amplitude': self.getAmp, '/cutoff': self.getCutoff}
 
         self.Show(False)
 
     def getFixedValues(self):
-        return [self.fftsize, self.overlaps, self.winsize, self.formant]
+        return [self.fftsize, self.overlaps, self.winsize, self.formant, self.transCheck, self.getTransYMin(), 
+                self.getTransYMax(), self.cutoffCheck, self.getCutoffYMin(), self.getCutoffYMax(), self.getFilterType()]
 
     def save(self):
         return {'fftsize': self.getFFTSize(),
@@ -618,8 +649,13 @@ class FFTReaderFrame(Module):
                 'formant': self.getKeepFormant(),
                 'cutoff': self.getCutoff(),
                 'amp': self.getAmp(),
+                'transCheck': self.getTransCheck(),
                 'transYmin': self.getTransYMin(),
-                'transYmax': self.getTransYMax()}
+                'transYmax': self.getTransYMax(),
+                'cutoffCheck': self.getCutoffCheck(),
+                'cutoffYmin': self.getCutoffYMin(),
+                'cutoffYmax': self.getCutoffYMax(),
+                'filterType': self.getFilterType()}
 
     def load(self, dict):
         self.setFFTSize(dict['fftsize'])
@@ -628,8 +664,13 @@ class FFTReaderFrame(Module):
         self.setKeepFormant(dict['formant'])
         self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
+        self.setTransCheck(['transCheck'])
         self.setTransYMin(dict['transYmin'])
         self.setTransYMax(dict['transYmax'])
+        self.setCutoffCheck(['cutoffCheck'])
+        self.setCutoffYMin(dict['cutoffYmin'])
+        self.setCutoffYMax(dict['cutoffYmax'])
+        self.setFilterType(dict['filterType'])
 
 class FFTAdsynFrame(Module): 
     def __init__(self, parent, surface, continuousControl):

@@ -32,7 +32,7 @@ def soundInfo(sndfile):
 def checkForDrivers():
     setGlobalDuration(.01)
     sine(amplitude=0)
-    startCsound()
+    startCsound(withevents=False)
     if sys.platform != 'win32':
         os.wait()
     else:
@@ -74,6 +74,11 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
                     'FFTRingMod': ['/amplitude', '/cutoff', '/transpo', '/globalAmp'],
                     'FFTAdsyn': ['/amplitude', '/cutoff', '/globalAmp'],
                     'FMCrossSynth': ['/amplitude', '/cutoff', '/transpo', '/carrier', '/modulator', '/index', '/globalAmp']}[module]
+    totalbuslist = xlist + ylist + amplist + reclist + paramslist
+    totaloscbuslist = oscxlist + oscylist + oscamplist + oscreclist + oscparamslist
+    portamentolist = [0.002] * len(totalbuslist)
+    recindex = totalbuslist.index('rec')
+    portamentolist[recindex] = 0
     
     if audioDriver != None:
         setAudioDevice(onumber = audioDriver)
@@ -83,19 +88,22 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     snd = sndfile
     chans, samprate, dur, frac, samps, bitrate = getSoundInfo(snd)
     
-    setAudioAttributes(samplingrate=samprate, controlrate=samprate/10, sampleformat=bitrate, softbuffer=512, hardbuffer=2048)
+    setAudioAttributes(samplingrate=samprate, controlrate=samprate/10, sampleformat=bitrate, 
+                       softbuffer=Settings.getSoftBuffer(), hardbuffer=Settings.getHardBuffer())
     
     setChannels(chans)
     tab = genSoundTable(snd)
 
-    oscReceive( bus=xlist + ylist + amplist + reclist + paramslist, 
-                address=oscxlist + oscylist + oscamplist + oscreclist + oscparamslist, 
-                port=8000, portamento=0.002)
+    oscReceive( bus=totalbuslist, address=totaloscbuslist, port=8000, portamento=portamentolist)
     
     if module == 'Granulator':
-        overlaps, trans, tr_check, tr_ymin, tr_ymax, cut_check, cut_ymin, cut_ymax = args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]
-        randomChoice(bus='sizeVar', choice=trans, rate=50)
-        busMix(bus='size', in1='sizeVar', in2='grainsize', ftype='times')
+        overlaps, trans, tr_check, tr_ymin, tr_ymax, cut_check, cut_ymin, cut_ymax, filt_type = args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]
+        if len(trans) == 1 and trans[0] == 1:
+            sizeVar = 'grainsize'
+        else:    
+            randomChoice(bus='sizeVar', choice=trans, rate=50)
+            busMix(bus='size', in1='sizeVar', in2='grainsize', ftype='times')
+            sizeVar = 'size'
         if tr_check == 0:
             pitVarlist = None
         else:
@@ -107,24 +115,58 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
             else:
                 pitVar = pitVarlist[i]
             granulator2(table=tab, overlaps=overlaps, pointerpos=frac, grainsize=0.001, amplitude=.5, 
-                    grainsizeVar='size', pitch=1, pointerposVar=xlist[i], pitchVar=pitVar, amplitudeVar=amplist[i], out='outgrain%d' % i)
+                    grainsizeVar=sizeVar, pitch=1, pointerposVar=xlist[i], pitchVar=pitVar, amplitudeVar=amplist[i], out='outgrain%d' % i)
         if cut_check == 0:
             outbus = 'outgrain'
         else:
             cutVarlist = ['cutVar'+ele for ele in ylist]
             busMapper(cutVarlist, ylist, 0, 1, cut_ymin, cut_ymax)
             for i in range(len(amplist)):
-                lowpass(input='outgrain%d' % i, cutoff=1, cutoffVar=cutVarlist[i], out='outlp%d' % i)
+                if filt_type == 0:
+                    lowpass(input='outgrain%d' % i, cutoff=1, cutoffVar=cutVarlist[i], out='outlp%d' % i)
+                elif filt_type == 1:
+                    highpass(input='outgrain%d' % i, cutoff=1, cutoffVar=cutVarlist[i], out='outlp%d' % i)
+                elif filt_type == 2:
+                    bandpass(input='outgrain%d' % i, cutoff=1, bandwidth=.25, cutoffVar=cutVarlist[i], bandwidthVar=cutVarlist[i], out='outlp%d' % i)
+                else:
+                    bandreject(input='outgrain%d' % i, cutoff=1, bandwidth=.25, cutoffVar=cutVarlist[i], bandwidthVar=cutVarlist[i], out='outlp%d' % i)
             outbus = 'outlp'
         for i in range(len(amplist)):
             dcblock(input=outbus+str(i), amplitudeVar='amplitude', out='sndout') 
                
     elif module == 'FFTReader':
-        fftsize, overlaps, windowsize, keepformant = args[0], args[1], args[2], args[3]
+        fftsize, overlaps, windowsize, keepformant, tr_check, tr_ymin, tr_ymax, cut_check, cut_ymin, cut_ymax, filt_type = args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10]  
         soundTableRead(table=tab, duration=dur, out='snd')
-        fftBufRead(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, bufferlength=dur, 
-                   transpo=1, keepformant=keepformant, pointerposVar=xlist, transpoVar=ylist, amplitudeVar=amplist, out='fft')
-        lowpass(input='fft', cutoff=1, cutoffVar='cutoff', out='lp')
+        if tr_check == 0:
+            pitVarlist = None
+        else:
+            pitVarlist = ['pitVar'+ele for ele in ylist]
+            busMapper(pitVarlist, ylist, 0, 1, tr_ymin, tr_ymax)
+        for i in range(len(amplist)):
+            if tr_check == 0:
+                pitVar = None
+            else:
+                pitVar = pitVarlist[i]
+            fftBufRead(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, bufferlength=dur, 
+                   transpo=1, keepformant=keepformant, pointerposVar=xlist[i], transpoVar=pitVar, amplitudeVar=amplist[i], out='fft%d' % i)
+        if cut_check == 0:
+            outbus = 'fft'
+        else:
+            cutVarlist = ['cutVar'+ele for ele in ylist]
+            busMapper(cutVarlist, ylist, 0, 1, cut_ymin, cut_ymax)
+            for i in range(len(amplist)):
+                if filt_type == 0:
+                    lowpass(input='fft%d' % i, cutoff=1, cutoffVar=cutVarlist[i], out='outlp%d' % i)
+                elif filt_type == 1:
+                    highpass(input='fft%d' % i, cutoff=1, cutoffVar=cutVarlist[i], out='outlp%d' % i)
+                elif filt_type == 2:
+                    bandpass(input='fft%d' % i, cutoff=1, bandwidth=.25, cutoffVar=cutVarlist[i], bandwidthVar=cutVarlist[i], out='outlp%d' % i)
+                else:
+                    bandreject(input='fft%d' % i, cutoff=1, bandwidth=.25, cutoffVar=cutVarlist[i], bandwidthVar=cutVarlist[i], out='outlp%d' % i)
+            outbus = 'outlp'
+
+        for i in range(len(amplist)):
+            lowpass(input=outbus+str(i), cutoff=1, cutoffVar='cutoff', out='lp')
         dcblock(input='lp', amplitudeVar='amplitude', out='sndout') 
                
     elif module == 'FFTRingMod':
@@ -159,7 +201,7 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     toDac(input='sndout', amplitudeVar='globalAmp')
 
     beginTrigInst(trigbus = 'rec', trigval = 1, release = 0.05)
-    recordPerf(name = outFile)
+    recordPerf(name = os.path.join(os.path.expanduser('~'), outFile))
     endTrigInst()
             
     monitor()
@@ -274,7 +316,7 @@ def splitSnd(file):
     cspipe2.wait()
     
 def recordInput(audioDriver):
-    setAudioAttributes(samplingrate=44100, controlrate=4410, softbuffer=500, hardbuffer=2000)
+    setAudioAttributes(samplingrate=44100, controlrate=4410, softbuffer=Settings.getSoftBuffer(), hardbuffer=Settings.getHardBuffer())
     
     if audioDriver != None:
         setAudioDevice(onumber = audioDriver)
