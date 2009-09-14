@@ -48,6 +48,13 @@ class Preferences(wx.Frame):
         self.port = wx.TextCtrl( self, -1, "8000", size=(200, -1))
         box.Add(self.port, 0, wx.CENTER | wx.ALL, 5)
 
+        box.Add(wx.StaticText(self, -1, "Soft buffer"), 0, wx.CENTER|wx.TOP, 5)
+        self.soft = wx.TextCtrl( self, -1, "500", size=(200, -1))
+        box.Add(self.soft, 0, wx.CENTER | wx.ALL, 5)
+
+        box.Add(wx.StaticText(self, -1, "Hard buffer"), 0, wx.CENTER|wx.TOP, 5)
+        self.hard = wx.TextCtrl( self, -1, "2000", size=(200, -1))
+        box.Add(self.hard, 0, wx.CENTER | wx.ALL, 5)
         self.SetSizerAndFit(box)
 
         self.Show()
@@ -55,5 +62,7 @@ class Preferences(wx.Frame):
     def handleClose(self, event):
         Settings.setHost(self.host.GetValue().strip())
         Settings.setPort(int(self.port.GetValue().strip()))
+        Settings.setSoftBuffer(int(self.soft.GetValue().strip()))
+        Settings.setHardBuffer(int(self.hard.GetValue().strip()))
         self.Show(False)
         

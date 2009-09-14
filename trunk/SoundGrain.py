@@ -929,7 +929,7 @@ class ControlPanel(scrolled.ScrolledPanel):
 
         box.Add(wx.StaticText(self, -1, "Global amplitude"), 0, wx.LEFT|wx.TOP, 5)
         ampBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_amp = wx.Slider( self, -1, 100, 0, 200, size=(150, -1), style=wx.SL_HORIZONTAL)
+        self.sl_amp = wx.Slider( self, -1, 100, 0, 400, size=(150, -1), style=wx.SL_HORIZONTAL)
         ampBox.Add(self.sl_amp, 0, wx.RIGHT, 10)
         self.ampValue = wx.StaticText(self, -1, str(self.sl_amp.GetValue() * 0.01))
         ampBox.Add(self.ampValue, 0, wx.RIGHT, 10)
@@ -1187,8 +1187,13 @@ class ControlPanel(scrolled.ScrolledPanel):
             if not self.sndPath:
                 self.parent.log('*** No sound loaded! ***')
                 self.tog_audio.SetValue(0)
+                self.parent.menu.Check(7, False)
+                self.parent.moduleFrames[self.parent.currentModule].menu.Check(201, False)
             else:    
+                self.tog_audio.SetValue(1)
                 self.tog_audio.SetLabel('Stop audio')
+                self.parent.menu.Check(7, True)
+                self.parent.moduleFrames[self.parent.currentModule].menu.Check(201, True)
                 self.tog_inrec.Disable()
                 self.trajMax.Disable()
                 self.tx_output.Disable()
@@ -1207,7 +1212,10 @@ class ControlPanel(scrolled.ScrolledPanel):
                     self.parent.log('FFT Buffering...')
                     wx.CallLater(self.sndDur * 1000, self.logSndInfo)
         else:    
+            self.tog_audio.SetValue(0)
             self.tog_audio.SetLabel('Start audio')
+            self.parent.menu.Check(7, False)
+            self.parent.moduleFrames[self.parent.currentModule].menu.Check(201, False)
             self.tog_inrec.Enable()
             self.trajMax.Enable()
             self.tx_output.Enable()
@@ -1360,7 +1368,7 @@ class MainFrame(wx.Frame):
         self.status = wx.StatusBar(self, -1)
         self.SetStatusBar(self.status)
 
-        menuBar = wx.MenuBar()
+        self.menuBar = wx.MenuBar()
         self.menu = wx.Menu()
         self.menu.Append(1, "Open...\tCtrl+O")
         self.Bind(wx.EVT_MENU, self.handleOpen, id=1)
@@ -1376,9 +1384,12 @@ class MainFrame(wx.Frame):
         self.menu.Append(6, "Open FX Window\tCtrl+P")
         self.Bind(wx.EVT_MENU, self.openFxWindow, id=6)
         self.menu.AppendSeparator()
-        self.menu.Append(7, "Quit\tCtrl+Q")  
-        self.Bind(wx.EVT_MENU, self.OnClose, id=7)
-        menuBar.Append(self.menu, "&File")
+        self.menu.Append(7, "Run\tCtrl+R", "", wx.ITEM_CHECK)
+        self.Bind(wx.EVT_MENU, self.onRun, id=7)
+        self.menu.AppendSeparator()
+        self.menu.Append(8, "Quit\tCtrl+Q")  
+        self.Bind(wx.EVT_MENU, self.OnClose, id=8)
+        self.menuBar.Append(self.menu, "&File")
 
         self.menu1 = wx.Menu()
         self.menu1.Append(110, "Undo\tCtrl+Z", "")
@@ -1406,10 +1417,10 @@ class MainFrame(wx.Frame):
         self.menu1.InsertSeparator(7)
         self.menu1.Append(103, "Reinit counters\tCtrl+T", "")
         self.Bind(wx.EVT_MENU, self.handleReinit, id=103)
-        menuBar.Append(self.menu1, "&Drawing")
+        self.menuBar.Append(self.menu1, "&Drawing")
 
         self.menu2 = wx.Menu()
-        menuBar.Append(self.menu2, "&Audio Drivers")
+        self.menuBar.Append(self.menu2, "&Audio Drivers")
 
         self.menu3 = wx.Menu()
         for i, module in enumerate(self.modules):
@@ -1426,15 +1437,15 @@ class MainFrame(wx.Frame):
             self.subMenu3.Append(3000+i, f)
             self.Bind(wx.EVT_MENU, self.handleExamples, id=3000+i)
         self.menu3.AppendMenu(menuId+1, "Examples", self.subMenu3)
-        menuBar.Append(self.menu3, "&Modules")
+        self.menuBar.Append(self.menu3, "&Modules")
 
         menu4 = wx.Menu()
         helpItem = menu4.Append(400, '&About %s %s' % (NAME, VERSION), 'wxPython RULES!!!')
         wx.App.SetMacAboutMenuItemId(helpItem.GetId())
         self.Bind(wx.EVT_MENU, self.showAbout, helpItem)
-        menuBar.Append(menu4, '&Help')
+        self.menuBar.Append(menu4, '&Help')
 
-        self.SetMenuBar(menuBar)
+        self.SetMenuBar(self.menuBar)
         
         mainBox = wx.BoxSizer(wx.HORIZONTAL)
         self.panel = DrawingSurface(self)
@@ -1466,7 +1477,10 @@ class MainFrame(wx.Frame):
 
         self.Show()
         wx.CallAfter(self.check)
-            
+ 
+    def onRun(self, event):
+        self.controls.handleAudio(event)
+        
     def check(self):
         self.status.SetStatusText('Scanning audio drivers...')
         self.driversList, selected = checkForDrivers()

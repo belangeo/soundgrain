@@ -19,6 +19,8 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 host = '127.0.0.1'
 port = 8000
+soft = 500
+hard = 2000
 
 def setHost(h):
     global host
@@ -33,3 +35,18 @@ def setPort(p):
 
 def getPort():
     return port
+    
+def setSoftBuffer(x):
+    global soft
+    soft = x
+    
+def getSoftBuffer():
+    return soft
+    
+def setHardBuffer(x):
+    global hard
+    hard = x
+    
+def getHardBuffer():
+    return hard
+    
