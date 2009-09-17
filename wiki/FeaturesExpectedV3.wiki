@@ -10,10 +10,13 @@ Expected features for version 3.0
 - Temporary effects with circles the user can drag and drop on the drawing surface.
 
     - multitap delays
+
     - infinite reverb
 
 - Trajectory Behavior changes with objects the user can drag and drop on the drawing surface. 
 
     - wall to change direction of the ball
+
     - blur to create a moment of confusion and jitter on the trajectory
+
     - trampoline to give a swing to the ball 
