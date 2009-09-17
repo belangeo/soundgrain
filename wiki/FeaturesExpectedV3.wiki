@@ -7,13 +7,13 @@ Expected features for version 3.0
 
 - Fractal trajectories with random choice for path of the ball when lines are splitting.
 
-- Temporary effects with circles the user can drag and drop on the drawing surface.
+- Temporary effects with circles user can drag and drop on the drawing surface.
 
     - multitap delays
 
     - infinite reverb
 
-- Trajectory Behavior changes with objects the user can drag and drop on the drawing surface. 
+- Trajectory Behavior changes with objects user can drag and drop on the drawing surface. 
 
     - wall to change direction of the ball
 
