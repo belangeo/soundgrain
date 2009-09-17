@@ -1,5 +1,3 @@
-#Expected features for version 3.0 
-
 = Introduction =
 
 Expected features for version 3.0 
@@ -7,7 +5,15 @@ Expected features for version 3.0
 
 = Details =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+- Fractal trajectories with random choice for path of the ball when lines are splitting.
+
+- Temporary effects with circles the user can drag and drop on the drawing surface.
+
+    - multitap delays
+    - infinite reverb
+
+- Trajectory Behavior changes with objects the user can drag and drop on the drawing surface. 
+
+    - wall to change direction of the ball
+    - blur to create a moment of confusion and jitter on the trajectory
+    - trampoline to give a swing to the ball 
