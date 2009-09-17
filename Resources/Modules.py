@@ -167,7 +167,39 @@ class Module(wx.Frame):
 
     def setCutoffYMax(self, ymax):
         self.tx_cut_ymax.SetValue(str(ymax))
+
+    def handleRingCheck(self, event):
+        self.ringCheck = event.GetInt()
+
+    def getRingCheck(self):
+        return self.ringCheck
+
+    def setRingCheck(self, value):
+        self.ringCheck = value
+        self.tx_yring_ch.SetValue(value)
+
+    def handleRingWav(self, event):
+        self.ringWav = event.GetInt()
+
+    def getRingWav(self):
+        return self.ringWav
+
+    def setRingWav(self, wav):
+        self.ringWav = wav
+        self.tx_ringwav.SetSelection(wav)
                         
+    def getRingYMin(self):
+        return float(self.tx_ring_ymin.GetValue())
+
+    def setRingYMin(self, ymin):
+        self.tx_ring_ymin.SetValue(str(ymin))
+    
+    def getRingYMax(self):
+        return float(self.tx_ring_ymax.GetValue())
+
+    def setRingYMax(self, ymax):
+        self.tx_ring_ymax.SetValue(str(ymax))
+                       
     def handleFFTSize(self, event):
         self.fftsize = 2 ** event.GetInt()
         self.fftsizeValue.SetLabel(str(self.fftsize))
@@ -271,57 +303,6 @@ class Module(wx.Frame):
         self.sl_transpo.SetValue(int(self.transpo*100))
         self.transpoValue.SetLabel(str(self.transpo))
 
-    def handlePitch(self, event):
-        self.pitch = event.GetInt()
-        self.pitchValue.SetLabel(str(self.pitch) + ' Hz')
-
-    def getPitch(self):
-        return self.pitch
-
-    def setPitch(self, pitch):
-        self.pitch = pitch
-        self.sl_pitch.SetValue(int(self.pitch))
-        self.pitchValue.SetLabel(str(self.pitch) + ' Hz')
-
-    def handleCarrier(self, event):
-        self.carrier = event.GetInt() * 0.001
-        self.carrierValue.SetLabel(str(self.carrier))
-        self.continuousControl('/carrier', self.carrier)   
-
-    def getCarrier(self):
-        return self.carrier
-
-    def setCarrier(self, carrier):
-        self.carrier = carrier
-        self.sl_carrier.SetValue(int(self.carrier*1000))
-        self.carrierValue.SetLabel(str(self.carrier))
-
-    def handleModulator(self, event):
-        self.modulator = event.GetInt() * 0.001
-        self.modulatorValue.SetLabel(str(self.modulator))
-        self.continuousControl('/modulator', self.modulator)   
-
-    def getModulator(self):
-        return self.modulator
-
-    def setModulator(self, modulator):
-        self.modulator = modulator
-        self.sl_modulator.SetValue(int(self.modulator*1000))
-        self.modulatorValue.SetLabel(str(self.modulator))
-
-    def handleIndex(self, event):
-        self.index = event.GetInt() * 0.01
-        self.indexValue.SetLabel(str(self.index))
-        self.continuousControl('/index', self.index)   
-
-    def getIndex(self):
-        return self.index
-
-    def setIndex(self, index):
-        self.index = index
-        self.sl_index.SetValue(int(self.index*100))
-        self.indexValue.SetLabel(str(self.index))
-
     def handleCutoff(self, event):
         self.cutoff = event.GetInt() * 100
         self.cutoffValue.SetLabel(str(self.cutoff) + ' Hz')
@@ -405,6 +386,25 @@ class Module(wx.Frame):
         textBox.Add(self.tx_cut_ymax, 0, wx.RIGHT, 20)
         box.Add(textBox, 0, wx.ALL, 10)
 
+    def makeYaxisRingBox(self, box, label=None):
+        if label == None: lab = "Y axis (Ring Mod frequency)"
+        else: lab = label
+        box.Add(wx.StaticText(self, -1, lab), 0, wx.CENTER|wx.TOP, 5)
+        self.tx_ringwav = wx.Choice(self, -1, choices = ['Sine', 'Square', 'Sawtooth'])
+        self.tx_ringwav.SetSelection(0)
+        box.Add(self.tx_ringwav, 0, wx.CENTER | wx.TOP, 5)
+        textBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.tx_yring_ch = wx.CheckBox(self, -1, "")
+        self.tx_yring_ch.SetValue(0)
+        textBox.Add(self.tx_yring_ch, 0, wx.LEFT | wx.RIGHT, 10)
+        textBox.Add(wx.StaticText(self, -1, "Min: "), 0, wx.TOP, 4)
+        self.tx_ring_ymin = wx.TextCtrl( self, -1, "0.", size=(50, -1))
+        textBox.Add(self.tx_ring_ymin, 0, wx.RIGHT, 20)
+        textBox.Add(wx.StaticText(self, -1, "Max: "), 0, wx.TOP, 4)
+        self.tx_ring_ymax = wx.TextCtrl( self, -1, "100.", size=(50, -1))
+        textBox.Add(self.tx_ring_ymax, 0, wx.RIGHT, 20)
+        box.Add(textBox, 0, wx.ALL, 10)
+        
     def makeFFTSizeBox(self, box):
         box.Add(wx.StaticText(self, -1, "FFT size (power of 2)"), 0, wx.LEFT|wx.TOP, 5)
         fftsizeBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -473,42 +473,6 @@ class Module(wx.Frame):
         transpoBox.Add(self.transpoValue, 0, wx.RIGHT, 10)
         box.Add(transpoBox, 0, wx.ALL, 5)
    
-    def makePitchBox(self, box):
-        box.Add(wx.StaticText(self, -1, "Base pitch"), 0, wx.LEFT|wx.TOP, 5)
-        pitchBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_pitch = wx.Slider( self, -1, self.pitch, 40, 500, size=(200, -1), style=wx.SL_HORIZONTAL)
-        pitchBox.Add(self.sl_pitch, 0, wx.RIGHT, 10)
-        self.pitchValue = wx.StaticText(self, -1, str(self.sl_pitch.GetValue()) + ' Hz')
-        pitchBox.Add(self.pitchValue, 0, wx.RIGHT, 10)
-        box.Add(pitchBox, 0, wx.ALL, 5)
-  
-    def makeCarrierBox(self, box):
-        box.Add(wx.StaticText(self, -1, "Carrier ratio"), 0, wx.LEFT|wx.TOP, 5)
-        carrierBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_carrier = wx.Slider( self, -1, int(self.carrier * 1000), 250, 2000, size=(200, -1), style=wx.SL_HORIZONTAL)
-        carrierBox.Add(self.sl_carrier, 0, wx.RIGHT, 10)
-        self.carrierValue = wx.StaticText(self, -1, str(self.sl_carrier.GetValue() * 0.001))
-        carrierBox.Add(self.carrierValue, 0, wx.RIGHT, 10)
-        box.Add(carrierBox, 0, wx.ALL, 5)
-
-    def makeModulatorBox(self, box):
-        box.Add(wx.StaticText(self, -1, "Modulator ratio"), 0, wx.LEFT|wx.TOP, 5)
-        modulatorBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_modulator = wx.Slider( self, -1, int(self.modulator * 1000), 250, 2000, size=(200, -1), style=wx.SL_HORIZONTAL)
-        modulatorBox.Add(self.sl_modulator, 0, wx.RIGHT, 10)
-        self.modulatorValue = wx.StaticText(self, -1, str(self.sl_modulator.GetValue() * 0.001))
-        modulatorBox.Add(self.modulatorValue, 0, wx.RIGHT, 10)
-        box.Add(modulatorBox, 0, wx.ALL, 5)
-
-    def makeIndexBox(self, box):
-        box.Add(wx.StaticText(self, -1, "Modulation index"), 0, wx.LEFT|wx.TOP, 5)
-        indexBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_index = wx.Slider( self, -1, int(self.index * 100), 0, 2000, size=(200, -1), style=wx.SL_HORIZONTAL)
-        indexBox.Add(self.sl_index, 0, wx.RIGHT, 10)
-        self.indexValue = wx.StaticText(self, -1, str(self.sl_index.GetValue() * 0.01))
-        indexBox.Add(self.indexValue, 0, wx.RIGHT, 10)
-        box.Add(indexBox, 0, wx.ALL, 5)
-
     def makeCutoffBox(self, box):
         box.Add(wx.StaticText(self, -1, "Lowpass cutoff"), 0, wx.LEFT|wx.TOP, 5)
         cutoffBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -529,7 +493,9 @@ class GranulatorFrame(Module):
         self.transCheck = 1
         self.cutoffCheck = 0
         self.filterType = 0
-
+        self.ringCheck = 0
+        self.ringWav = 0
+        
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeGrainOverlapsBox(box)
         self.makeGrainSizeBox(box)
@@ -539,6 +505,7 @@ class GranulatorFrame(Module):
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
         self.makeYaxisTranspoBox(box)
         self.makeYaxisCutoffBox(box)
+        self.makeYaxisRingBox(box)
         self.SetSizer(box)
         
         self.Bind(wx.EVT_SLIDER, self.handleGrainOverlaps, self.sl_overlaps)        
@@ -548,20 +515,24 @@ class GranulatorFrame(Module):
         self.tx_ytrans_ch.Bind(wx.EVT_CHECKBOX, self.handleTransCheck)      
         self.tx_ycutoff_ch.Bind(wx.EVT_CHECKBOX, self.handleCutoffCheck)      
         self.tx_filtype.Bind(wx.EVT_CHOICE, self.handleFilterType)      
+        self.tx_yring_ch.Bind(wx.EVT_CHECKBOX, self.handleRingCheck)      
+        self.tx_ringwav.Bind(wx.EVT_CHOICE, self.handleRingWav)      
         
         self.Fit()
         self.SetMinSize(self.GetSize())
         self.SetMaxSize(self.GetSize())
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
 
-        self.widgets = [self.sl_overlaps, self.tx_ytrans_ch, self.tx_ycutoff_ch, self.tx_filtype]
+        self.widgets = [self.sl_overlaps, self.tx_ytrans_ch, self.tx_ycutoff_ch, self.tx_filtype, 
+                        self.tx_yring_ch, self.tx_ringwav]
         self.controls = {'/amplitude': self.getAmp, '/grainsize': self.getGrainSize}
 
         self.Show(False)
 
     def getFixedValues(self):
         return [self.grainoverlaps, self.trans, self.transCheck, self.getTransYMin(), self.getTransYMax(),
-                self.cutoffCheck, self.getCutoffYMin(), self.getCutoffYMax(), self.getFilterType()]
+                self.cutoffCheck, self.getCutoffYMin(), self.getCutoffYMax(), self.getFilterType(),
+                self.ringCheck, self.getRingYMin(), self.getRingYMax(), self.getRingWav()]
 
     def save(self):
         return {'grainoverlaps': self.getGrainOverlaps(),
@@ -574,7 +545,11 @@ class GranulatorFrame(Module):
                 'cutoffCheck': self.getCutoffCheck(),
                 'cutoffYmin': self.getCutoffYMin(),
                 'cutoffYmax': self.getCutoffYMax(),
-                'filterType': self.getFilterType()}
+                'filterType': self.getFilterType(),
+                'ringCheck': self.getRingCheck(),
+                'ringYmin': self.getRingYMin(),
+                'ringYmax': self.getRingYMax(),
+                'ringwav': self.getRingWav()}
 
     def load(self, dict):
         self.setGrainOverlaps(dict['grainoverlaps'])
@@ -588,6 +563,10 @@ class GranulatorFrame(Module):
         self.setCutoffYMin(dict['cutoffYmin'])
         self.setCutoffYMax(dict['cutoffYmax'])
         self.setFilterType(dict['filterType'])
+        self.setRingCheck(['ringCheck'])
+        self.setRingYMin(dict['ringYmin'])
+        self.setRingYMax(dict['ringYmax'])
+        self.setRingWav(dict['ringwav'])
 
 class FFTReaderFrame(Module): 
     def __init__(self, parent, surface, continuousControl):
@@ -600,8 +579,11 @@ class FFTReaderFrame(Module):
         self.formant = 0
         self.cutoff = 10000
         self.amplitude = 0.7
+        self.transCheck = 1
         self.cutoffCheck = 0
         self.filterType = 0
+        self.ringCheck = 0
+        self.ringWav = 0
 
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeFFTSizeBox(box)
@@ -615,6 +597,7 @@ class FFTReaderFrame(Module):
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
         self.makeYaxisTranspoBox(box)
         self.makeYaxisCutoffBox(box)
+        self.makeYaxisRingBox(box)
         self.SetSizer(box)
         
         self.Bind(wx.EVT_SLIDER, self.handleFFTSize, self.sl_fftsize)        
@@ -626,6 +609,8 @@ class FFTReaderFrame(Module):
         self.tx_ytrans_ch.Bind(wx.EVT_CHECKBOX, self.handleTransCheck)      
         self.tx_ycutoff_ch.Bind(wx.EVT_CHECKBOX, self.handleCutoffCheck)      
         self.tx_filtype.Bind(wx.EVT_CHOICE, self.handleFilterType)      
+        self.tx_yring_ch.Bind(wx.EVT_CHECKBOX, self.handleRingCheck)      
+        self.tx_ringwav.Bind(wx.EVT_CHOICE, self.handleRingWav)      
        
         self.Fit()
         self.SetMinSize(self.GetSize())
@@ -633,14 +618,15 @@ class FFTReaderFrame(Module):
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
 
         self.widgets = [self.sl_fftsize, self.sl_overlaps, self.sl_winsize, self.tog_formant,
-                        self.tx_ytrans_ch, self.tx_ycutoff_ch, self.tx_filtype]
+                        self.tx_ytrans_ch, self.tx_ycutoff_ch, self.tx_filtype, self.tx_yring_ch, self.tx_ringwav]
         self.controls = {'/amplitude': self.getAmp, '/cutoff': self.getCutoff}
 
         self.Show(False)
 
     def getFixedValues(self):
         return [self.fftsize, self.overlaps, self.winsize, self.formant, self.transCheck, self.getTransYMin(), 
-                self.getTransYMax(), self.cutoffCheck, self.getCutoffYMin(), self.getCutoffYMax(), self.getFilterType()]
+                self.getTransYMax(), self.cutoffCheck, self.getCutoffYMin(), self.getCutoffYMax(), self.getFilterType(),
+                self.ringCheck, self.getRingYMin(), self.getRingYMax(), self.getRingWav()]
 
     def save(self):
         return {'fftsize': self.getFFTSize(),
@@ -655,7 +641,11 @@ class FFTReaderFrame(Module):
                 'cutoffCheck': self.getCutoffCheck(),
                 'cutoffYmin': self.getCutoffYMin(),
                 'cutoffYmax': self.getCutoffYMax(),
-                'filterType': self.getFilterType()}
+                'filterType': self.getFilterType(),
+                'ringCheck': self.getRingCheck(),
+                'ringYmin': self.getRingYMin(),
+                'ringYmax': self.getRingYMax(),
+                'ringwav': self.getRingWav()}
 
     def load(self, dict):
         self.setFFTSize(dict['fftsize'])
@@ -671,6 +661,10 @@ class FFTReaderFrame(Module):
         self.setCutoffYMin(dict['cutoffYmin'])
         self.setCutoffYMax(dict['cutoffYmax'])
         self.setFilterType(dict['filterType'])
+        self.setRingCheck(['ringCheck'])
+        self.setRingYMin(dict['ringYmin'])
+        self.setRingYMax(dict['ringYmax'])
+        self.setRingWav(dict['ringwav'])
 
 class FFTAdsynFrame(Module): 
     def __init__(self, parent, surface, continuousControl):
@@ -686,6 +680,11 @@ class FFTAdsynFrame(Module):
         self.incr = 3        
         self.cutoff = 10000
         self.amplitude = 0.7
+        self.transCheck = 1
+        self.cutoffCheck = 0
+        self.filterType = 0
+        self.ringCheck = 0
+        self.ringWav = 0
 
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeFFTSizeBox(box)
@@ -700,6 +699,8 @@ class FFTAdsynFrame(Module):
         self.makeAmplitudeBox(box)
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
         self.makeYaxisTranspoBox(box)
+        self.makeYaxisCutoffBox(box)
+        self.makeYaxisRingBox(box)
         self.SetSizer(box)
 
         self.Bind(wx.EVT_SLIDER, self.handleFFTSize, self.sl_fftsize)        
@@ -710,19 +711,27 @@ class FFTAdsynFrame(Module):
         self.Bind(wx.EVT_SLIDER, self.handleIncr, self.sl_incr)                
         self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
+        self.tx_ytrans_ch.Bind(wx.EVT_CHECKBOX, self.handleTransCheck)      
+        self.tx_ycutoff_ch.Bind(wx.EVT_CHECKBOX, self.handleCutoffCheck)      
+        self.tx_filtype.Bind(wx.EVT_CHOICE, self.handleFilterType)      
+        self.tx_yring_ch.Bind(wx.EVT_CHECKBOX, self.handleRingCheck)      
+        self.tx_ringwav.Bind(wx.EVT_CHOICE, self.handleRingWav)      
         
         self.Fit()
         self.SetMinSize(self.GetSize())
         self.SetMaxSize(self.GetSize())
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
 
-        self.widgets = [self.sl_fftsize, self.sl_overlaps, self.sl_winsize, self.sl_numbins, self.sl_first, self.sl_incr]
+        self.widgets = [self.sl_fftsize, self.sl_overlaps, self.sl_winsize, self.sl_numbins, self.sl_first, self.sl_incr,
+                        self.tx_ytrans_ch, self.tx_ycutoff_ch, self.tx_filtype, self.tx_yring_ch, self.tx_ringwav]
         self.controls = {'/amplitude': self.getAmp, '/cutoff': self.getCutoff}
 
         self.Show(False)
 
     def getFixedValues(self):
-        return [self.fftsize, self.overlaps, self.winsize, self.numbins, self.first, self.incr]
+        return [self.fftsize, self.overlaps, self.winsize, self.numbins, self.first, self.incr, self.transCheck, 
+                self.getTransYMin(), self.getTransYMax(), self.cutoffCheck, self.getCutoffYMin(), self.getCutoffYMax(), 
+                self.getFilterType(), self.ringCheck, self.getRingYMin(), self.getRingYMax(), self.getRingWav()]
 
     def save(self):
         return {'fftsize': self.getFFTSize(),
@@ -733,8 +742,17 @@ class FFTAdsynFrame(Module):
                 'incr': self.getIncr(),
                 'cutoff': self.getCutoff(),
                 'amp': self.getAmp(),
+                'transCheck': self.getTransCheck(),
                 'transYmin': self.getTransYMin(),
-                'transYmax': self.getTransYMax()}
+                'transYmax': self.getTransYMax(),
+                'cutoffCheck': self.getCutoffCheck(),
+                'cutoffYmin': self.getCutoffYMin(),
+                'cutoffYmax': self.getCutoffYMax(),
+                'filterType': self.getFilterType(),
+                'ringCheck': self.getRingCheck(),
+                'ringYmin': self.getRingYMin(),
+                'ringYmax': self.getRingYMax(),
+                'ringwav': self.getRingWav()}
 
     def load(self, dict):
         self.setFFTSize(dict['fftsize'])
@@ -745,157 +763,14 @@ class FFTAdsynFrame(Module):
         self.setIncr(dict['incr'])
         self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
+        self.setTransCheck(['transCheck'])
         self.setTransYMin(dict['transYmin'])
         self.setTransYMax(dict['transYmax'])
-
-class FFTRingModFrame(Module): 
-    def __init__(self, parent, surface, continuousControl):
-        Module.__init__(self, parent, surface, continuousControl)
-        
-        self.ffts = {32: 5, 64: 6, 128: 7, 256: 8, 512: 9, 1024: 10, 2048: 11, 4096: 12, 8192: 13, 16384: 14}
-        self.fftsize = 1024        
-        self.overlaps = 8
-        self.winsize = 2048         
-        self.cutoff = 10000
-        self.amplitude = 0.7
-        self.transpo = 1
-
-        box = wx.BoxSizer(wx.VERTICAL)
-        self.makeFFTSizeBox(box)
-        self.makeFFTOverlapsBox(box)
-        self.makeFFTWinSizeBox(box)
-        box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
-        self.makeTranspoBox(box)
-        self.makeCutoffBox(box)
-        self.makeAmplitudeBox(box)
-        box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
-        self.makeYaxisTranspoBox(box, "Y axis (* 100 = Sine pitch)")
-        self.SetSizer(box)
-        
-        self.Bind(wx.EVT_SLIDER, self.handleFFTSize, self.sl_fftsize)        
-        self.Bind(wx.EVT_SLIDER, self.handleOverlaps, self.sl_overlaps)        
-        self.Bind(wx.EVT_SLIDER, self.handleWindowSize, self.sl_winsize)                
-        self.Bind(wx.EVT_SLIDER, self.handleTranspo, self.sl_transpo)        
-        self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
-        self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
-        
-        self.Fit()
-        self.SetMinSize(self.GetSize())
-        self.SetMaxSize(self.GetSize())
-        self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
-
-        self.widgets = [self.sl_fftsize, self.sl_overlaps, self.sl_winsize]
-        self.controls = {'/amplitude': self.getAmp, '/transpo': self.getTranspo, '/cutoff': self.getCutoff}
-
-        self.Show(False)
-
-    def getFixedValues(self):
-        return [self.fftsize, self.overlaps, self.winsize]
-
-    def save(self):
-        return {'fftsize': self.getFFTSize(),
-                'overlaps': self.getOverlaps(),
-                'winsize': self.getWindowSize(),
-                'transpo': self.getTranspo(),
-                'cutoff': self.getCutoff(),
-                'amp': self.getAmp(),
-                'transYmin': self.getTransYMin(),
-                'transYmax': self.getTransYMax()}
-
-    def load(self, dict):
-        self.setFFTSize(dict['fftsize'])
-        self.setOverlaps(dict['overlaps'])
-        self.setWindowSize(dict['winsize'])
-        self.setTranspo(dict['transpo'])
-        self.setCutoff(dict['cutoff'])
-        self.setAmp(dict['amp'])
-        self.setTransYMin(dict['transYmin'])
-        self.setTransYMax(dict['transYmax'])
-
-class FMCrossSynthFrame(Module): 
-    def __init__(self, parent, surface, continuousControl):
-        Module.__init__(self, parent, surface, continuousControl)
-
-        self.ffts = {32: 5, 64: 6, 128: 7, 256: 8, 512: 9, 1024: 10, 2048: 11, 4096: 12, 8192: 13, 16384: 14}
-        self.fftsize = 1024        
-        self.overlaps = 8
-        self.winsize = 2048 
-        self.transpo = 1
-        self.pitch = 100
-        self.carrier = 1
-        self.modulator = .5
-        self.index = 5
-        self.cutoff = 10000
-        self.amplitude = 0.7
-
-        box = wx.BoxSizer(wx.VERTICAL)
-        self.makeFFTSizeBox(box)
-        self.makeFFTOverlapsBox(box)
-        self.makeFFTWinSizeBox(box)
-        box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
-        self.makeTranspoBox(box)
-        box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
-        box.Add(wx.StaticText(self, -1, "FM parameters"), 0, wx.CENTER|wx.TOP, 5)
-        self.makePitchBox(box)
-        self.makeCarrierBox(box)
-        self.makeModulatorBox(box)
-        self.makeIndexBox(box)
-        box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
-        self.makeCutoffBox(box)
-        self.makeAmplitudeBox(box)
-        box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND)
-        self.makeYaxisTranspoBox(box, "Y axis (FM pitch)")
-        self.SetSizer(box)
-        
-        self.Bind(wx.EVT_SLIDER, self.handleFFTSize, self.sl_fftsize)        
-        self.Bind(wx.EVT_SLIDER, self.handleOverlaps, self.sl_overlaps)        
-        self.Bind(wx.EVT_SLIDER, self.handleWindowSize, self.sl_winsize)        
-        self.Bind(wx.EVT_SLIDER, self.handleTranspo, self.sl_transpo)        
-        self.Bind(wx.EVT_SLIDER, self.handlePitch, self.sl_pitch)        
-        self.Bind(wx.EVT_SLIDER, self.handleCarrier, self.sl_carrier)        
-        self.Bind(wx.EVT_SLIDER, self.handleModulator, self.sl_modulator)        
-        self.Bind(wx.EVT_SLIDER, self.handleIndex, self.sl_index)        
-        self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
-        self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
-        
-        self.Fit()
-        self.SetMinSize(self.GetSize())
-        self.SetMaxSize(self.GetSize())
-        self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
-
-        self.widgets = [self.sl_fftsize, self.sl_overlaps, self.sl_winsize, self.sl_pitch]
-        self.controls = {'/amplitude': self.getAmp, '/transpo': self.getTranspo, '/carrier': self.getCarrier, 
-                         '/modulator': self.getModulator, '/index': self.getIndex, '/cutoff': self.getCutoff}
-
-        self.Show(False)
-
-    def getFixedValues(self):
-        return [self.fftsize, self.overlaps, self.winsize, self.pitch]
-
-    def save(self):
-        return {'fftsize': self.getFFTSize(),
-                'overlaps': self.getOverlaps(),
-                'winsize': self.getWindowSize(),
-                'transpo': self.getTranspo(),
-                'pitch': self.getPitch(),
-                'carrier': self.getCarrier(),
-                'modulator': self.getModulator(),
-                'index': self.getIndex(),
-                'cutoff': self.getCutoff(),
-                'amp': self.getAmp(),
-                'transYmin': self.getTransYMin(),
-                'transYmax': self.getTransYMax()}
-
-    def load(self, dict):
-        self.setFFTSize(dict['fftsize'])
-        self.setOverlaps(dict['overlaps'])
-        self.setWindowSize(dict['winsize'])
-        self.setTranspo(dict['transpo'])
-        self.setPitch(dict['pitch'])
-        self.setCarrier(dict['carrier'])
-        self.setModulator(dict['modulator'])
-        self.setIndex(dict['index'])
-        self.setCutoff(dict['cutoff'])
-        self.setAmp(dict['amp'])
-        self.setTransYMin(dict['transYmin'])
-        self.setTransYMax(dict['transYmax'])
+        self.setCutoffCheck(['cutoffCheck'])
+        self.setCutoffYMin(dict['cutoffYmin'])
+        self.setCutoffYMax(dict['cutoffYmax'])
+        self.setFilterType(dict['filterType'])
+        self.setRingCheck(['ringCheck'])
+        self.setRingYMin(dict['ringYmin'])
+        self.setRingYMax(dict['ringYmax'])
+        self.setRingWav(dict['ringwav'])

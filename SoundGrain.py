@@ -1330,7 +1330,7 @@ class PlaybackParameters(wx.Panel):
 
         box.Add(wx.StaticText(self, -1, "Point step"), 0, wx.LEFT, 5)
         stepBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_step = wx.Slider( self, -1, 1, 1, 50, size=(150, -1), style=wx.SL_HORIZONTAL)
+        self.sl_step = wx.Slider( self, -1, 1, 1, 100, size=(150, -1), style=wx.SL_HORIZONTAL)
         stepBox.Add(self.sl_step, 0, wx.RIGHT, 10)
         self.stepValue = wx.StaticText(self, -1, str(self.sl_step.GetValue()))
         stepBox.Add(self.stepValue, 0, wx.RIGHT, 10)
@@ -1359,7 +1359,7 @@ class MainFrame(wx.Frame):
         self.editionLevels = [2, 4, 8, 12, 16, 24, 32, 50]
         self.editionLevel = 2
         self.audioDriver = None
-        self.modules = ['Granulator', 'FFTReader', 'FFTAdsyn', 'FFTRingMod', 'FMCrossSynth']
+        self.modules = ['Granulator', 'FFTReader', 'FFTAdsyn']
         self.moduleFrames = {}
         self.recall = self.undos = 0
 
@@ -1463,12 +1463,8 @@ class MainFrame(wx.Frame):
         self.moduleFrames['Granulator'] = self.granulatorControls
         self.fftreaderControls = FFTReaderFrame(self, self.panel, sendControl)
         self.moduleFrames['FFTReader'] = self.fftreaderControls
-        self.fftringmodControls = FFTRingModFrame(self, self.panel, sendControl)
-        self.moduleFrames['FFTRingMod'] = self.fftringmodControls
         self.fftadsynControls = FFTAdsynFrame(self, self.panel, sendControl)
         self.moduleFrames['FFTAdsyn'] = self.fftadsynControls
-        self.fmcrosssynthControls = FMCrossSynthFrame(self, self.panel, sendControl)
-        self.moduleFrames['FMCrossSynth'] = self.fmcrosssynthControls
         
         self.createInitTempFile()
 
