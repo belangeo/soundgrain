@@ -1,8 +1,8 @@
-#summary One-sentence summary of this page.
+#Expected features for version 3.0 
 
 = Introduction =
 
-Add your content here.
+Expected features for version 3.0 
 
 
 = Details =
