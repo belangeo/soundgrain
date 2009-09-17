@@ -1,4 +1,4 @@
-#Expected features for version 3.0 
+Expected features for version 3.0 
 
 = Introduction =
 
