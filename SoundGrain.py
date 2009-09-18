@@ -88,6 +88,8 @@ class Trajectory:
         self.freeze = False
         self.initPoints = []
         self.points = []
+        self.mario = 0
+        self.lastCirclePos = (0,0)
         self.circlePos = None
         self.counter = 0
         self.filterCut = 5000
@@ -311,8 +313,11 @@ class Trajectory:
     def clock(self):
         if not self.freeze:
             if self.points and (self._timeStep % self.timeMul) == 0:
+                if self.circlePos != None:
+                    self.lastCirclePos = self.circlePos
                 self.circlePos = self.points[self.counter % len(self.points)]
                 self.counter += self.step
+                self.mario = (self.mario+1) % 3
             self._timeStep += 1
 
     ### Circle functions ###
@@ -350,6 +355,15 @@ class DrawingSurface(wx.Panel):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY, pos=pos, size=size, style = wx.EXPAND)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.parent = parent
+        self.useMario = False
+        self.marios = [
+                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario1.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario2.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario3.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario4.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario5.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario6.png'), wx.BITMAP_TYPE_PNG)
+                        ]
         if PLATFORM in ['win32', 'linux2']:
             self.font = wx.Font(7, wx.NORMAL, wx.NORMAL, wx.NORMAL)
         else:
@@ -501,6 +515,18 @@ class DrawingSurface(wx.Panel):
                     self.trajectoriesBank[int(c)-1].setFreeze(False)
                 else:
                     self.trajectoriesBank[int(c)-1].setFreeze(True)
+            elif c == '0': 
+                for i in range(8): 
+                    if self.trajectoriesBank[i].getFreeze():
+                        self.trajectoriesBank[i].setFreeze(False)
+                    else:
+                        self.trajectoriesBank[i].setFreeze(True)
+            elif c == '9':
+                if not self.useMario:
+                    self.useMario = True
+                else:
+                    self.useMario = False                
+                      
         self.Refresh()
      
     def MouseDown(self, evt):
@@ -726,7 +752,13 @@ class DrawingSurface(wx.Panel):
             if len(t.getPoints()) > 1:
                 dc.DrawLines(t.getPoints())
                 if t.circlePos:
-                    dc.DrawCirclePoint(t.circlePos, 4)
+                    if not self.useMario:    
+                        dc.DrawCirclePoint(t.circlePos, 4)
+                    else:
+                        if t.lastCirclePos[0] < t.circlePos[0]: marioff = 0
+                        else: marioff = 3
+                        bitmario = self.marios[t.mario + marioff]
+                        dc.DrawBitmap(bitmario, t.circlePos[0]-8, t.circlePos[1]-8)
                 dc.DrawRoundedRectanglePointSize((t.getFirstPoint()[0],t.getFirstPoint()[1]), (10,10), 2)
                 dc.SetTextForeground("#FFFFFF")
                 dc.SetFont(self.font)
