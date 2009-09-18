@@ -64,16 +64,12 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     oscamplist = ['/amp%d' % i for i in range(_NUM)]
     reclist = ['rec']
     oscreclist = ['/rec']
-    paramslist = {  'Granulator': ['amplitude', 'grainsize', 'globalAmp'],
+    paramslist = {  'Granulator': ['amplitude', 'grainsize', 'cutoff', 'globalAmp'],
                     'FFTReader': ['amplitude', 'cutoff', 'globalAmp'],
-                    'FFTRingMod': ['amplitude', 'cutoff', 'transpo', 'globalAmp'],
-                    'FFTAdsyn': ['amplitude', 'cutoff', 'globalAmp'],
-                    'FMCrossSynth': ['amplitude', 'cutoff', 'transpo', 'carrier', 'modulator', 'index', 'globalAmp']}[module]
-    oscparamslist = {'Granulator': ['/amplitude', '/grainsize', '/globalAmp'],
+                    'FFTAdsyn': ['amplitude', 'cutoff', 'globalAmp']}[module]
+    oscparamslist = {'Granulator': ['/amplitude', '/grainsize', '/cutoff', '/globalAmp'],
                     'FFTReader': ['/amplitude', '/cutoff', '/globalAmp'],
-                    'FFTRingMod': ['/amplitude', '/cutoff', '/transpo', '/globalAmp'],
-                    'FFTAdsyn': ['/amplitude', '/cutoff', '/globalAmp'],
-                    'FMCrossSynth': ['/amplitude', '/cutoff', '/transpo', '/carrier', '/modulator', '/index', '/globalAmp']}[module]
+                    'FFTAdsyn': ['/amplitude', '/cutoff', '/globalAmp']}[module]
     totalbuslist = xlist + ylist + amplist + reclist + paramslist
     totaloscbuslist = oscxlist + oscylist + oscamplist + oscreclist + oscparamslist
     portamentolist = [0.002] * len(totalbuslist)
@@ -97,8 +93,8 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     oscReceive( bus=totalbuslist, address=totaloscbuslist, port=8000, portamento=portamentolist)
     
     if module == 'Granulator':
-        overlaps, trans, tr_check, tr_ymin, tr_ymax, cut_check, cut_ymin, cut_ymax, filt_type, ring_check, ring_ymin, ring_ymax, ring_wav = \
-            args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12]
+        overlaps, trans, tr_check, tr_ymin, tr_ymax, cut_check, cut_ymin, cut_ymax, filt_type, ring_check, ring_ymin, ring_ymax, ring_wav, disto_check, disto_ymin, disto_ymax = \
+            args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14], args[15]
             
         if len(trans) == 1 and trans[0] == 1:
             sizeVar = 'grainsize'
@@ -145,12 +141,19 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
                     sawtooth(pitch=1, pitchVar=ringVarlist[i], out='wav%d' % i)
                 ringMod(in1=outbus+str(i), in2='wav%d' % i, out='ring%d' % i)
             outbus = 'ring'
+        if disto_check == 1:
+            distoVarlist = ['distoVar'+ele for ele in ylist]
+            busMapper(distoVarlist, ylist, 0, 1, disto_ymin, disto_ymax)
+            for i in range(len(amplist)):
+                distortion(input=outbus+str(i), drive=1, driveVar=distoVarlist[i], cutoff=10000, out='disto%d' % i)
+            outbus = 'disto'
         for i in range(len(amplist)):
-            dcblock(input=outbus+str(i), amplitudeVar='amplitude', out='sndout') 
+            lowpass(input=outbus+str(i), cutoff=1, cutoffVar='cutoff', out='lp')
+        dcblock(input='lp', amplitudeVar='amplitude', out='sndout') 
                
     elif module == 'FFTReader':
-        fftsize, overlaps, windowsize, keepformant, tr_check, tr_ymin, tr_ymax, cut_check, cut_ymin, cut_ymax, filt_type, ring_check, ring_ymin, ring_ymax, ring_wav = \
-            args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14]  
+        fftsize, overlaps, windowsize, tr_check, tr_ymin, tr_ymax, cut_check, cut_ymin, cut_ymax, filt_type, ring_check, ring_ymin, ring_ymax, ring_wav, disto_check, disto_ymin, disto_ymax = \
+            args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14], args[15], args[16]   
         soundTableRead(table=tab, duration=dur, out='snd')
         if tr_check == 0:
             pitVarlist = None
@@ -163,7 +166,7 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
             else:
                 pitVar = pitVarlist[i]
             fftBufRead(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, bufferlength=dur, 
-                   transpo=1, keepformant=keepformant, pointerposVar=xlist[i], transpoVar=pitVar, amplitudeVar=amplist[i], out='fft%d' % i)
+                   transpo=1, pointerposVar=xlist[i], transpoVar=pitVar, amplitudeVar=amplist[i], out='fft%d' % i)
         if cut_check == 0:
             outbus = 'fft'
         else:
@@ -191,13 +194,19 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
                     sawtooth(pitch=1, pitchVar=ringVarlist[i], out='wav%d' % i)
                 ringMod(in1=outbus+str(i), in2='wav%d' % i, out='ring%d' % i)
             outbus = 'ring'
+        if disto_check == 1:
+            distoVarlist = ['distoVar'+ele for ele in ylist]
+            busMapper(distoVarlist, ylist, 0, 1, disto_ymin, disto_ymax)
+            for i in range(len(amplist)):
+                distortion(input=outbus+str(i), drive=1, driveVar=distoVarlist[i], cutoff=10000, out='disto%d' % i)
+            outbus = 'disto'
         for i in range(len(amplist)):
             lowpass(input=outbus+str(i), cutoff=1, cutoffVar='cutoff', out='lp')
         dcblock(input='lp', amplitudeVar='amplitude', out='sndout') 
 
     elif module == 'FFTAdsyn':
-        fftsize, overlaps, windowsize, bins, first, incr, tr_check, tr_ymin, tr_ymax, cut_check, cut_ymin, cut_ymax, filt_type, ring_check, ring_ymin, ring_ymax, ring_wav = \
-            args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14], args[15], args[16] 
+        fftsize, overlaps, windowsize, bins, first, incr, tr_check, tr_ymin, tr_ymax, cut_check, cut_ymin, cut_ymax, filt_type, ring_check, ring_ymin, ring_ymax, ring_wav, disto_check, disto_ymin, disto_ymax = \
+            args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14], args[15], args[16], args[17], args[18], args[19]  
         soundTableRead(table=tab, duration=dur, out='snd')
         if tr_check == 0:
             pitVarlist = None
@@ -210,8 +219,7 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
             else:
                 pitVar = pitVarlist[i]
             fftBufAdsyn(input='snd', fftsize=fftsize, overlaps=overlaps, windowsize=windowsize, amplitudeVar=amplist[i],
-                   numbins=bins, firstbin=first, binincr=incr, pointerposVar=xlist[i], transpoVar=pitVar, bufferlength=dur, out='fft%d' % i)
-                   
+                   numbins=bins, firstbin=first, binincr=incr, pointerposVar=xlist[i], transpoVar=pitVar, bufferlength=dur, out='fft%d' % i)          
         if cut_check == 0:
             outbus = 'fft'
         else:
@@ -239,7 +247,12 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
                     sawtooth(pitch=1, pitchVar=ringVarlist[i], out='wav%d' % i)
                 ringMod(in1=outbus+str(i), in2='wav%d' % i, out='ring%d' % i)
             outbus = 'ring'                   
-                   
+        if disto_check == 1:
+            distoVarlist = ['distoVar'+ele for ele in ylist]
+            busMapper(distoVarlist, ylist, 0, 1, disto_ymin, disto_ymax)
+            for i in range(len(amplist)):
+                distortion(input=outbus+str(i), drive=1, driveVar=distoVarlist[i], cutoff=10000, out='disto%d' % i)
+            outbus = 'disto'                   
         for i in range(len(amplist)):
             lowpass(input=outbus+str(i), cutoff=1, cutoffVar='cutoff', out='lp')
         dcblock(input='lp', amplitudeVar='amplitude', out='sndout') 
