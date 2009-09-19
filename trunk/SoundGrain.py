@@ -317,7 +317,7 @@ class Trajectory:
                     self.lastCirclePos = self.circlePos
                 self.circlePos = self.points[self.counter % len(self.points)]
                 self.counter += self.step
-                self.mario = (self.mario+1) % 3
+                self.mario = (self.mario+1) % 4
             self._timeStep += 1
 
     ### Circle functions ###
@@ -360,9 +360,11 @@ class DrawingSurface(wx.Panel):
                         wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario1.png'), wx.BITMAP_TYPE_PNG),
                         wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario2.png'), wx.BITMAP_TYPE_PNG),
                         wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario3.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario2.png'), wx.BITMAP_TYPE_PNG),
                         wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario4.png'), wx.BITMAP_TYPE_PNG),
                         wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario5.png'), wx.BITMAP_TYPE_PNG),
-                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario6.png'), wx.BITMAP_TYPE_PNG)
+                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario6.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario5.png'), wx.BITMAP_TYPE_PNG)
                         ]
         if PLATFORM in ['win32', 'linux2']:
             self.font = wx.Font(7, wx.NORMAL, wx.NORMAL, wx.NORMAL)
@@ -756,7 +758,7 @@ class DrawingSurface(wx.Panel):
                         dc.DrawCirclePoint(t.circlePos, 4)
                     else:
                         if t.lastCirclePos[0] < t.circlePos[0]: marioff = 0
-                        else: marioff = 3
+                        else: marioff = 4
                         bitmario = self.marios[t.mario + marioff]
                         dc.DrawBitmap(bitmario, t.circlePos[0]-8, t.circlePos[1]-8)
                 dc.DrawRoundedRectanglePointSize((t.getFirstPoint()[0],t.getFirstPoint()[1]), (10,10), 2)
@@ -1188,6 +1190,10 @@ class ControlPanel(scrolled.ScrolledPanel):
     def loadSound(self, sndPath, force=False):
         self.sndPath = sndPath
         if self.sndPath:
+            if '/Resources/examples/flute.aif' in self.sndPath:
+                self.sndPath = os.path.join(RESOURCES_PATH, 'examples', 'flute.aif')
+            if '/Resources/examples/comprendrez.aif' in self.sndPath:
+                self.sndPath = os.path.join(RESOURCES_PATH, 'examples', 'comprendrez.aif')
             if os.path.isfile(self.sndPath):
                 chnls, samprate, dur = soundInfo(self.sndPath)
                 self.sndDur = dur
