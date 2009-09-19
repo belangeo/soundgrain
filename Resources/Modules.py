@@ -19,10 +19,6 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx, sys
 
-def intToBool(x):
-    if x == 0: return False
-    else: return True
-    
 class Module(wx.Frame):
     def __init__(self, parent, surface, continuousControl):
         wx.Frame.__init__(self, parent, -1, "Controls")
@@ -104,29 +100,17 @@ class Module(wx.Frame):
         self.sl_amp.SetValue(int(self.amplitude*100))
         self.ampValue.SetLabel(str(self.amplitude))
 
-    def handleTrans(self, event):
-        key = event.GetKeyCode()
-        if key == wx.WXK_TAB or key == wx.WXK_RETURN:
-            self.trans = [float(value) for value in self.tx_trans.GetValue().split(',') if value not in [" ", ""]]
-            self.surface.SetFocus()
-        event.Skip()
-
     def getTrans(self):
-        return self.trans
+        return [float(value) for value in self.tx_trans.GetValue().split(',') if value not in [" ", ""]]
 
     def setTrans(self, trans):
-        self.trans = trans
-        self.tx_trans.SetValue(", ".join(str(t) for t in self.trans))
-
-    def handleTransCheck(self, event):
-        self.transCheck = event.GetInt()
+        self.tx_trans.SetValue(", ".join(str(t) for t in trans))
 
     def getTransCheck(self):
-        return self.transCheck
+        return self.tx_ytrans_ch.GetValue()
 
     def setTransCheck(self, value):
-        self.transCheck = value
-        self.tx_ytrans_ch.SetValue(intToBool(value))
+        self.tx_ytrans_ch.SetValue(value)
                         
     def getTransYMin(self):
         return float(self.tx_tr_ymin.GetValue())
@@ -140,24 +124,16 @@ class Module(wx.Frame):
     def setTransYMax(self, ymax):
         self.tx_tr_ymax.SetValue(str(ymax))
 
-    def handleCutoffCheck(self, event):
-        self.cutoffCheck = event.GetInt()
-
     def getCutoffCheck(self):
-        return self.cutoffCheck
+        return self.tx_ycutoff_ch.GetValue()
 
     def setCutoffCheck(self, value):
-        self.cutoffCheck = value
-        self.tx_ycutoff_ch.SetValue(intToBool(value))
-
-    def handleFilterType(self, event):
-        self.filterType = event.GetInt()
+        self.tx_ycutoff_ch.SetValue(value)
 
     def getFilterType(self):
-        return self.filterType
+        return self.tx_filtype.GetSelection()
 
     def setFilterType(self, filtype):
-        self.filterType = filtype
         self.tx_filtype.SetSelection(filtype)
                         
     def getCutoffYMin(self):
@@ -172,24 +148,16 @@ class Module(wx.Frame):
     def setCutoffYMax(self, ymax):
         self.tx_cut_ymax.SetValue(str(ymax))
 
-    def handleRingCheck(self, event):
-        self.ringCheck = event.GetInt()
-
     def getRingCheck(self):
-        return self.ringCheck
+        return self.tx_yring_ch.GetValue()
 
     def setRingCheck(self, value):
-        self.ringCheck = value
-        self.tx_yring_ch.SetValue(intToBool(value))
-
-    def handleRingWav(self, event):
-        self.ringWav = event.GetInt()
+        self.tx_yring_ch.SetValue(value)
 
     def getRingWav(self):
-        return self.ringWav
+        return self.tx_ringwav.GetSelection()
 
     def setRingWav(self, wav):
-        self.ringWav = wav
         self.tx_ringwav.SetSelection(wav)
                         
     def getRingYMin(self):
@@ -204,15 +172,11 @@ class Module(wx.Frame):
     def setRingYMax(self, ymax):
         self.tx_ring_ymax.SetValue(str(ymax))
 
-    def handleDistoCheck(self, event):
-        self.distoCheck = event.GetInt()
-
     def getDistoCheck(self):
-        return self.distoCheck
+        return self.tx_ydisto_ch.GetValue()
 
     def setDistoCheck(self, value):
-        self.distoCheck = value
-        self.tx_ydisto_ch.SetValue(intToBool(value))
+        self.tx_ydisto_ch.SetValue(value)
                  
     def getDistoYMin(self):
         return float(self.tx_disto_ymin.GetValue())
@@ -495,7 +459,7 @@ class Module(wx.Frame):
     def makeCutoffBox(self, box):
         box.Add(wx.StaticText(self, -1, "Lowpass cutoff"), 0, wx.LEFT|wx.TOP, 5)
         cutoffBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_cutoff = wx.Slider( self, -1, int(self.cutoff * 0.01), 1, 160, size=(200, -1), style=wx.SL_HORIZONTAL)
+        self.sl_cutoff = wx.Slider( self, -1, int(self.cutoff * 0.01), 1, 180, size=(200, -1), style=wx.SL_HORIZONTAL)
         cutoffBox.Add(self.sl_cutoff, 0, wx.RIGHT, 10)
         self.cutoffValue = wx.StaticText(self, -1, str(self.sl_cutoff.GetValue() * 100) + ' Hz')
         cutoffBox.Add(self.cutoffValue, 0, wx.RIGHT, 10)
@@ -509,13 +473,6 @@ class GranulatorFrame(Module):
         self.grainsize = 200
         self.cutoff = 10000
         self.amplitude = 0.7
-        self.trans = [1.]
-        self.transCheck = 1
-        self.cutoffCheck = 0
-        self.filterType = 0
-        self.ringCheck = 0
-        self.ringWav = 0
-        self.distoCheck = 0
         
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeGrainOverlapsBox(box)
@@ -536,13 +493,6 @@ class GranulatorFrame(Module):
         self.Bind(wx.EVT_SLIDER, self.handleGrainSize, self.sl_size)        
         self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
-        self.tx_trans.Bind(wx.EVT_CHAR, self.handleTrans)  
-        self.tx_ytrans_ch.Bind(wx.EVT_CHECKBOX, self.handleTransCheck)      
-        self.tx_ycutoff_ch.Bind(wx.EVT_CHECKBOX, self.handleCutoffCheck)      
-        self.tx_filtype.Bind(wx.EVT_CHOICE, self.handleFilterType)      
-        self.tx_yring_ch.Bind(wx.EVT_CHECKBOX, self.handleRingCheck)      
-        self.tx_ringwav.Bind(wx.EVT_CHOICE, self.handleRingWav)      
-        self.tx_ydisto_ch.Bind(wx.EVT_CHECKBOX, self.handleDistoCheck)      
         
         self.Fit()
         self.SetMinSize(self.GetSize())
@@ -556,9 +506,9 @@ class GranulatorFrame(Module):
         self.Show(False)
 
     def getFixedValues(self):
-        return [self.grainoverlaps, self.trans, self.transCheck, self.getTransYMin(), self.getTransYMax(),
-                self.cutoffCheck, self.getCutoffYMin(), self.getCutoffYMax(), self.getFilterType(),
-                self.ringCheck, self.getRingYMin(), self.getRingYMax(), self.getRingWav(), self.distoCheck, self.getDistoYMin(), self.getDistoYMax()]
+        return [self.grainoverlaps, self.getTrans(), self.getTransCheck(), self.getTransYMin(), self.getTransYMax(),
+                self.getCutoffCheck(), self.getCutoffYMin(), self.getCutoffYMax(), self.getFilterType(),
+                self.getRingCheck(), self.getRingYMin(), self.getRingYMax(), self.getRingWav(), self.getDistoCheck(), self.getDistoYMin(), self.getDistoYMax()]
 
     def save(self):
         return {'grainoverlaps': self.getGrainOverlaps(),
@@ -587,18 +537,18 @@ class GranulatorFrame(Module):
         self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
         self.setTrans(dict['trans'])
-        self.setTransCheck(['transCheck'])
+        self.setTransCheck(dict['transCheck'])
         self.setTransYMin(dict['transYmin'])
         self.setTransYMax(dict['transYmax'])
-        self.setCutoffCheck(['cutoffCheck'])
+        self.setCutoffCheck(dict['cutoffCheck'])
         self.setCutoffYMin(dict['cutoffYmin'])
         self.setCutoffYMax(dict['cutoffYmax'])
         self.setFilterType(dict['filterType'])
-        self.setRingCheck(['ringCheck'])
+        self.setRingCheck(dict['ringCheck'])
         self.setRingYMin(dict['ringYmin'])
         self.setRingYMax(dict['ringYmax'])
         self.setRingWav(dict['ringwav'])
-        self.setDistoCheck(['distoCheck'])
+        self.setDistoCheck(dict['distoCheck'])
         self.setDistoYMin(dict['distoYmin'])
         self.setDistoYMax(dict['distoYmax'])
 
@@ -612,12 +562,6 @@ class FFTReaderFrame(Module):
         self.winsize = 2048 
         self.cutoff = 10000
         self.amplitude = 0.7
-        self.transCheck = 1
-        self.cutoffCheck = 0
-        self.filterType = 0
-        self.ringCheck = 0
-        self.ringWav = 0
-        self.distoCheck = 0
 
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeFFTSizeBox(box)
@@ -638,12 +582,6 @@ class FFTReaderFrame(Module):
         self.Bind(wx.EVT_SLIDER, self.handleWindowSize, self.sl_winsize)        
         self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
-        self.tx_ytrans_ch.Bind(wx.EVT_CHECKBOX, self.handleTransCheck)      
-        self.tx_ycutoff_ch.Bind(wx.EVT_CHECKBOX, self.handleCutoffCheck)      
-        self.tx_filtype.Bind(wx.EVT_CHOICE, self.handleFilterType)      
-        self.tx_yring_ch.Bind(wx.EVT_CHECKBOX, self.handleRingCheck)      
-        self.tx_ringwav.Bind(wx.EVT_CHOICE, self.handleRingWav)      
-        self.tx_ydisto_ch.Bind(wx.EVT_CHECKBOX, self.handleDistoCheck)      
        
         self.Fit()
         self.SetMinSize(self.GetSize())
@@ -657,9 +595,9 @@ class FFTReaderFrame(Module):
         self.Show(False)
 
     def getFixedValues(self):
-        return [self.fftsize, self.overlaps, self.winsize, self.transCheck, self.getTransYMin(), 
-                self.getTransYMax(), self.cutoffCheck, self.getCutoffYMin(), self.getCutoffYMax(), self.getFilterType(),
-                self.ringCheck, self.getRingYMin(), self.getRingYMax(), self.getRingWav(), self.distoCheck, self.getDistoYMin(), self.getDistoYMax()]
+        return [self.fftsize, self.overlaps, self.winsize, self.getTransCheck(), self.getTransYMin(), 
+                self.getTransYMax(), self.getCutoffCheck(), self.getCutoffYMin(), self.getCutoffYMax(), self.getFilterType(),
+                self.getRingCheck(), self.getRingYMin(), self.getRingYMax(), self.getRingWav(), self.getDistoCheck(), self.getDistoYMin(), self.getDistoYMax()]
 
     def save(self):
         return {'fftsize': self.getFFTSize(),
@@ -688,18 +626,18 @@ class FFTReaderFrame(Module):
         self.setWindowSize(dict['winsize'])
         self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
-        self.setTransCheck(['transCheck'])
+        self.setTransCheck(dict['transCheck'])
         self.setTransYMin(dict['transYmin'])
         self.setTransYMax(dict['transYmax'])
-        self.setCutoffCheck(['cutoffCheck'])
+        self.setCutoffCheck(dict['cutoffCheck'])
         self.setCutoffYMin(dict['cutoffYmin'])
         self.setCutoffYMax(dict['cutoffYmax'])
         self.setFilterType(dict['filterType'])
-        self.setRingCheck(['ringCheck'])
+        self.setRingCheck(dict['ringCheck'])
         self.setRingYMin(dict['ringYmin'])
         self.setRingYMax(dict['ringYmax'])
         self.setRingWav(dict['ringwav'])
-        self.setDistoCheck(['distoCheck'])
+        self.setDistoCheck(dict['distoCheck'])
         self.setDistoYMin(dict['distoYmin'])
         self.setDistoYMax(dict['distoYmax'])
 
@@ -717,12 +655,6 @@ class FFTAdsynFrame(Module):
         self.incr = 3        
         self.cutoff = 10000
         self.amplitude = 0.7
-        self.transCheck = 1
-        self.cutoffCheck = 0
-        self.filterType = 0
-        self.ringCheck = 0
-        self.ringWav = 0
-        self.distoCheck = 0
 
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeFFTSizeBox(box)
@@ -750,12 +682,6 @@ class FFTAdsynFrame(Module):
         self.Bind(wx.EVT_SLIDER, self.handleIncr, self.sl_incr)                
         self.Bind(wx.EVT_SLIDER, self.handleCutoff, self.sl_cutoff)        
         self.Bind(wx.EVT_SLIDER, self.handleAmp, self.sl_amp)        
-        self.tx_ytrans_ch.Bind(wx.EVT_CHECKBOX, self.handleTransCheck)      
-        self.tx_ycutoff_ch.Bind(wx.EVT_CHECKBOX, self.handleCutoffCheck)      
-        self.tx_filtype.Bind(wx.EVT_CHOICE, self.handleFilterType)      
-        self.tx_yring_ch.Bind(wx.EVT_CHECKBOX, self.handleRingCheck)      
-        self.tx_ringwav.Bind(wx.EVT_CHOICE, self.handleRingWav)      
-        self.tx_ydisto_ch.Bind(wx.EVT_CHECKBOX, self.handleDistoCheck)      
         
         self.Fit()
         self.SetMinSize(self.GetSize())
@@ -769,9 +695,10 @@ class FFTAdsynFrame(Module):
         self.Show(False)
 
     def getFixedValues(self):
-        return [self.fftsize, self.overlaps, self.winsize, self.numbins, self.first, self.incr, self.transCheck, 
-                self.getTransYMin(), self.getTransYMax(), self.cutoffCheck, self.getCutoffYMin(), self.getCutoffYMax(), 
-                self.getFilterType(), self.ringCheck, self.getRingYMin(), self.getRingYMax(), self.getRingWav(), self.distoCheck, self.getDistoYMin(), self.getDistoYMax()]
+        return [self.fftsize, self.overlaps, self.winsize, self.numbins, self.first, self.incr, self.getTransCheck(), 
+                self.getTransYMin(), self.getTransYMax(), self.getCutoffCheck(), self.getCutoffYMin(), self.getCutoffYMax(), 
+                self.getFilterType(), self.getRingCheck(), self.getRingYMin(), self.getRingYMax(), self.getRingWav(), self.getDistoCheck(), 
+                self.getDistoYMin(), self.getDistoYMax()]
 
     def save(self):
         return {'fftsize': self.getFFTSize(),
@@ -806,17 +733,17 @@ class FFTAdsynFrame(Module):
         self.setIncr(dict['incr'])
         self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
-        self.setTransCheck(['transCheck'])
+        self.setTransCheck(dict['transCheck'])
         self.setTransYMin(dict['transYmin'])
         self.setTransYMax(dict['transYmax'])
-        self.setCutoffCheck(['cutoffCheck'])
+        self.setCutoffCheck(dict['cutoffCheck'])
         self.setCutoffYMin(dict['cutoffYmin'])
         self.setCutoffYMax(dict['cutoffYmax'])
         self.setFilterType(dict['filterType'])
-        self.setRingCheck(['ringCheck'])
+        self.setRingCheck(dict['ringCheck'])
         self.setRingYMin(dict['ringYmin'])
         self.setRingYMax(dict['ringYmax'])
         self.setRingWav(dict['ringwav'])
-        self.setDistoCheck(['distoCheck'])
+        self.setDistoCheck(dict['distoCheck'])
         self.setDistoYMin(dict['distoYmin'])
         self.setDistoYMax(dict['distoYmax'])
