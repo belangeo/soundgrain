@@ -6,6 +6,10 @@ List of commands.
 
 Open, Save or Save as .sg files (not sound). A .sg file is a snapshot of the state of the project.
 
+Open Soundfile... imports a new sound.
+
+Preferences (Ctrl+;). User can change OSC settings (to share trajectories with an other software) and the Csound's buffer sizes.
+
 == Menu Drawing ==
 
 === Undo - Redo ===
