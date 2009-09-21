@@ -22,7 +22,7 @@ import Settings
 
 class Preferences(wx.Frame):
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent, -1, "OSC Settings")
+        wx.Frame.__init__(self, parent, -1, "Preferences")
 
         if wx.Platform == '__WXMAC__':
             self.MacSetMetalAppearance(True)
