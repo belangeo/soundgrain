@@ -90,3 +90,10 @@ Some example projects.
  * *alt+clic on red rect* : duplicates a trajectory
  * *left-clic on blue diamond* : rescales a circle or oscil trajectory
  * *left-clic on a trajectory* : the user can drag and modify the shape of the trajectory. See Edition levels. 
+
+With the focus on the drawing surface:
+
+ * arrow keys moves all trajectories
+ * Shift + arrow keys move the selected trajectory
+ * 1 to 8 (not on numeric keypad) freezes and unfreezes the targeted trajectory
+ * 0 (not on numeric keypad) freezes and unfreezes all trajectories
