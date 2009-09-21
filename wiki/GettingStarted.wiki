@@ -14,7 +14,7 @@ Import a new sound.
 
 === Preferences... === 
 
-(Ctrl+;) Opens window where User can change OSC settings (to share trajectories with an other software) and the Csound's buffer sizes.
+(Ctrl+;) Opens a window where User can change OSC settings (to share trajectories with an other software) and the Csound's buffer sizes.
 
 === Open FX Window ===
 
@@ -61,35 +61,21 @@ Used to choose the desired driver. The drivers list is updated only on startup.
 Granulates a sound by moving a pointer in the sound. It gives control on grain size and on a per-grain randomly choosed transposition.
 
  * X axis: Pointer position in the sound
- * Y axis: Global transposition
+ * Y axis: Global transposition and/or filters and/or ring modulation and/or distortion
 
 === FFTReader ===
 
 Resynthesis of the sound by moving a pointer in an FFT buffer. 
 
  * X axis: Pointer position in the sound
- * Y axis: Global transposition
+ * Y axis: Global transposition and/or filters and/or ring modulation and/or distortion
 
 === FFTAdsyn ===
 
 Same as FFTReader with additional control on the number and position of bins used in synthesis.
 
  * X axis: Pointer position in the sound
- * Y axis: Global transposition
-
-=== FFTRingMod ===
-
-Performs a ring modulation between a FFT resynthesis of the sound and a sine wave. 
-
- * X axis: Pointer position in the sound
- * Y axis: Pitch of the sine wave
-
-=== FMCrossSynth ===
-
-Cross synthesis between the sound and a frequency modulation.
-
- * X axis: Pointer position in the sound
- * Y axis: FM base pitch
+ * Y axis: Global transposition and/or filters and/or ring modulation and/or distortion
 
 
 === Examples ===
