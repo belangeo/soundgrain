@@ -1417,7 +1417,7 @@ class MainFrame(wx.Frame):
         self.menu.Append(4, "Save as...\tShift+Ctrl+S")
         self.Bind(wx.EVT_MENU, self.handleSaveAs, id=4)
         self.menu.AppendSeparator()
-        self.menu.Append(5, "OSC Settings\tCtrl+;")
+        self.menu.Append(5, "Preferences...\tCtrl+;")
         self.Bind(wx.EVT_MENU, self.showOSCSettings, id=5)
         self.menu.Append(6, "Open FX Window\tCtrl+P")
         self.Bind(wx.EVT_MENU, self.openFxWindow, id=6)
