@@ -357,14 +357,14 @@ class DrawingSurface(wx.Panel):
         self.parent = parent
         self.useMario = False
         self.marios = [
-                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario1.png'), wx.BITMAP_TYPE_PNG),
-                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario2.png'), wx.BITMAP_TYPE_PNG),
-                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario3.png'), wx.BITMAP_TYPE_PNG),
-                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario2.png'), wx.BITMAP_TYPE_PNG),
-                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario4.png'), wx.BITMAP_TYPE_PNG),
-                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario5.png'), wx.BITMAP_TYPE_PNG),
-                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario6.png'), wx.BITMAP_TYPE_PNG),
-                        wx.Bitmap(os.path.join(RESOURCES_PATH, 'Mario5.png'), wx.BITMAP_TYPE_PNG)
+                        wx.Bitmap(os.path.join(IMAGES_PATH, 'Mario1.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(IMAGES_PATH, 'Mario2.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(IMAGES_PATH, 'Mario3.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(IMAGES_PATH, 'Mario2.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(IMAGES_PATH, 'Mario4.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(IMAGES_PATH, 'Mario5.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(IMAGES_PATH, 'Mario6.png'), wx.BITMAP_TYPE_PNG),
+                        wx.Bitmap(os.path.join(IMAGES_PATH, 'Mario5.png'), wx.BITMAP_TYPE_PNG)
                         ]
         if PLATFORM in ['win32', 'linux2']:
             self.font = wx.Font(7, wx.NORMAL, wx.NORMAL, wx.NORMAL)
@@ -969,7 +969,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         ampBox.Add(self.ampValue, 0, wx.RIGHT, 10)
         box.Add(ampBox, 0, wx.ALL, 5)
 
-        self.meter = VuMeter(self, RESOURCES_PATH, size=(200,11))
+        self.meter = VuMeter(self, size=(200,11))
         box.Add(self.meter, 0, wx.ALL, 5)
 
         soundBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -1827,7 +1827,7 @@ class MainFrame(wx.Frame):
 "PURPOSE. See the GNU General Public License "
 "for more details.", 350, wx.ClientDC(self)) 
 
-        info.SetIcon(wx.Icon(os.path.join(RESOURCES_PATH, 'SoundGrain.png'), wx.BITMAP_TYPE_PNG))
+        info.SetIcon(wx.Icon(os.path.join(IMAGES_PATH, 'SoundGrain.png'), wx.BITMAP_TYPE_PNG))
         info.SetName('Sound Grain')
         info.SetVersion('%s' % VERSION)
         info.SetDescription(description)
