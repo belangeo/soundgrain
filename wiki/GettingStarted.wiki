@@ -4,15 +4,25 @@ List of commands.
 
 == Menu File ==
 
+=== Open, Save or Save as... ===
+
 Open, Save or Save as .sg files (not sound). A .sg file is a snapshot of the state of the project.
 
-Open Soundfile... imports a new sound.
+=== Open Soundfile... ===
 
-Preferences... (Ctrl+;). User can change OSC settings (to share trajectories with an other software) and the Csound's buffer sizes.
+Import a new sound.
 
-Open FX Window (Ctrl+P). Opens the module's parameters window.
+=== Preferences... === 
 
-Run (Ctrl+R). Shortcut to start/stop the sound.
+(Ctrl+;) Opens window where User can change OSC settings (to share trajectories with an other software) and the Csound's buffer sizes.
+
+=== Open FX Window ===
+
+(Ctrl+P) Opens the module's parameters window.
+
+=== Run ===
+ 
+(Ctrl+R) Shortcut to start/stop the sound.
 
 == Menu Drawing ==
 
