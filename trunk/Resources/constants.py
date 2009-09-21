@@ -32,6 +32,7 @@ if '/SoundGrain.app' in os.getcwd():
 else:
     RESOURCES_PATH = os.path.join(os.getcwd(), 'Resources')
 
+IMAGES_PATH = os.path.join(RESOURCES_PATH, 'images')
 OUNK_PATH = os.path.join(os.path.expanduser('~'), '.ounk')
 TEMP_PATH = os.path.join(os.path.expanduser('~'), '.soundgrain')
 
