@@ -8,7 +8,11 @@ Open, Save or Save as .sg files (not sound). A .sg file is a snapshot of the sta
 
 Open Soundfile... imports a new sound.
 
-Preferences (Ctrl+;). User can change OSC settings (to share trajectories with an other software) and the Csound's buffer sizes.
+Preferences... (Ctrl+;). User can change OSC settings (to share trajectories with an other software) and the Csound's buffer sizes.
+
+Open FX Window (Ctrl+P). Opens the module's parameters window.
+
+Run (Ctrl+R). Shortcut to start/stop the sound.
 
 == Menu Drawing ==
 
