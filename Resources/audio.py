@@ -72,7 +72,7 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
                     'FFTAdsyn': ['/amplitude', '/cutoff', '/globalAmp']}[module]
     totalbuslist = xlist + ylist + amplist + metrolist + reclist + paramslist
     totaloscbuslist = oscxlist + oscylist + oscamplist + oscmetrolist + oscreclist + oscparamslist
-    portamentolist = [0.002] * len(totalbuslist)
+    portamentolist = [0.005] * len(totalbuslist)
     recindex = totalbuslist.index('rec')
     portamentolist[recindex] = 0
     
@@ -263,7 +263,7 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     recordPerf(name = os.path.join(os.path.expanduser('~'), outFile))
     endTrigInst()
 
-    metro(bus='refresh', tempo=380)
+    metro(bus='refresh', tempo=300)
     oscSend(input='refresh', address='/refresh', port=15000)
 
     for i in range(_NUM):

@@ -69,6 +69,10 @@
 <value><int>2</int></value>
 </member>
 <member>
+<name>timeSpeed</name>
+<value><int>20</int></value>
+</member>
+<member>
 <name>active</name>
 <value><boolean>1</boolean></value>
 </member>
@@ -1475,6 +1479,10 @@
 <member>
 <name>editLevel</name>
 <value><int>2</int></value>
+</member>
+<member>
+<name>timeSpeed</name>
+<value><int>20</int></value>
 </member>
 <member>
 <name>active</name>

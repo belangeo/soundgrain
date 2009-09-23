@@ -376,8 +376,6 @@ class DrawingSurface(wx.Panel):
         self.sndBitmap = None
         self.bitmapDict = {}
         self.closed = 0
-        self.timeSpeed = 25
-        self.step = 1
         self.oscilPeriod = 2
         self.oscilScaling = 1
         self.mode = trajTypes[0]
@@ -412,15 +410,6 @@ class DrawingSurface(wx.Panel):
             t.setInitPoints()
         self.currentSize = (w,h)
 
-    def getTimerSpeed(self):
-        return self.timeSpeed
-
-    def setTimerSpeed(self, speed):
-        self.timeSpeed = speed
-        #if self.timer.IsRunning():
-        #    self.stopTimer()
-        #    self.startTimer()
-
     def clock(self, which):
         t = self.trajectoriesBank[which]
         t.clock()
@@ -430,7 +419,7 @@ class DrawingSurface(wx.Panel):
             if t.getPointPos() != None:
                 x = t.getPointPos()[0]/w
                 y = 1 - t.getPointPos()[1]/h
-            sendXYControl([x,y], which)
+                sendXYControl([x,y], which)
             
     def setOscilPeriod(self, period):
         self.oscilPeriod = period
@@ -1111,18 +1100,6 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.drawing.scalingValue.SetLabel(str(scaling))
         self.surface.setOscilScaling(scaling)
 
-    def handleTimer(self, event):
-        self.surface.setTimerSpeed(event.GetInt())
-        self.playback.speedValue.SetLabel(str(event.GetInt()) + ' ms')
-
-    def getTimer(self):
-        return self.surface.getTimerSpeed()
-
-    def setTimer(self, time):
-        self.playback.sl_speed.SetValue(time)
-        self.surface.setTimerSpeed(time)
-        self.playback.speedValue.SetLabel(str(time) + ' ms')
-
     def handleSelected(self, selected):
         self.selected = selected
         timeSpeed = self.surface.getTrajectory(selected).getTimeSpeed()
@@ -1350,14 +1327,6 @@ class PlaybackParameters(wx.Panel):
         self.parent = parent
         box = wx.BoxSizer(wx.VERTICAL)
 
-        box.Add(wx.StaticText(self, -1, "Timer speed"), 0, wx.LEFT|wx.TOP, 5)
-        speedBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_speed = wx.Slider( self, -1, 25, 5, 250, size=(150, -1), style=wx.SL_HORIZONTAL)
-        speedBox.Add(self.sl_speed, 0, wx.RIGHT, 10)
-        self.speedValue = wx.StaticText(self, -1, str(self.sl_speed.GetValue()) + ' ms')
-        speedBox.Add(self.speedValue, 0, wx.RIGHT, 10)
-        box.Add(speedBox, 0, wx.ALL, 5)
-
         box.Add(wx.StaticText(self, -1, "Selected trajectory"), 0, wx.LEFT|wx.TOP, 5)
         self.tog_traj = Selector(self, outFunction=self.parent.GetParent().handleSelected)
         box.Add(self.tog_traj, 0, wx.ALL, 5)
@@ -1378,7 +1347,6 @@ class PlaybackParameters(wx.Panel):
         stepBox.Add(self.stepValue, 0, wx.RIGHT, 10)
         box.Add(stepBox, 0, wx.ALL, 5)
 
-        self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handleTimer, self.sl_speed)
         self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handleTimerSpeed, self.sl_timespeed)
         self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handleStep, self.sl_step)
 
@@ -1699,7 +1667,6 @@ class MainFrame(wx.Frame):
         saveDict['ControlPanel']['q'] = self.controls.getQ()
         saveDict['ControlPanel']['period'] = self.controls.getPeriod()
         saveDict['ControlPanel']['scaling'] = self.controls.getScaling()
-        saveDict['ControlPanel']['timer'] = self.controls.getTimer()
         saveDict['ControlPanel']['globalamp'] = self.controls.getAmp()
         saveDict['ControlPanel']['sound'] = self.controls.sndPath
 
@@ -1738,7 +1705,6 @@ class MainFrame(wx.Frame):
         self.controls.setQ(dict['ControlPanel']['q'])
         self.controls.setPeriod(dict['ControlPanel']['period'])
         self.controls.setScaling(dict['ControlPanel']['scaling'])
-        self.controls.setTimer(dict['ControlPanel']['timer'])
         self.controls.setAmp(dict['ControlPanel']['globalamp'])
         self.controls.loadSound(dict['ControlPanel']['sound'])
 
@@ -1748,6 +1714,7 @@ class MainFrame(wx.Frame):
 
         self.panel.setCurrentSize(dict['MainFrame']['size'])
         self.panel.OnResize(None)
+        self.panel.Refresh()
 
         self.currentFile = path
         self.SetTitle(os.path.split(self.currentFile)[1] + ' - ' + self.currentModule)
@@ -1799,6 +1766,7 @@ class MainFrame(wx.Frame):
         for file in tmpFiles:
             os.remove(os.path.join(TEMP_PATH, file))
         self.Destroy()
+        sys.exit()
 
     def log(self, text):
         self.status.SetStatusText(text)
