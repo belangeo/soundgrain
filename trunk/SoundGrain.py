@@ -668,7 +668,7 @@ class DrawingSurface(wx.Panel):
                             y = math.sin(math.pi * i * scaleR) * r
                             self.traj.addCirclePoint((int(round(x + self.downPos[0])), int(round(y + self.downPos[1]))))
                     else:
-                        for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling)):
+                        for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling + 4)):
                             a = i * scaleR * r
                             x = math.cos(math.pi * i * scaleR) * r
                             y = math.sin(math.pi * self.oscilPeriod * i * scaleR) * r
@@ -705,7 +705,7 @@ class DrawingSurface(wx.Panel):
                         y = math.sin(math.pi * i * scaleR) * r
                         self.selected.addCirclePoint((int(round(x + self.selected.getCenter()[0])), int(round(y + self.selected.getCenter()[1]))))
                 else:
-                    for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling)):
+                    for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling + 4)):
                         a = i * scaleR * r
                         x = math.cos(math.pi * i * scaleR) * r
                         y = math.sin(math.pi * self.oscilPeriod * i * scaleR) * r
@@ -864,6 +864,8 @@ class DrawingSurface(wx.Panel):
         self.create_bitmap()
 
     def create_bitmap(self):
+        gradient = True
+
         size = self.GetSizeTuple()
         X = size[0]
         self.length = len(self.list[0])
@@ -872,28 +874,41 @@ class DrawingSurface(wx.Panel):
         self.memory = wx.MemoryDC()
         self.memory.SelectObject(self.sndBitmap)
         # dc background  
+        self.memory.SetBrush(wx.Brush(self.backgroundcolor))
+        self.memory.DrawRectangle(0,0,size[0],size[1])
         new_Y = size[1]  / float(len(self.list))
         l = []
         append = l.append
         for chan in range(len(self.list)):
             halfY = new_Y / 2
             off = new_Y * chan
-            self.memory.SetBrush(wx.Brush(self.backgroundcolor))
-            self.memory.DrawRectangle(0,0,size[0],size[1])
-            self.memory.SetPen(wx.Pen('black', 1))
+            self.memory.SetPen(wx.Pen('#333333', 1))
             self.memory.DrawLine(0,halfY+off,size[0],halfY+off)
             
             # draw waveform    
             self.memory.SetPen(wx.Pen(self.wavecolor, 1)) 
-            if self.list[chan]:
-                last = 0
-                for i in range(X):
-                    y = int(round(i / scalar))
-                    val = int(((halfY * self.list[chan][y][1]) + last) / 2)
-                    append((i,halfY+off,i,halfY+off+val))
-                    append((i,halfY+off,i,halfY+off-val))
-                    last = val
-        self.memory.DrawLineList(l)
+            if gradient:
+                if self.list[chan]:
+                    last = 0
+                    for i in range(X):
+                        y = int(round(i / scalar))
+                        val = int(((halfY * self.list[chan][y][1]) + last) / 2)
+                        rec = wx.Rect(i, halfY+off, 1, val)
+                        self.memory.GradientFillLinear(rec, "#AAAAAA", "#333333", wx.BOTTOM)
+                        rec = wx.Rect(i, halfY+off-val, 1, val)
+                        self.memory.GradientFillLinear(rec, "#AAAAAA", "#333333", wx.UP)
+                        last = val                
+            else:    
+                if self.list[chan]:
+                    last = 0
+                    for i in range(X):
+                        y = int(round(i / scalar))
+                        val = int(((halfY * self.list[chan][y][1]) + last) / 2)
+                        append((i,halfY+off,i,halfY+off+val))
+                        append((i,halfY+off,i,halfY+off-val))
+                        last = val
+        if not gradient:                
+            self.memory.DrawLineList(l)
         self.memory.SelectObject(wx.NullBitmap)
         self.Refresh()
 
