@@ -22,9 +22,6 @@ import os, sys, time, tempfile, xmlrpclib
 import wx
 from wx.lib.wordwrap import wordwrap
 import  wx.lib.scrolledpanel as scrolled
-import Resources.osc as osc
-
-osc.init()
 
 from Resources.constants import *
 from Resources.Preferences import Preferences
@@ -32,8 +29,8 @@ from Resources.Selector import Selector
 from Resources.audio import *
 from Resources.Biquad import BiquadLP
 from Resources.Modules import *
-from Resources.WaitCsound import WaitCsound
 from Resources.Meter import VuMeter
+from Resources.OscListener import Listener
 
 trajTypes = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 
@@ -79,8 +76,7 @@ class Trajectory:
         self.label = label
         self.activeLp = True
         self.editLevel = 2
-        self.timeMul = 1
-        self._timeStep = 0
+        self.timeSpeed = 20
         self.type = None
         self.center = None
         self.radius = None
@@ -101,7 +97,7 @@ class Trajectory:
         self.type = None
         self.center = None
         self.radius = None
-        self.active = False
+        self.setActive(False)
         self.initPoints = []
         self.points = []
         self.circlePos = None
@@ -109,7 +105,7 @@ class Trajectory:
     def getAttributes(self):
         return {'activeLp': self.activeLp, 
                 'editLevel': self.editLevel, 
-                'timeMul': self.timeMul,
+                'timeSpeed': self.timeSpeed,
                 'step': self.step,
                 'type': self.type, 
                 'center': self.center, 
@@ -124,7 +120,7 @@ class Trajectory:
     def setAttributes(self, dict):
         self.activeLp = dict['activeLp']
         self.editLevel = dict['editLevel']
-        self.timeMul = dict['timeMul']
+        self.timeSpeed = dict['timeSpeed']
         self.step = dict['step']
         self.type = dict['type']
         self.center = dict['center']
@@ -145,12 +141,12 @@ class Trajectory:
     def getLabel(self):
         return self.label
 
-    def setTimeMul(self, mul):
-        self.timeMul = mul
+    def setTimeSpeed(self, speed):
+        self.timeSpeed = speed
 
-    def getTimeMul(self):
-        return self.timeMul
-
+    def getTimeSpeed(self):
+        return self.timeSpeed
+        
     def setEditionLevel(self, level):
         self.editLevel = level
 
@@ -172,9 +168,14 @@ class Trajectory:
     def getType(self):
         return self.type
 
-    def setActive(self, state):
-        self.active = state
-
+    def setActive(self, state=None):
+        if state != None:
+            self.active = state
+        if self.active:
+            sendActiveTraj(1, self.label-1)
+        else:
+            sendActiveTraj(0, self.label-1)
+            
     def getActive(self):
         return self.active
         
@@ -312,13 +313,12 @@ class Trajectory:
 
     def clock(self):
         if not self.freeze:
-            if self.points and (self._timeStep % self.timeMul) == 0:
+            if self.points:
                 if self.circlePos != None:
                     self.lastCirclePos = self.circlePos
                 self.circlePos = self.points[self.counter % len(self.points)]
                 self.counter += self.step
                 self.mario = (self.mario+1) % 4
-            self._timeStep += 1
 
     ### Circle functions ###
     def addCirclePoint(self, point):
@@ -391,7 +391,6 @@ class DrawingSurface(wx.Panel):
         self.Bind(wx.EVT_MOTION, self.MouseMotion)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_SIZE, self.OnResize)
-        self.startTimer()
 
     def setCurrentSize(self, size):
         self.currentSize = size
@@ -418,23 +417,21 @@ class DrawingSurface(wx.Panel):
 
     def setTimerSpeed(self, speed):
         self.timeSpeed = speed
-        if self.timer.IsRunning():
-            self.stopTimer()
-            self.startTimer()
-        
-    def startTimer(self):
-        self.timer = wx.PyTimer(self.clock)
-        self.timer.Start(self.timeSpeed)
-        
-    def stopTimer(self):
-        self.timer.Stop()
-        del self.timer
+        #if self.timer.IsRunning():
+        #    self.stopTimer()
+        #    self.startTimer()
 
-    def clock(self):
-        for traj in self.getActiveTrajectories():
-            traj.clock()
-        self.Refresh()
-
+    def clock(self, which):
+        t = self.trajectoriesBank[which]
+        t.clock()
+        if t.getActive():
+            w,h = self.GetSizeTuple()
+            w,h = float(w), float(h)
+            if t.getPointPos() != None:
+                x = t.getPointPos()[0]/w
+                y = 1 - t.getPointPos()[1]/h
+            sendXYControl([x,y], which)
+            
     def setOscilPeriod(self, period):
         self.oscilPeriod = period
 
@@ -770,8 +767,6 @@ class DrawingSurface(wx.Panel):
                     dc.SetPen(wx.Pen(self.losacolor, width=1, style=wx.SOLID))
                     dc.DrawRoundedRectanglePointSize((t.getLosangePoint()[0]-5,t.getLosangePoint()[1]-5), (10,10), 1)
  
-        sendXYControls(self.getValues())
-
     def clip(self, off, exXs, exYs):
         Xs = [p[0] for p in self.selected.getPoints()]
         minX, maxX = min(Xs), max(Xs)
@@ -911,6 +906,7 @@ class DrawingSurface(wx.Panel):
                     last = val
         self.memory.DrawLineList(l)
         self.memory.SelectObject(wx.NullBitmap)
+        self.Refresh()
 
 class ControlPanel(scrolled.ScrolledPanel):
     def __init__(self, parent, surface):
@@ -1004,6 +1000,8 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleAudio, self.tog_audio)
         self.tx_output.Bind(wx.EVT_CHAR, self.handleOutput)        
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleRecord, self.tog_record)
+
+        self.listen = Listener(self.meter, self.csoundReady, self.surface.clock, self.surface)
 
         self.SetAutoLayout(True)
 
@@ -1127,30 +1125,35 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def handleSelected(self, selected):
         self.selected = selected
-        timeMul = self.surface.getTrajectory(selected).getTimeMul()
+        timeSpeed = self.surface.getTrajectory(selected).getTimeSpeed()
         step = self.surface.getTrajectory(selected).getStep()
-        self.setTimerMul(timeMul)
+        self.setTimerSpeed(timeSpeed)
         self.setStep(step)
 
     def setSelected(self, selected):
         self.playback.tog_traj.setSelected(selected)
         self.selected = 1
-        timeMul = self.surface.getTrajectory(selected).getTimeMul()
+        timeSpeed = self.surface.getTrajectory(selected).getTimeSpeed()
         step = self.surface.getTrajectory(selected).getStep()
-        self.setTimerMul(timeMul)
+        self.setTimerSpeed(timeSpeed)
         self.setStep(step)
 
     def getSelected(self):
         return self.selected
 
-    def handleTimerMul(self, event):
-        self.surface.getTrajectory(self.selected).setTimeMul(event.GetInt())
-        self.playback.timemulValue.SetLabel(str(event.GetInt()))
+    def handleTimerSpeed(self, event):
+        self.surface.getTrajectory(self.selected).setTimeSpeed(event.GetInt())
+        self.playback.timespeedValue.SetLabel(str(event.GetInt()) + ' ms')
+        self.sendTrajSpeed(self.selected-1, event.GetInt())
   
-    def setTimerMul(self, timeMul):
-        self.playback.sl_timemul.SetValue(timeMul)
-        self.playback.timemulValue.SetLabel(str(timeMul))
-      
+    def setTimerSpeed(self, timeSpeed):
+        self.playback.sl_timespeed.SetValue(timeSpeed)
+        self.playback.timespeedValue.SetLabel(str(timeSpeed) + ' ms')
+
+    def sendTrajSpeed(self, which, speed):
+        speed = 15000. / speed
+        sendControl('/metroVar%d' % which, speed)
+              
     def handleStep(self, event):
         self.surface.getTrajectory(self.selected).setStep(event.GetInt())
         self.playback.stepValue.SetLabel(str(event.GetInt()))
@@ -1236,17 +1239,16 @@ class ControlPanel(scrolled.ScrolledPanel):
                 self.trajMax.Disable()
                 self.tx_output.Disable()
                 self.tog_record.Enable()
+
                 for item in self.parent.modules:
                     self.parent.menu3.Enable(self.parent.menu3.FindItem(item), False)
                 for i in range(self.parent.subMenu3.GetMenuItemCount()):
                     self.parent.subMenu3.Enable(i + 3000, False)
                 for t in self.surface.getAllTrajectories():
                     t.initCounter()
-                wait = WaitCsound(self.csoundReady)
-                wait.start()
                 args = self.parent.moduleFrames[self.parent.currentModule].getFixedValues()
                 startAudio(self.numTraj, self.sndPath, self.parent.audioDriver, self.tx_output.GetValue(), self.parent.currentModule, *args)
-                if self.parent.currentModule in ['FFTReader','FFTAdsyn', 'FFTRingMod', 'FMCrossSynth']:
+                if self.parent.currentModule in ['FFTReader','FFTAdsyn']:
                     self.parent.log('FFT Buffering...')
                     wx.CallLater(self.sndDur * 1000, self.logSndInfo)
         else:    
@@ -1268,9 +1270,11 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.parent.moduleFrames[self.parent.currentModule].activateWidgets(event.GetInt())
 
     def csoundReady(self, msg):
-        if msg == 'ready':
-            resetFlag()
+        if msg == 1:
             self.parent.moduleFrames[self.parent.currentModule].initControlValues()
+            for traj in self.surface.getAllTrajectories():
+                self.sendTrajSpeed(traj.getLabel()-1, traj.getTimeSpeed())
+                traj.setActive()
             self.sendAmp()
 
     def handleOutput(self, event):
@@ -1358,13 +1362,13 @@ class PlaybackParameters(wx.Panel):
         self.tog_traj = Selector(self, outFunction=self.parent.GetParent().handleSelected)
         box.Add(self.tog_traj, 0, wx.ALL, 5)
 
-        box.Add(wx.StaticText(self, -1, "Timer multiplier"), 0, wx.LEFT, 5)
-        timemulBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_timemul = wx.Slider( self, -1, 1, 1, 50, size=(150, -1), style=wx.SL_HORIZONTAL)
-        timemulBox.Add(self.sl_timemul, 0, wx.RIGHT, 10)
-        self.timemulValue = wx.StaticText(self, -1, str(self.sl_timemul.GetValue()))
-        timemulBox.Add(self.timemulValue, 0, wx.RIGHT, 10)
-        box.Add(timemulBox, 0, wx.ALL, 5)
+        box.Add(wx.StaticText(self, -1, "Timer speed"), 0, wx.LEFT, 5)
+        timespeedBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_timespeed = wx.Slider( self, -1, 20, 10, 200, size=(150, -1), style=wx.SL_HORIZONTAL)
+        timespeedBox.Add(self.sl_timespeed, 0, wx.RIGHT, 10)
+        self.timespeedValue = wx.StaticText(self, -1, str(self.sl_timespeed.GetValue()))
+        timespeedBox.Add(self.timespeedValue, 0, wx.RIGHT, 10)
+        box.Add(timespeedBox, 0, wx.ALL, 5)
 
         box.Add(wx.StaticText(self, -1, "Point step"), 0, wx.LEFT, 5)
         stepBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -1375,7 +1379,7 @@ class PlaybackParameters(wx.Panel):
         box.Add(stepBox, 0, wx.ALL, 5)
 
         self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handleTimer, self.sl_speed)
-        self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handleTimerMul, self.sl_timemul)
+        self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handleTimerSpeed, self.sl_timespeed)
         self.Bind(wx.EVT_SLIDER, self.parent.GetParent().handleStep, self.sl_step)
 
         self.SetAutoLayout(True)
@@ -1491,7 +1495,7 @@ class MainFrame(wx.Frame):
         mainBox.Add(self.panel, 20, wx.EXPAND, 5)
         mainBox.Add(self.controls, 0, wx.EXPAND, 5)
         self.SetSizer(mainBox)
-
+        
         self.Bind(wx.EVT_SIZE, self.OnResize)        
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
@@ -1788,9 +1792,9 @@ class MainFrame(wx.Frame):
         self.pref.SetPosition((50,50))
 
     def OnClose(self, evt):
-        self.panel.stopTimer()
         self.controls.meter.OnClose(evt)
         stopCsound()
+        self.controls.listen.stop()
         tmpFiles = os.listdir(TEMP_PATH)
         for file in tmpFiles:
             os.remove(os.path.join(TEMP_PATH, file))

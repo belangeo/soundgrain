@@ -22,9 +22,7 @@ from subprocess import Popen, PIPE
 from ounk.ounklib import *
 from constants import *
 import Settings
- 
-flag = [0]*8
-   
+    
 def soundInfo(sndfile):
     chans, samprate, dur, frac, samps, bitrate = getSoundInfo(sndfile)
     return (chans, samprate, dur)
@@ -62,6 +60,8 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     oscylist = ['/y%d' % i for i in range(_NUM)]
     amplist = ['amp%d' % i for i in range(_NUM)]
     oscamplist = ['/amp%d' % i for i in range(_NUM)]
+    metrolist = ['metroVar%d' % i for i in range(_NUM)]
+    oscmetrolist = ['/metroVar%d' % i for i in range(_NUM)]
     reclist = ['rec']
     oscreclist = ['/rec']
     paramslist = {  'Granulator': ['amplitude', 'grainsize', 'cutoff', 'globalAmp'],
@@ -70,8 +70,8 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     oscparamslist = {'Granulator': ['/amplitude', '/grainsize', '/cutoff', '/globalAmp'],
                     'FFTReader': ['/amplitude', '/cutoff', '/globalAmp'],
                     'FFTAdsyn': ['/amplitude', '/cutoff', '/globalAmp']}[module]
-    totalbuslist = xlist + ylist + amplist + reclist + paramslist
-    totaloscbuslist = oscxlist + oscylist + oscamplist + oscreclist + oscparamslist
+    totalbuslist = xlist + ylist + amplist + metrolist + reclist + paramslist
+    totaloscbuslist = oscxlist + oscylist + oscamplist + oscmetrolist + oscreclist + oscparamslist
     portamentolist = [0.002] * len(totalbuslist)
     recindex = totalbuslist.index('rec')
     portamentolist[recindex] = 0
@@ -262,7 +262,13 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     beginTrigInst(trigbus = 'rec', trigval = 1, release = 0.05)
     recordPerf(name = os.path.join(os.path.expanduser('~'), outFile))
     endTrigInst()
-            
+
+    metro(bus='refresh', tempo=380)
+    oscSend(input='refresh', address='/refresh', port=15000)
+
+    for i in range(_NUM):
+        metro(bus='metro%d' % i, tempo=1, tempoVar='metroVar%d' % i)
+        oscSend(input='metro%d' % i, address='/metro%d' % i, port=15000)
     monitor()
     startCsound(withevents=False)
 
@@ -270,24 +276,13 @@ def stopAudio():
     stopCsound()
     processNumber(1)
       
-def resetFlag():
-    global flag
-    flag = [0]*8
-
-def sendXYControls(list):
-    if list:
-        for i, l in enumerate(list):
-            if l:
-                if not flag[i]:
-                    flag[i] = 1
-                    sendOscControl(value=1, host=Settings.getHost(), port=Settings.getPort(), address='/amp%d' % i)
-                sendOscControl(value=l[0], host=Settings.getHost(), port=Settings.getPort(), address='/x%d' % i)
-                sendOscControl(value=l[1], host=Settings.getHost(), port=Settings.getPort(), address='/y%d' % i)
-            else:
-                if flag[i]:
-                    flag[i] = 0
-                    sendOscControl(value=0, host=Settings.getHost(), port=Settings.getPort(), address='/amp%d' % i)
-
+def sendActiveTraj(val, which):
+    sendOscControl(value=val, host=Settings.getHost(), port=Settings.getPort(), address='/amp%d' % which)
+    
+def sendXYControl(l, which):
+    sendOscControl(value=l[0], host=Settings.getHost(), port=Settings.getPort(), address='/x%d' % which)
+    sendOscControl(value=l[1], host=Settings.getHost(), port=Settings.getPort(), address='/y%d' % which)
+                
 def sendRecord():
     sendOscTrigger(value = 1, host=Settings.getHost(), port=Settings.getPort(), address = '/rec')
     

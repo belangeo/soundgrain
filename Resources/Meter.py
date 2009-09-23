@@ -16,35 +16,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
-import wx, math, threading, time, osc, random, os, sys
+import wx, math, os, sys
 from Biquad import BiquadLP
 from constants import *
-
-class Listener(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self.terminated = False
-        self.amps = [0]*8
-        self.t = 0
-
-        #osc.init()
-        self.inSocket = osc.createListener("127.0.0.1", 15001)
-        osc.bind(self.monitor, "/monitor")
-
-    def run(self):
-        while not self.terminated:
-            osc.getOSC(self.inSocket)
-            time.sleep(.06)
-
-    def monitor(self, *msg):
-        self.amps = msg[0][2:]
-
-    def getAmps(self):
-        return self.amps
-
-    def stop(self):
-        self.terminated = True
-        del self.inSocket
 
 class VuMeter(wx.Panel):
     def __init__(self, parent, size=(200,11)):
@@ -55,33 +29,16 @@ class VuMeter(wx.Panel):
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.old_nchnls = 2
         self.numSliders = 2
-        self.timeSpeed = 60
         self.SetSize((200, 5*self.numSliders+1))
         self.bitmap = wx.Bitmap(os.path.join(IMAGES_PATH, 'vu-metre.png'))
         self.backBitmap = wx.Bitmap(os.path.join(IMAGES_PATH, 'vu-metre-dark.png'))
         self.amplitude = [0] * self.numSliders
-        self.listener = Listener()
-        self.listener.start()
 
         self.Bind(wx.EVT_CLOSE, self.OnClose)   
         self.Bind(wx.EVT_SIZE, self.OnResize)   
  
-        self.startTimer()
-
     def OnResize(self, evt):
         self.setNumSliders(self.numSliders)
-
-    def startTimer(self):
-        self.timer = wx.PyTimer(self.clock)
-        self.timer.Start(self.timeSpeed)
-        
-    def stopTimer(self):
-        self.timer.Stop()
-        del self.timer
-
-    def clock(self):
-        self.setAmplitude([math.sqrt(amp) for amp in self.listener.getAmps()])
-        self.Refresh()
 
     def setNumSliders(self, numSliders):
         oldChnls = self.old_nchnls
@@ -104,6 +61,7 @@ class VuMeter(wx.Panel):
             self.amplitude = [0 for i in range(self.numSliders)]                
         else:
             self.amplitude = amplitudeList
+        self.Refresh()    
         
     def OnPaint(self, event):
         w,h = self.GetSize()
@@ -119,8 +77,6 @@ class VuMeter(wx.Panel):
             dc.DestroyClippingRegion()
 
     def OnClose(self, evt):
-        self.stopTimer()
-        self.listener.stop()
         self.Destroy()
 
 
