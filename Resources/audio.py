@@ -269,7 +269,7 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     for i in range(_NUM):
         metro(bus='metro%d' % i, tempo=1, tempoVar='metroVar%d' % i)
         oscSend(input='metro%d' % i, address='/metro%d' % i, port=15000)
-    monitor()
+    monitor(poll=15)
     startCsound(withevents=False)
 
 def stopAudio():
