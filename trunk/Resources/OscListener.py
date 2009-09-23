@@ -48,22 +48,29 @@ class Listener():
         wx.CallAfter(self.meter.setAmplitude, amps)
 
     def refreshScreen(self, *msg):
-        self.surface.Refresh()
+        wx.CallAfter(self.surface.Refresh)
         
     def metro1(self, *msg):
         wx.CallAfter(self.clock, 0) 
+        
     def metro2(self, *msg):
         wx.CallAfter(self.clock, 1)
+        
     def metro3(self, *msg):
         wx.CallAfter(self.clock, 2)
+        
     def metro4(self, *msg):
         wx.CallAfter(self.clock, 3)
+        
     def metro5(self, *msg):
         wx.CallAfter(self.clock, 4)
+        
     def metro6(self, *msg):
         wx.CallAfter(self.clock, 5)
+        
     def metro7(self, *msg):
         wx.CallAfter(self.clock, 6)
+        
     def metro8(self, *msg):
         wx.CallAfter(self.clock, 7)
          
