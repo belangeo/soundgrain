@@ -318,7 +318,7 @@ class ControlSlider(wx.Panel):
             dc.DrawRoundedRectangleRect(rec2, 3)
 
         if sys.platform in ['win32', 'linux2']:
-            dc.SetFont(wx.Font(8, wx.ROMAN, wx.NORMAL, wx.NORMAL))
+            dc.SetFont(wx.Font(7, wx.ROMAN, wx.NORMAL, wx.NORMAL))
         else:    
             dc.SetFont(wx.Font(10, wx.ROMAN, wx.NORMAL, wx.NORMAL))
 
