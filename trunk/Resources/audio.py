@@ -64,10 +64,10 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
     oscmetrolist = ['/metroVar%d' % i for i in range(_NUM)]
     reclist = ['rec']
     oscreclist = ['/rec']
-    paramslist = {  'Granulator': ['amplitude', 'grainsize', 'cutoff', 'globalAmp'],
+    paramslist = {  'Granulator': ['amplitude', 'grainsize', 'rndpos', 'cutoff', 'globalAmp'],
                     'FFTReader': ['amplitude', 'cutoff', 'globalAmp'],
                     'FFTAdsyn': ['amplitude', 'cutoff', 'globalAmp']}[module]
-    oscparamslist = {'Granulator': ['/amplitude', '/grainsize', '/cutoff', '/globalAmp'],
+    oscparamslist = {'Granulator': ['/amplitude', '/grainsize', '/rndpos', '/cutoff', '/globalAmp'],
                     'FFTReader': ['/amplitude', '/cutoff', '/globalAmp'],
                     'FFTAdsyn': ['/amplitude', '/cutoff', '/globalAmp']}[module]
     totalbuslist = xlist + ylist + amplist + metrolist + reclist + paramslist
@@ -97,11 +97,11 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
             args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14], args[15]
             
         if len(trans) == 1 and trans[0] == 1:
-            sizeVar = 'grainsize'
+            rndsizeVar = None
         else:    
             randomChoice(bus='sizeVar', choice=trans, rate=50)
-            busMix(bus='size', in1='sizeVar', in2='grainsize', ftype='times')
-            sizeVar = 'size'
+            rndsizeVar = 'sizeVar'
+        rando(bus='rndposvar', mini=-1, maxi=1, miniVar='rndpos', maxiVar='rndpos')    
         if tr_check == 0:
             pitVarlist = None
         else:
@@ -112,8 +112,8 @@ def startAudio(_NUM, sndfile, audioDriver, outFile, module, *args):
                 pitVar = None
             else:
                 pitVar = pitVarlist[i]
-            granulator2(table=tab, overlaps=overlaps, pointerpos=frac, grainsize=0.001, amplitude=.5, 
-                    grainsizeVar=sizeVar, pitch=1, pointerposVar=xlist[i], pitchVar=pitVar, amplitudeVar=amplist[i], out='outgrain%d' % i)
+            granulator2(table=tab, overlaps=overlaps, pointerpos=frac, grainsize=0.001, amplitude=.5, randgrainsizeVar=rndsizeVar, randpointerposVar='rndposvar',
+                    grainsizeVar='grainsize', pitch=1, pointerposVar=xlist[i], pitchVar=pitVar, amplitudeVar=amplist[i], out='outgrain%d' % i)
         if cut_check == 0:
             outbus = 'outgrain'
         else:

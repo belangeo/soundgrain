@@ -96,6 +96,25 @@ class Module(wx.Frame):
         self.grainsize = size
         self.sl_size.SetValue(self.grainsize)
 
+    def makeRandPosBox(self, box):
+        box.AddSpacer(5)
+        box.Add(wx.StaticText(self, -1, "Position random"), 0, wx.LEFT, 10)
+        rndposBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_rndpos = ControlSlider(self, 0, .5, self.rndpos, size=(250, 16), outFunction=self.handleRandPos)
+        rndposBox.Add(self.sl_rndpos, 0, wx.LEFT | wx.RIGHT, 5)
+        box.Add(rndposBox, 0, wx.LEFT | wx.RIGHT, 5)
+
+    def handleRandPos(self, val):
+        self.rndpos = val
+        self.continuousControl('/rndpos', self.rndpos)   
+
+    def getRandPos(self):
+        return self.rndpos
+
+    def setRandPos(self, rnd):
+        self.rndpos = rnd
+        self.sl_rndpos.SetValue(self.rndpos)
+        
     def makeAmplitudeBox(self, box):
         box.AddSpacer(5)
         box.Add(wx.StaticText(self, -1, "Amplitude"), 0, wx.LEFT, 10)
@@ -438,12 +457,14 @@ class GranulatorFrame(Module):
   
         self.grainoverlaps = 8
         self.grainsize = 200
+        self.rndpos = 0
         self.cutoff = 10000
         self.amplitude = 0.7
         
         box = wx.BoxSizer(wx.VERTICAL)
         self.makeGrainOverlapsBox(box)
         self.makeGrainSizeBox(box)
+        self.makeRandPosBox(box)
         box.Add(wx.StaticLine(self, -1), 0, wx.EXPAND | wx.TOP, 5)
         self.makeCutoffBox(box)
         self.makeAmplitudeBox(box)
@@ -463,7 +484,7 @@ class GranulatorFrame(Module):
 
         self.widgets = [self.sl_overlaps, self.tx_ytrans_ch, self.tx_ycutoff_ch, self.tx_filtype, 
                         self.tx_yring_ch, self.tx_ringwav, self.tx_ydisto_ch]
-        self.controls = {'/amplitude': self.getAmp, '/cutoff': self.getCutoff, '/grainsize': self.getGrainSize}
+        self.controls = {'/amplitude': self.getAmp, '/cutoff': self.getCutoff, '/grainsize': self.getGrainSize, '/rndpos': self.getRandPos}
 
         self.Show(False)
 
@@ -475,6 +496,7 @@ class GranulatorFrame(Module):
     def save(self):
         return {'grainoverlaps': self.getGrainOverlaps(),
                 'grainsize': self.getGrainSize(),
+                'rndpos': self.getRandPos(),
                 'cutoff': self.getCutoff(),
                 'amp': self.getAmp(),
                 'trans': self.getTrans(),
@@ -496,6 +518,7 @@ class GranulatorFrame(Module):
     def load(self, dict):
         self.setGrainOverlaps(dict['grainoverlaps'])
         self.setGrainSize(dict['grainsize'])
+        self.setRandPos(dict['rndpos'])
         self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
         self.setTrans(dict['trans'])

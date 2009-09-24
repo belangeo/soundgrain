@@ -301,7 +301,7 @@ class ControlSlider(wx.Panel):
         else: sliderColour = "#BBBBBB"
         h2 = self.sliderHeight / 4
         rec = wx.Rect(0, h2, w, self.sliderHeight)
-        dc.GradientFillLinear(rec, "#313753", sliderColour, wx.BOTTOM)
+        dc.GradientFillLinear(rec, "#424864", sliderColour, wx.BOTTOM)
         dc.DrawBitmap(self.sliderMask, 0, 0, True)
 
         # Draw knob
