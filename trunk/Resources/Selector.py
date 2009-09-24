@@ -23,7 +23,8 @@ class Selector(wx.Panel):
     def __init__(self, parent, size=(160,20), outFunction=None):
         wx.Panel.__init__(self, parent, -1, size=size)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
-        self.SetBackgroundColour("#cccccc")
+        self.backgroundColour = wx.SystemSettings.GetColour(0)
+        self.SetBackgroundColour(self.backgroundColour)
         self.parent = parent
         self.SetSize((160,20))
         self.SetMaxSize(self.GetSize())
@@ -67,7 +68,7 @@ class Selector(wx.Panel):
         w,h = self.GetSize()
         dc = wx.AutoBufferedPaintDC(self)
 
-        dc.SetBrush(wx.Brush("#999999", wx.SOLID))
+        dc.SetBrush(wx.Brush(self.backgroundColour, wx.SOLID))
         dc.Clear()
 
         # Draw background
@@ -80,7 +81,7 @@ class Selector(wx.Panel):
                 dc.DrawRoundedRectangleRect(self.rectList[i], 2)
             dc.SetTextForeground("#000000")
             dc.DrawLabel(str(i+1), self.rectList[i], wx.ALIGN_CENTER)
-            dc.SetBrush(wx.Brush("#999999", wx.SOLID))
+            dc.SetBrush(wx.Brush(self.backgroundColour, wx.SOLID))
 
     def MouseDown(self, event):
         pos = event.GetPosition()
