@@ -4169,6 +4169,10 @@
 <value><int>299</int></value>
 </member>
 <member>
+<name>rndpos</name>
+<value><double>0</double></value>
+</member>
+<member>
 <name>transYmin</name>
 <value><double>0.5</double></value>
 </member>

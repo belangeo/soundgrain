@@ -77,7 +77,7 @@ class Trajectory:
         self.label = label
         self.activeLp = True
         self.editLevel = 2
-        self.timeSpeed = 20
+        self.timeSpeed = 25
         self.type = None
         self.center = None
         self.radius = None
