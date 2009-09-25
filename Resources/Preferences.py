@@ -39,24 +39,29 @@ class Preferences(wx.Frame):
 
         self.parent = parent
 
+        self.panel = wx.Panel(self, -1)
+        
         box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(wx.StaticText(self, -1, "OSC host"), 0, wx.CENTER|wx.TOP, 5)
-        self.host = wx.TextCtrl( self, -1, "127.0.0.1", size=(200, -1))
+        box.Add(wx.StaticText(self.panel, -1, "OSC host"), 0, wx.CENTER|wx.TOP, 5)
+        self.host = wx.TextCtrl(self.panel, -1, "127.0.0.1", size=(200, -1))
         box.Add(self.host, 0, wx.CENTER | wx.ALL, 5)
 
-        box.Add(wx.StaticText(self, -1, "OSC port"), 0, wx.CENTER|wx.TOP, 5)
-        self.port = wx.TextCtrl( self, -1, "8000", size=(200, -1))
+        box.Add(wx.StaticText(self.panel, -1, "OSC port"), 0, wx.CENTER|wx.TOP, 5)
+        self.port = wx.TextCtrl(self.panel, -1, "8000", size=(200, -1))
         box.Add(self.port, 0, wx.CENTER | wx.ALL, 5)
 
-        box.Add(wx.StaticText(self, -1, "Soft buffer"), 0, wx.CENTER|wx.TOP, 5)
-        self.soft = wx.TextCtrl( self, -1, "500", size=(200, -1))
+        box.Add(wx.StaticText(self.panel, -1, "Soft buffer"), 0, wx.CENTER|wx.TOP, 5)
+        self.soft = wx.TextCtrl(self.panel, -1, "500", size=(200, -1))
         box.Add(self.soft, 0, wx.CENTER | wx.ALL, 5)
 
-        box.Add(wx.StaticText(self, -1, "Hard buffer"), 0, wx.CENTER|wx.TOP, 5)
-        self.hard = wx.TextCtrl( self, -1, "2000", size=(200, -1))
+        box.Add(wx.StaticText(self.panel, -1, "Hard buffer"), 0, wx.CENTER|wx.TOP, 5)
+        self.hard = wx.TextCtrl(self.panel, -1, "2000", size=(200, -1))
         box.Add(self.hard, 0, wx.CENTER | wx.ALL, 5)
-        self.SetSizerAndFit(box)
+        self.panel.SetSizerAndFit(box)
 
+        self.Fit()
+        self.SetMinSize(self.GetSize())
+        self.SetMaxSize(self.GetSize())
         self.Show()
 
     def handleClose(self, event):

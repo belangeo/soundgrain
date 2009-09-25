@@ -1811,8 +1811,8 @@ if __name__ == '__main__':
     X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
     if X < 900: sizex = X - 40
     else: sizex = 900
-    if PLATFORM in ['win32', 'linux2']: defaultY = 550
-    else: defaultY = 530
+    if PLATFORM in ['win32', 'linux2']: defaultY = 500
+    else: defaultY = 480
     if Y < defaultY: sizey = Y - 40
     else: sizey = defaultY
     f = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), file=file)
