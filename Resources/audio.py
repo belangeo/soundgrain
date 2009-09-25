@@ -340,7 +340,7 @@ def splitSnd(file):
 
     outPath = TEMP_PATH
     sndName = os.path.split(file)[1].rsplit('.',1)[0]
-    sndFileInput = file.replace('\\', '/')
+    sndFileInput = file.replace('\\', '/').encode('utf-8')
     
     splitter.write('idur filelen "%s"\n' % sndFileInput)
     splitter.write('p3 = idur\n')
@@ -350,7 +350,7 @@ def splitSnd(file):
     
     for i in range(chnls):
         sndOutName = sndName + '-%d.aif' % i
-        sndOutFile = os.path.join(outPath, sndOutName).replace('\\', '/')
+        sndOutFile = os.path.join(outPath, sndOutName).replace('\\', '/').encode('utf-8')
         splitter.write('fout "%s", %d, a%d\n' % (sndOutFile, {16:2, 24:8}[bitrate], i))
     splitter.write('endin\n')
     

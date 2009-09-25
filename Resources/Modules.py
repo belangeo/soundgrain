@@ -297,7 +297,7 @@ class Module(wx.Frame):
         self.sl_transpo.SetValue(transpo)
    
     def makeYaxisTranspoBox(self, box, label=None):
-        if label == None: lab = "Y axis (transposition)"
+        if label == None: lab = "Y axis (Transposition)"
         else: lab = label
         box.Add(wx.StaticText(self.panel, -1, lab), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
         textBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -331,7 +331,7 @@ class Module(wx.Frame):
         self.tx_tr_ymax.SetValue(str(ymax))
 
     def makeYaxisCutoffBox(self, box, label=None):
-        if label == None: lab = "Y axis (lowpass cutoff)"
+        if label == None: lab = "Y axis (Lowpass cutoff)"
         else: lab = label
         box.AddSpacer(5)
         box.Add(wx.StaticText(self.panel, -1, lab), 0, wx.CENTER|wx.TOP, 5)
