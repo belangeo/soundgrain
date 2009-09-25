@@ -42,6 +42,8 @@ class Module(wx.Frame):
         self.surface = surface
         self.continuousControl = continuousControl
 
+        self.panel = wx.Panel(self, -1)
+        
     def onRun(self, event):
         self.parent.onRun(event)
         
@@ -61,9 +63,9 @@ class Module(wx.Frame):
             self.continuousControl(key, func())
 
     def makeGrainOverlapsBox(self, box):
-        box.Add(wx.StaticText(self, -1, "Number of grains"), 0, wx.LEFT|wx.TOP, 10)
+        box.Add(wx.StaticText(self.panel, -1, "Number of grains"), 0, wx.LEFT|wx.TOP, 10)
         overlapsBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_overlaps = ControlSlider(self, 1, 48, self.grainoverlaps, size=(250, 16), integer=True, outFunction=self.handleGrainOverlaps)
+        self.sl_overlaps = ControlSlider(self.panel, 1, 48, self.grainoverlaps, size=(250, 16), integer=True, outFunction=self.handleGrainOverlaps)
         overlapsBox.Add(self.sl_overlaps, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(overlapsBox, 0, wx.LEFT | wx.RIGHT, 5)
 
@@ -79,9 +81,9 @@ class Module(wx.Frame):
 
     def makeGrainSizeBox(self, box):
         box.AddSpacer(5)
-        box.Add(wx.StaticText(self, -1, "Grain size (ms)"), 0, wx.LEFT, 10)
+        box.Add(wx.StaticText(self.panel, -1, "Grain size (ms)"), 0, wx.LEFT, 10)
         sizeBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_size = ControlSlider(self, 50, 500, self.grainsize, size=(250, 16), integer=True, outFunction=self.handleGrainSize)
+        self.sl_size = ControlSlider(self.panel, 50, 500, self.grainsize, size=(250, 16), integer=True, outFunction=self.handleGrainSize)
         sizeBox.Add(self.sl_size, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(sizeBox, 0, wx.LEFT | wx.RIGHT, 5)
 
@@ -98,9 +100,9 @@ class Module(wx.Frame):
 
     def makeRandPosBox(self, box):
         box.AddSpacer(5)
-        box.Add(wx.StaticText(self, -1, "Position random"), 0, wx.LEFT, 10)
+        box.Add(wx.StaticText(self.panel, -1, "Position random"), 0, wx.LEFT, 10)
         rndposBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_rndpos = ControlSlider(self, 0, .5, self.rndpos, size=(250, 16), outFunction=self.handleRandPos)
+        self.sl_rndpos = ControlSlider(self.panel, 0, .5, self.rndpos, size=(250, 16), outFunction=self.handleRandPos)
         rndposBox.Add(self.sl_rndpos, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(rndposBox, 0, wx.LEFT | wx.RIGHT, 5)
 
@@ -117,9 +119,9 @@ class Module(wx.Frame):
         
     def makeAmplitudeBox(self, box):
         box.AddSpacer(5)
-        box.Add(wx.StaticText(self, -1, "Amplitude"), 0, wx.LEFT, 10)
+        box.Add(wx.StaticText(self.panel, -1, "Amplitude"), 0, wx.LEFT, 10)
         ampBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_amp = ControlSlider(self, 0, 4, self.amplitude, size=(250, 16), outFunction=self.handleAmp)
+        self.sl_amp = ControlSlider(self.panel, 0, 4, self.amplitude, size=(250, 16), outFunction=self.handleAmp)
         ampBox.Add(self.sl_amp, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(ampBox, 0, wx.LEFT | wx.RIGHT, 5)
 
@@ -136,9 +138,9 @@ class Module(wx.Frame):
 
     def makeCutoffBox(self, box):
         box.AddSpacer(5)
-        box.Add(wx.StaticText(self, -1, "Lowpass cutoff"), 0, wx.LEFT, 10)
+        box.Add(wx.StaticText(self.panel, -1, "Lowpass cutoff"), 0, wx.LEFT, 10)
         cutoffBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_cutoff = ControlSlider(self, 100, 18000, self.cutoff, size=(250, 16), integer=True, log=True, outFunction=self.handleCutoff)
+        self.sl_cutoff = ControlSlider(self.panel, 100, 18000, self.cutoff, size=(250, 16), integer=True, log=True, outFunction=self.handleCutoff)
         cutoffBox.Add(self.sl_cutoff, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(cutoffBox, 0, wx.LEFT | wx.RIGHT, 5)
 
@@ -154,10 +156,10 @@ class Module(wx.Frame):
         self.sl_cutoff.SetValue(cutoff)
 
     def makeTransBox(self, box):
-        box.Add(wx.StaticText(self, -1, "Random transposition per grain"), 0, wx.CENTER|wx.TOP, 5)
-        box.Add(wx.StaticText(self, -1, "List of transposition ratios"), 0, wx.CENTER|wx.TOP, 1)
+        box.Add(wx.StaticText(self.panel, -1, "Random transposition per grain"), 0, wx.CENTER|wx.TOP, 5)
+        box.Add(wx.StaticText(self.panel, -1, "List of transposition ratios"), 0, wx.CENTER|wx.TOP, 1)
         transBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_trans = wx.TextCtrl( self, -1, "1, ", size=(250, -1))
+        self.tx_trans = wx.TextCtrl(self.panel, -1, "1, ", size=(250, -1))
         transBox.Add(self.tx_trans, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(transBox, 0, wx.ALL, 5)                        
 
@@ -169,14 +171,13 @@ class Module(wx.Frame):
 
     def makeFFTSizeBox(self, box):
         box.AddSpacer(5)
-        box.Add(wx.StaticText(self, -1, "FFT size (power of 2)"), 0, wx.LEFT, 10)
+        box.Add(wx.StaticText(self.panel, -1, "FFT size (power of 2)"), 0, wx.LEFT|wx.TOP, 10)
         fftsizeBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_fftsize = ControlSlider(self, 5, 14, self.fftsize, size=(250, 16), powoftwo=True, outFunction=self.handleFFTSize)
+        self.sl_fftsize = ControlSlider(self.panel, 5, 14, self.fftsize, size=(250, 16), powoftwo=True, outFunction=self.handleFFTSize)
         fftsizeBox.Add(self.sl_fftsize, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(fftsizeBox, 0, wx.LEFT | wx.RIGHT, 5)
 
     def handleFFTSize(self, val):
-        print val
         self.fftsize = val
 
     def getFFTSize(self):
@@ -188,9 +189,9 @@ class Module(wx.Frame):
 
     def makeFFTOverlapsBox(self, box):
         box.AddSpacer(5)
-        box.Add(wx.StaticText(self, -1, "FFT Overlaps"), 0, wx.LEFT, 10)
+        box.Add(wx.StaticText(self.panel, -1, "FFT Overlaps"), 0, wx.LEFT, 10)
         overlapsBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_overlaps = ControlSlider(self, 2, 16, self.overlaps, size=(250, 16), integer=True, outFunction=self.handleOverlaps)
+        self.sl_overlaps = ControlSlider(self.panel, 2, 16, self.overlaps, size=(250, 16), integer=True, outFunction=self.handleOverlaps)
         overlapsBox.Add(self.sl_overlaps, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(overlapsBox, 0, wx.LEFT | wx.RIGHT, 5)
 
@@ -206,9 +207,9 @@ class Module(wx.Frame):
 
     def makeFFTWinSizeBox(self, box):
         box.AddSpacer(5)
-        box.Add(wx.StaticText(self, -1, "FFT window size ( >= FFT size)"), 0, wx.LEFT, 10)
+        box.Add(wx.StaticText(self.panel, -1, "FFT window size ( >= FFT size)"), 0, wx.LEFT, 10)
         winsizeBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_winsize = ControlSlider(self, 5, 14, self.winsize, size=(250, 16), powoftwo=True, outFunction=self.handleWindowSize)
+        self.sl_winsize = ControlSlider(self.panel, 5, 14, self.winsize, size=(250, 16), powoftwo=True, outFunction=self.handleWindowSize)
         winsizeBox.Add(self.sl_winsize, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(winsizeBox, 0, wx.LEFT | wx.RIGHT, 5)
 
@@ -224,9 +225,9 @@ class Module(wx.Frame):
 
     def makeNumBinsBox(self, box):
         box.AddSpacer(5)
-        box.Add(wx.StaticText(self, -1, "Number of bins to synthesize"), 0, wx.LEFT, 10)
+        box.Add(wx.StaticText(self.panel, -1, "Number of bins to synthesize"), 0, wx.LEFT, 10)
         numbinsBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_numbins = ControlSlider(self, 1, 200, self.numbins, size=(250, 16), integer=True, outFunction=self.handleNumBins)
+        self.sl_numbins = ControlSlider(self.panel, 1, 200, self.numbins, size=(250, 16), integer=True, outFunction=self.handleNumBins)
         numbinsBox.Add(self.sl_numbins, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(numbinsBox, 0, wx.LEFT | wx.RIGHT, 5)
 
@@ -242,9 +243,9 @@ class Module(wx.Frame):
 
     def makeFirstBinBox(self, box):
         box.AddSpacer(5)
-        box.Add(wx.StaticText(self, -1, "First bin"), 0, wx.LEFT, 10)
+        box.Add(wx.StaticText(self.panel, -1, "First bin"), 0, wx.LEFT, 10)
         firstBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_first = ControlSlider(self, 0, 50, self.first, size=(250, 16), integer=True, outFunction=self.handleFirst)
+        self.sl_first = ControlSlider(self.panel, 0, 50, self.first, size=(250, 16), integer=True, outFunction=self.handleFirst)
         firstBox.Add(self.sl_first, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(firstBox, 0, wx.LEFT | wx.RIGHT, 5)
 
@@ -260,9 +261,9 @@ class Module(wx.Frame):
 
     def makeIncrementBox(self, box):
         box.AddSpacer(5)
-        box.Add(wx.StaticText(self, -1, "Bin increment"), 0, wx.LEFT, 10)
+        box.Add(wx.StaticText(self.panel, -1, "Bin increment"), 0, wx.LEFT, 10)
         incrBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_incr = ControlSlider(self, 1, 50, self.incr, size=(250, 16), integer=True, outFunction=self.handleIncr)
+        self.sl_incr = ControlSlider(self.panel, 1, 50, self.incr, size=(250, 16), integer=True, outFunction=self.handleIncr)
         incrBox.Add(self.sl_incr, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(incrBox, 0, wx.LEFT | wx.RIGHT, 5)
            
@@ -278,9 +279,9 @@ class Module(wx.Frame):
 
     def makeTranspoBox(self, box):
         box.AddSpacer(5)
-        box.Add(wx.StaticText(self, -1, "Sound transposition"), 0, wx.LEFT, 10)
+        box.Add(wx.StaticText(self.panel, -1, "Sound transposition"), 0, wx.LEFT, 10)
         transpoBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_transpo = ControlSlider(self, 0, 2, self.transpo, size=(250, 16), outFunction=self.handleTranspo)
+        self.sl_transpo = ControlSlider(self.panel, 0, 2, self.transpo, size=(250, 16), outFunction=self.handleTranspo)
         transpoBox.Add(self.sl_transpo, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(transpoBox, 0, wx.LEFT | wx.RIGHT, 5)
    
@@ -298,16 +299,16 @@ class Module(wx.Frame):
     def makeYaxisTranspoBox(self, box, label=None):
         if label == None: lab = "Y axis (transposition)"
         else: lab = label
-        box.Add(wx.StaticText(self, -1, lab), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
+        box.Add(wx.StaticText(self.panel, -1, lab), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
         textBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_ytrans_ch = wx.CheckBox(self, -1, "")
+        self.tx_ytrans_ch = wx.CheckBox(self.panel, -1, "")
         self.tx_ytrans_ch.SetValue(1)
         textBox.Add(self.tx_ytrans_ch, 0, wx.LEFT | wx.RIGHT, 10)
-        textBox.Add(wx.StaticText(self, -1, "Min: "), 0, wx.TOP, 4)
-        self.tx_tr_ymin = wx.TextCtrl( self, -1, "0.", size=(50, -1))
+        textBox.Add(wx.StaticText(self.panel, -1, "Min: "), 0, wx.TOP, 4)
+        self.tx_tr_ymin = wx.TextCtrl(self.panel, -1, "0.", size=(50, -1))
         textBox.Add(self.tx_tr_ymin, 0, wx.RIGHT, 20)
-        textBox.Add(wx.StaticText(self, -1, "Max: "), 0, wx.TOP, 4)
-        self.tx_tr_ymax = wx.TextCtrl( self, -1, "1.", size=(50, -1))
+        textBox.Add(wx.StaticText(self.panel, -1, "Max: "), 0, wx.TOP, 4)
+        self.tx_tr_ymax = wx.TextCtrl(self.panel, -1, "1.", size=(50, -1))
         textBox.Add(self.tx_tr_ymax, 0, wx.RIGHT, 20)
         box.Add(textBox, 0, wx.LEFT | wx.RIGHT, 10)
 
@@ -333,19 +334,19 @@ class Module(wx.Frame):
         if label == None: lab = "Y axis (lowpass cutoff)"
         else: lab = label
         box.AddSpacer(5)
-        box.Add(wx.StaticText(self, -1, lab), 0, wx.CENTER|wx.TOP, 5)
-        self.tx_filtype = wx.Choice(self, -1, choices = ['Lowpass', 'Highpass', 'Bandpass', 'Bandreject'])
+        box.Add(wx.StaticText(self.panel, -1, lab), 0, wx.CENTER|wx.TOP, 5)
+        self.tx_filtype = wx.Choice(self.panel, -1, choices = ['Lowpass', 'Highpass', 'Bandpass', 'Bandreject'])
         self.tx_filtype.SetSelection(0)
         box.Add(self.tx_filtype, 0, wx.CENTER | wx.TOP, 5)
         textBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_ycutoff_ch = wx.CheckBox(self, -1, "")
+        self.tx_ycutoff_ch = wx.CheckBox(self.panel, -1, "")
         self.tx_ycutoff_ch.SetValue(0)
         textBox.Add(self.tx_ycutoff_ch, 0, wx.LEFT | wx.RIGHT, 10)
-        textBox.Add(wx.StaticText(self, -1, "Min: "), 0, wx.TOP, 4)
-        self.tx_cut_ymin = wx.TextCtrl( self, -1, "100", size=(50, -1))
+        textBox.Add(wx.StaticText(self.panel, -1, "Min: "), 0, wx.TOP, 4)
+        self.tx_cut_ymin = wx.TextCtrl(self.panel, -1, "100", size=(50, -1))
         textBox.Add(self.tx_cut_ymin, 0, wx.RIGHT, 20)
-        textBox.Add(wx.StaticText(self, -1, "Max: "), 0, wx.TOP, 4)
-        self.tx_cut_ymax = wx.TextCtrl( self, -1, "10000", size=(50, -1))
+        textBox.Add(wx.StaticText(self.panel, -1, "Max: "), 0, wx.TOP, 4)
+        self.tx_cut_ymax = wx.TextCtrl(self.panel, -1, "10000", size=(50, -1))
         textBox.Add(self.tx_cut_ymax, 0, wx.RIGHT, 20)
         box.Add(textBox, 0, wx.ALL, 10)
 
@@ -376,19 +377,19 @@ class Module(wx.Frame):
     def makeYaxisRingBox(self, box, label=None):
         if label == None: lab = "Y axis (Ring Mod frequency)"
         else: lab = label
-        box.Add(wx.StaticText(self, -1, lab), 0, wx.CENTER|wx.TOP, 5)
-        self.tx_ringwav = wx.Choice(self, -1, choices = ['Sine', 'Square', 'Sawtooth'])
+        box.Add(wx.StaticText(self.panel, -1, lab), 0, wx.CENTER|wx.TOP, 5)
+        self.tx_ringwav = wx.Choice(self.panel, -1, choices = ['Sine', 'Square', 'Sawtooth'])
         self.tx_ringwav.SetSelection(0)
         box.Add(self.tx_ringwav, 0, wx.CENTER | wx.TOP | wx.BOTTOM, 5)
         textBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_yring_ch = wx.CheckBox(self, -1, "")
+        self.tx_yring_ch = wx.CheckBox(self.panel, -1, "")
         self.tx_yring_ch.SetValue(0)
         textBox.Add(self.tx_yring_ch, 0, wx.LEFT | wx.RIGHT, 10)
-        textBox.Add(wx.StaticText(self, -1, "Min: "), 0, wx.TOP, 4)
-        self.tx_ring_ymin = wx.TextCtrl( self, -1, "0.", size=(50, -1))
+        textBox.Add(wx.StaticText(self.panel, -1, "Min: "), 0, wx.TOP, 4)
+        self.tx_ring_ymin = wx.TextCtrl(self.panel, -1, "0.", size=(50, -1))
         textBox.Add(self.tx_ring_ymin, 0, wx.RIGHT, 20)
-        textBox.Add(wx.StaticText(self, -1, "Max: "), 0, wx.TOP, 4)
-        self.tx_ring_ymax = wx.TextCtrl( self, -1, "100.", size=(50, -1))
+        textBox.Add(wx.StaticText(self.panel, -1, "Max: "), 0, wx.TOP, 4)
+        self.tx_ring_ymax = wx.TextCtrl(self.panel, -1, "100.", size=(50, -1))
         textBox.Add(self.tx_ring_ymax, 0, wx.RIGHT, 20)
         box.AddSpacer(5)
         box.Add(textBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
@@ -420,16 +421,16 @@ class Module(wx.Frame):
     def makeYaxisDistoBox(self, box, label=None):
         if label == None: lab = "Y axis (Distortion drive)"
         else: lab = label
-        box.Add(wx.StaticText(self, -1, lab), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
+        box.Add(wx.StaticText(self.panel, -1, lab), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
         textBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_ydisto_ch = wx.CheckBox(self, -1, "")
+        self.tx_ydisto_ch = wx.CheckBox(self.panel, -1, "")
         self.tx_ydisto_ch.SetValue(0)
         textBox.Add(self.tx_ydisto_ch, 0, wx.LEFT | wx.RIGHT, 10)
-        textBox.Add(wx.StaticText(self, -1, "Min: "), 0, wx.TOP, 4)
-        self.tx_disto_ymin = wx.TextCtrl( self, -1, "0.", size=(50, -1))
+        textBox.Add(wx.StaticText(self.panel, -1, "Min: "), 0, wx.TOP, 4)
+        self.tx_disto_ymin = wx.TextCtrl(self.panel, -1, "0.", size=(50, -1))
         textBox.Add(self.tx_disto_ymin, 0, wx.RIGHT, 20)
-        textBox.Add(wx.StaticText(self, -1, "Max: "), 0, wx.TOP, 4)
-        self.tx_disto_ymax = wx.TextCtrl( self, -1, "1.", size=(50, -1))
+        textBox.Add(wx.StaticText(self.panel, -1, "Max: "), 0, wx.TOP, 4)
+        self.tx_disto_ymax = wx.TextCtrl(self.panel, -1, "1.", size=(50, -1))
         textBox.Add(self.tx_disto_ymax, 0, wx.RIGHT, 20)
         box.Add(textBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
         
@@ -475,7 +476,7 @@ class GranulatorFrame(Module):
         self.makeYaxisCutoffBox(box)
         self.makeYaxisRingBox(box)
         self.makeYaxisDistoBox(box)
-        self.SetSizer(box)
+        self.panel.SetSizerAndFit(box)
         
         self.Fit()
         self.SetMinSize(self.GetSize())
@@ -559,7 +560,7 @@ class FFTReaderFrame(Module):
         self.makeYaxisCutoffBox(box)
         self.makeYaxisRingBox(box)
         self.makeYaxisDistoBox(box)
-        self.SetSizer(box)
+        self.panel.SetSizerAndFit(box)
        
         self.Fit()
         self.SetMinSize(self.GetSize())
@@ -648,7 +649,7 @@ class FFTAdsynFrame(Module):
         self.makeYaxisCutoffBox(box)
         self.makeYaxisRingBox(box)
         self.makeYaxisDistoBox(box)
-        self.SetSizer(box)
+        self.panel.SetSizerAndFit(box)
         
         self.Fit()
         self.SetMinSize(self.GetSize())
