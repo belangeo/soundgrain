@@ -747,7 +747,7 @@ class DrawingSurface(wx.Panel):
                         if t.lastCirclePos[0] < t.circlePos[0]: marioff = 0
                         else: marioff = 4
                         bitmario = self.marios[t.mario + marioff]
-                        dc.DrawBitmap(bitmario, t.circlePos[0]-8, t.circlePos[1]-8)
+                        dc.DrawBitmap(bitmario, t.circlePos[0]-8, t.circlePos[1]-8, True)
                 dc.DrawRoundedRectanglePointSize((t.getFirstPoint()[0],t.getFirstPoint()[1]), (10,10), 2)
                 dc.SetTextForeground("#FFFFFF")
                 dc.SetFont(self.font)
