@@ -26,6 +26,7 @@ class VuMeter(wx.Panel):
         self.parent = parent
         self.SetMinSize((200,6))
         self.SetBackgroundColour("#000000")
+        self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.old_nchnls = 2
         self.numSliders = 2
@@ -65,7 +66,7 @@ class VuMeter(wx.Panel):
         
     def OnPaint(self, event):
         w,h = self.GetSize()
-        dc = wx.PaintDC(self)
+        dc = wx.AutoBufferedPaintDC(self)
         dc.SetBrush(wx.Brush("#000000"))
         dc.Clear()
         dc.DrawRectangle(0,0,w,h)
