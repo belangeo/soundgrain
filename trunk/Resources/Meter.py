@@ -48,7 +48,9 @@ class VuMeter(wx.Panel):
         gap = (self.numSliders - oldChnls) * 5
         parentSize = self.parent.GetSize()
         if sys.platform == 'linux2':
+            self.SetSize((200, 5*self.numSliders+1))
             self.SetMinSize((200, 5*self.numSliders+1))
+            self.parent.SetSize((parentSize[0], parentSize[1]+gap))
             self.parent.SetMinSize((parentSize[0], parentSize[1]+gap))
         else:
             self.SetSize((200, 5*self.numSliders+1))
