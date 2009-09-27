@@ -355,6 +355,7 @@ class DrawingSurface(wx.Panel):
     def __init__(self, parent, pos=(0,0), size=wx.DefaultSize):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY, pos=pos, size=size, style = wx.EXPAND)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+        self.SetBackgroundColour(BACKGROUND_COLOUR)
         self.parent = parent
         self.useMario = False
         self.marios = [
@@ -916,6 +917,7 @@ class DrawingSurface(wx.Panel):
 class ControlPanel(scrolled.ScrolledPanel):
     def __init__(self, parent, surface):
         scrolled.ScrolledPanel.__init__(self, parent, -1)
+        self.SetBackgroundColour(BACKGROUND_COLOUR)
         self.parent = parent
         self.surface = surface
         self.type = 0
@@ -1270,6 +1272,7 @@ class ControlPanel(scrolled.ScrolledPanel):
 class DrawingParameters(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
+        self.SetBackgroundColour(BACKGROUND_COLOUR)
 
         self.parent = parent
         box = wx.BoxSizer(wx.VERTICAL)
@@ -1315,6 +1318,7 @@ class DrawingParameters(wx.Panel):
 class PlaybackParameters(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
+        self.SetBackgroundColour(BACKGROUND_COLOUR)
 
         self.parent = parent
         box = wx.BoxSizer(wx.VERTICAL)

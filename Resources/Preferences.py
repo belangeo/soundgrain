@@ -19,6 +19,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx
 import Settings
+from constants import BACKGROUND_COLOUR
 
 class Preferences(wx.Frame):
     def __init__(self, parent):
@@ -40,6 +41,7 @@ class Preferences(wx.Frame):
         self.parent = parent
 
         self.panel = wx.Panel(self, -1)
+        self.panel.SetBackgroundColour(BACKGROUND_COLOUR)
         
         box = wx.BoxSizer(wx.VERTICAL)
         box.Add(wx.StaticText(self.panel, -1, "OSC host"), 0, wx.CENTER|wx.TOP, 5)
@@ -57,6 +59,8 @@ class Preferences(wx.Frame):
         box.Add(wx.StaticText(self.panel, -1, "Hard buffer"), 0, wx.CENTER|wx.TOP, 5)
         self.hard = wx.TextCtrl(self.panel, -1, "2000", size=(200, -1))
         box.Add(self.hard, 0, wx.CENTER | wx.ALL, 5)
+        
+        box.AddSpacer(10)
         self.panel.SetSizerAndFit(box)
 
         self.Fit()
