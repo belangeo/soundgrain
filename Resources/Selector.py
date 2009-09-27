@@ -91,10 +91,10 @@ class Selector(wx.Panel):
                 self.setOverWait(i)
                 break
         if self.outFunction:
-            self.outFunction(self.selected+1)
+            self.outFunction(self.selected)
         self.Refresh()
         event.Skip()
 
     def setSelected(self, selected):
-        self.selected = selected - 1
+        self.selected = selected
         self.Refresh()

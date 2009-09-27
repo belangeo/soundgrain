@@ -465,7 +465,7 @@ class DrawingSurface(wx.Panel):
         self.closed = closed
 
     def getTrajectory(self, which):
-        return self.trajectoriesBank[which-1]
+        return self.trajectoriesBank[which]
 
     def getAllTrajectories(self):
         return self.trajectories
@@ -920,7 +920,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.surface = surface
         self.type = 0
         self.numTraj = 3
-        self.selected = 1
+        self.selected = 0
         self.sndPath = None
         self.amplitude = 1
 
@@ -1038,7 +1038,7 @@ class ControlPanel(scrolled.ScrolledPanel):
     def handleMax(self, event):
         self.numTraj = event.GetInt() + 1
         self.surface.numOfTrajectories(self.numTraj)
-        self.setSelected(1)
+        self.setSelected(0)
         
     def getMax(self):
         return self.numTraj
@@ -1047,7 +1047,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.numTraj = max
         self.trajMax.SetSelection(max-1)
         self.surface.numOfTrajectories(max)
-        self.setSelected(1)
+        self.setSelected(0)
 
     def handleClosed(self, event):
         self.surface.setClosed(event.GetInt())
@@ -1112,7 +1112,7 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def setSelected(self, selected):
         self.playback.tog_traj.setSelected(selected)
-        self.selected = 1
+        self.selected = selected
         timeSpeed = self.surface.getTrajectory(selected).getTimeSpeed()
         step = self.surface.getTrajectory(selected).getStep()
         self.setTimerSpeed(timeSpeed)
@@ -1123,7 +1123,7 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def handleTimerSpeed(self, val):
         self.surface.getTrajectory(self.selected).setTimeSpeed(val)
-        self.sendTrajSpeed(self.selected-1, val)
+        self.sendTrajSpeed(self.selected, val)
   
     def setTimerSpeed(self, timeSpeed):
         self.playback.sl_timespeed.SetValue(timeSpeed)
@@ -1698,7 +1698,8 @@ class MainFrame(wx.Frame):
         ### Trajectories ###
         for i, t in enumerate(self.panel.getAllTrajectories()):
             t.setAttributes(dict['Trajectories'][str(i)])
-
+            
+        self.controls.setSelected(0)    
         self.panel.setCurrentSize(dict['MainFrame']['size'])
         self.panel.OnResize(None)
         self.panel.Refresh()
