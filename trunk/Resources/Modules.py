@@ -19,6 +19,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx, sys
 from Slider import ControlSlider
+from constants import BACKGROUND_COLOUR
 
 class Module(wx.Frame):
     def __init__(self, parent, surface, continuousControl):
@@ -43,9 +44,12 @@ class Module(wx.Frame):
         self.continuousControl = continuousControl
 
         self.panel = wx.Panel(self, -1)
+        self.panel.SetBackgroundColour(BACKGROUND_COLOUR)
         self.notebook = wx.Notebook(self.panel, -1, style=wx.BK_DEFAULT | wx.EXPAND)
         self.panel1 = wx.Panel(self.notebook, wx.ID_ANY)
+        self.panel1.SetBackgroundColour(BACKGROUND_COLOUR)
         self.panel2 = wx.Panel(self.notebook, wx.ID_ANY)
+        self.panel2.SetBackgroundColour(BACKGROUND_COLOUR)
         self.box1 = wx.BoxSizer(wx.VERTICAL)
         self.box2 = wx.BoxSizer(wx.VERTICAL)
         
@@ -475,7 +479,6 @@ class GranulatorFrame(Module):
         self.makeCutoffBox(self.box1)
         self.makeAmplitudeBox(self.box1)
         self.makeTransBox(self.box1)
-        #self.panel1.SetAutoLayout(True)
         self.panel1.SetSizer(self.box1)
         self.notebook.AddPage(self.panel1, "Granulator")
         
@@ -483,7 +486,6 @@ class GranulatorFrame(Module):
         self.makeYaxisCutoffBox(self.box2)
         self.makeYaxisRingBox(self.box2)
         self.makeYaxisDistoBox(self.box2)
-        #self.panel2.SetAutoLayout(True)
         self.panel2.SetSizer(self.box2)
         self.notebook.AddPage(self.panel2, "Y Axis")
         

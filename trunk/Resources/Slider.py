@@ -18,6 +18,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import wx, sys, math
+from constants import BACKGROUND_COLOUR
 
 def interpFloat(t, v1, v2):
     "interpolator for a single value; interprets t in [0-1] between v1 and v2"
@@ -67,7 +68,7 @@ class ControlSlider(wx.Panel):
     def __init__(self, parent, minvalue, maxvalue, init=None, pos=(0,0), size=(200,16), log=False, outFunction=None, integer=False, powoftwo=False, backColour=None):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY, pos=pos, size=size, style=wx.NO_BORDER | wx.WANTS_CHARS)
         self.parent = parent
-        self.backgroundColour = wx.SystemSettings.GetColour(0)
+        self.backgroundColour = BACKGROUND_COLOUR
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)  
         self.SetBackgroundColour(self.backgroundColour)
         self.SetMinSize(self.GetSize())
@@ -301,14 +302,14 @@ class ControlSlider(wx.Panel):
         else: sliderColour = "#BBBBBB"
         h2 = self.sliderHeight / 4
         rec = wx.Rect(0, h2, w, self.sliderHeight)
-        dc.GradientFillLinear(rec, "#424864", sliderColour, wx.BOTTOM)
+        dc.GradientFillLinear(rec, "#646986", sliderColour, wx.BOTTOM)
         dc.DrawBitmap(self.sliderMask, 0, 0, True)
 
         # Draw knob
         if self._enable: knobColour = '#888888'
         else: knobColour = "#DDDDDD"
         rec = wx.Rect(self.pos-self.knobHalfSize, 0, self.knobSize, h)  
-        dc.GradientFillLinear(rec, "#313753", knobColour, wx.RIGHT)
+        dc.GradientFillLinear(rec, "#424864", knobColour, wx.RIGHT)
         dc.DrawBitmap(self.knobMask, rec[0], rec[1], True)
         
         if self.selected:
