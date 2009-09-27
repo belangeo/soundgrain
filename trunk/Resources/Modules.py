@@ -43,9 +43,9 @@ class Module(wx.Frame):
         self.continuousControl = continuousControl
 
         self.panel = wx.Panel(self, -1)
-        self.notebook = wx.Notebook(self, -1, style=wx.BK_DEFAULT | wx.EXPAND)
-        self.panel1 = wx.Panel(self.notebook, -1)
-        self.panel2 = wx.Panel(self.notebook, -1)
+        self.notebook = wx.Notebook(self.panel, -1, style=wx.BK_DEFAULT | wx.EXPAND)
+        self.panel1 = wx.Panel(self.notebook, wx.ID_ANY)
+        self.panel2 = wx.Panel(self.notebook, wx.ID_ANY)
         self.box1 = wx.BoxSizer(wx.VERTICAL)
         self.box2 = wx.BoxSizer(wx.VERTICAL)
         
@@ -475,17 +475,19 @@ class GranulatorFrame(Module):
         self.makeCutoffBox(self.box1)
         self.makeAmplitudeBox(self.box1)
         self.makeTransBox(self.box1)
-        self.panel1.SetSizerAndFit(self.box1)
+        #self.panel1.SetAutoLayout(True)
+        self.panel1.SetSizer(self.box1)
         self.notebook.AddPage(self.panel1, "Granulator")
         
         self.makeYaxisTranspoBox(self.box2)
         self.makeYaxisCutoffBox(self.box2)
         self.makeYaxisRingBox(self.box2)
         self.makeYaxisDistoBox(self.box2)
-        self.panel2.SetSizerAndFit(self.box2)
+        #self.panel2.SetAutoLayout(True)
+        self.panel2.SetSizer(self.box2)
         self.notebook.AddPage(self.panel2, "Y Axis")
         
-        box.Add(self.notebook)
+        box.Add(self.notebook, 0, wx.ALL, 5)
         self.panel.SetSizerAndFit(box)
         
         self.Fit()
