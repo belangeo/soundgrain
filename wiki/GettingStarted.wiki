@@ -54,34 +54,6 @@ Re-sync the trajectories points counter. This is automatically done when the aud
 
 Used to choose the desired driver. The drivers list is updated only on startup.
 
-== Menu Modules ==
-
-=== Granulator ===
-
-Granulates a sound by moving a pointer in the sound. It gives control on grain size and on a per-grain randomly choosed transposition.
-
- * X axis: Pointer position in the sound
- * Y axis: Global transposition and/or filters and/or ring modulation and/or distortion
-
-=== FFTReader ===
-
-Resynthesis of the sound by moving a pointer in an FFT buffer. 
-
- * X axis: Pointer position in the sound
- * Y axis: Global transposition and/or filters and/or ring modulation and/or distortion
-
-=== FFTAdsyn ===
-
-Same as FFTReader with additional control on the number and position of bins used in synthesis.
-
- * X axis: Pointer position in the sound
- * Y axis: Global transposition and/or filters and/or ring modulation and/or distortion
-
-
-=== Examples ===
-
-Some example projects.
-
 = Drawing surface =
 
  * *clic on empty space* : adds a new trajectory
