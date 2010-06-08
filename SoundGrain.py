@@ -24,13 +24,10 @@ from wx.lib.wordwrap import wordwrap
 import  wx.lib.scrolledpanel as scrolled
 
 from Resources.constants import *
-from Resources.Preferences import Preferences
-from Resources.Selector import Selector
 from Resources.audio import *
-from Resources.Biquad import BiquadLP
+from Resources.Biquad_Filter import BiquadLP
 from Resources.Modules import *
 from Resources.Meter import VuMeter
-from Resources.OscListener import Listener
 from Resources.Slider import ControlSlider
 
 trajTypes = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
@@ -73,7 +70,8 @@ met : 0 = linear, 1 = log, 2 = sqrt
 ###########################
 
 class Trajectory:
-    def __init__(self, label):
+    def __init__(self, label, parent):
+        self.parent = parent
         self.label = label
         self.activeLp = True
         self.editLevel = 2
@@ -121,12 +119,12 @@ class Trajectory:
     def setAttributes(self, dict):
         self.activeLp = dict['activeLp']
         self.editLevel = dict['editLevel']
-        self.timeSpeed = dict['timeSpeed']
+        self.setTimeSpeed(dict['timeSpeed'])
         self.step = dict['step']
         self.type = dict['type']
         self.center = dict['center']
         self.radius = dict['radius']
-        self.active = dict['active']
+        self.setActive(dict['active'])
         self.freeze = dict['freeze']
         self.circlePos = dict['circlePos']
         self.counter = dict['counter']
@@ -144,6 +142,7 @@ class Trajectory:
 
     def setTimeSpeed(self, speed):
         self.timeSpeed = speed
+        self.parent.parent.sg_audio.setMetroTime(self.label-1, speed * 0.001)
 
     def getTimeSpeed(self):
         return self.timeSpeed
@@ -173,9 +172,9 @@ class Trajectory:
         if state != None:
             self.active = state
         if self.active:
-            sendActiveTraj(1, self.label-1)
+            self.parent.parent.sg_audio.setActive(self.label-1, 1)
         else:
-            sendActiveTraj(0, self.label-1)
+            self.parent.parent.sg_audio.setActive(self.label-1, 0)
             
     def getActive(self):
         return self.active
@@ -372,8 +371,8 @@ class DrawingSurface(wx.Panel):
             self.font = wx.Font(7, wx.NORMAL, wx.NORMAL, wx.NORMAL)
         else:
             self.font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)
-        self.trajectoriesBank = [Trajectory(i+1) for i in range(8)]
-        self.numOfTrajectories(3)
+        self.trajectoriesBank = [Trajectory(i+1, self) for i in range(24)]
+        self.numOfTrajectories(24)
         self.screenOffset = 2
         self.sndBitmap = None
         self.bitmapDict = {}
@@ -421,8 +420,9 @@ class DrawingSurface(wx.Panel):
             if t.getPointPos() != None:
                 x = t.getPointPos()[0]/w
                 y = 1 - t.getPointPos()[1]/h
-                sendXYControl([x,y], which)
-            
+                self.parent.sg_audio.setXposition(which, x)
+                self.parent.sg_audio.setYposition(which, y)
+                
     def setOscilPeriod(self, period):
         self.oscilPeriod = period
 
@@ -473,7 +473,7 @@ class DrawingSurface(wx.Panel):
 
     def getActiveTrajectories(self):
         return [t for t in self.trajectories if t.getActive()]
-
+   
     def deleteTraj(self, evt):
         for t in self.getActiveTrajectories():
             if t.getInsideRect(evt.GetPosition()):
@@ -597,9 +597,9 @@ class DrawingSurface(wx.Panel):
                     if self.parent.fillPoints:
                         self.traj.fillPoints(self.closed)
                     self.traj.setInitPoints()
-                elif self.traj.getType() == 'circle':
+                elif self.traj.getType() in ['circle', 'oscil']:
                     if self.parent.fillPoints:
-                        self.traj.fillPoints(True)
+                        self.traj.fillPoints(False)
                     self.traj.setInitPoints()
                 else:
                     if self.parent.fillPoints:
@@ -657,20 +657,20 @@ class DrawingSurface(wx.Panel):
                     Ylen = abs(self.downPos[1] - evt.GetPosition()[1])
                     self.traj.setRadius(self.clipCirclePos(math.sqrt( Xlen**2 + Ylen**2 ), self.traj.getCenter(), self.traj.getRadius()))
                     r = self.traj.getRadius()
-                    halfR = int(round(r/2))
-                    if halfR == 0: scaleR = 1
-                    else: scaleR = 1./halfR
+                    halfR = int(round(r/2.))
+                    if halfR <= 1: scaleR = 1
+                    else: scaleR = 1./(halfR-1)
                     self.traj.points = []
                     self.traj.lpx.reinit()
                     self.traj.lpy.reinit()
                     if self.traj.getType() == 'circle':
-                        for i in range(-halfR,halfR):
+                        for i in range(-halfR,halfR+1):
                             a = i * scaleR * r
                             x = math.cos(math.pi * i * scaleR) * r
                             y = math.sin(math.pi * i * scaleR) * r
                             self.traj.addCirclePoint((int(round(x + self.downPos[0])), int(round(y + self.downPos[1]))))
                     else:
-                        for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling + 4)):
+                        for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling + 1)):
                             a = i * scaleR * r
                             x = math.cos(math.pi * i * scaleR) * r
                             y = math.sin(math.pi * self.oscilPeriod * i * scaleR) * r
@@ -694,20 +694,20 @@ class DrawingSurface(wx.Panel):
                 Ylen = abs(self.selected.getCenter()[1] - evt.GetPosition()[1])
                 self.selected.setRadius(self.clipCirclePos(math.sqrt( Xlen**2 + Ylen**2 ), self.selected.getCenter(), self.selected.getRadius()))
                 r = self.selected.getRadius()
-                halfR = int(round(r/2))
-                if halfR == 0: scaleR = 1
-                else: scaleR = 1./halfR
+                halfR = int(round(r/2.))
+                if halfR <= 1: scaleR = 1
+                else: scaleR = 1./(halfR-1)
                 self.selected.points = []
                 self.traj.lpx.reinit()
                 self.traj.lpy.reinit()
                 if self.selected.getType() == 'circle':
-                    for i in range(-halfR,halfR):
+                    for i in range(-halfR,halfR+1):
                         a = i * scaleR * r
                         x = math.cos(math.pi * i * scaleR) * r
                         y = math.sin(math.pi * i * scaleR) * r
                         self.selected.addCirclePoint((int(round(x + self.selected.getCenter()[0])), int(round(y + self.selected.getCenter()[1]))))
                 else:
-                    for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling + 4)):
+                    for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling + 1)):
                         a = i * scaleR * r
                         x = math.cos(math.pi * i * scaleR) * r
                         y = math.sin(math.pi * self.oscilPeriod * i * scaleR) * r
@@ -837,34 +837,12 @@ class DrawingSurface(wx.Panel):
             offy = center[1] - cy
         return [cx, cy], [offx, offy]
 
-    def analyse(self, file, chnls):
+    def analyse(self, file):
         self.file = file
-        self.chnls = chnls
-        splitSnd(file)
-        for i in range(chnls):
-            analfile = os.path.join(TEMP_PATH, 'anal%d' % i)
-            monofile = os.path.join(TEMP_PATH, os.path.split(file)[1].rsplit('.',1)[0] + '-' + str(i) + '.aif')
-            if PLATFORM == 'win32':
-                cspipe3 = Popen('start /REALTIME /WAIT csound -U envext -o "%s" -w .001 "%s"' % (analfile, monofile), shell=True, stdin=PIPE)
-            elif PLATFORM == 'linux2':    
-                cspipe3 = Popen('csound -U envext -o "%s" -w .001 "%s"' % (analfile, monofile), shell=True, stdin=PIPE)
-            else:    
-                cspipe3 = Popen('/usr/local/bin/csound -U envext -o "%s" -w .001 "%s"' % (analfile, monofile), shell=True, stdin=PIPE)
-            cspipe3.wait()
-        self.make_list()        
-
-    def make_list(self):
-        list = []
-        for i in range(self.chnls):
-            file = os.path.join(TEMP_PATH, 'anal%d' % i)
-            f = open(file, "r")
-            self.l = [li.strip('\n').split('\t') for li in f.readlines()]
-            f.close()
-            list.append([[eval(i[0]), eval(i[1])] for i in self.l])
-        self.bitmapDict[self.file] = list
-        self.list = list
+        self.list = self.parent.sg_audio.getViewTable()
+        self.bitmapDict[self.file] = self.list
         self.create_bitmap()
-
+        
     def create_bitmap(self):
         gradient = True
 
@@ -894,7 +872,7 @@ class DrawingSurface(wx.Panel):
                     last = 0
                     for i in range(X):
                         y = int(round(i / scalar))
-                        val = int(((halfY * self.list[chan][y][1]) + last) / 2)
+                        val = int(((halfY * self.list[chan][y]) + last) / 2)
                         rec = wx.Rect(i, halfY+off, 1, val)
                         self.memory.GradientFillLinear(rec, "#999999", "#222222", wx.BOTTOM)
                         rec = wx.Rect(i, halfY+off-val, 1, val)
@@ -905,7 +883,7 @@ class DrawingSurface(wx.Panel):
                     last = 0
                     for i in range(X):
                         y = int(round(i / scalar))
-                        val = int(((halfY * self.list[chan][y][1]) + last) / 2)
+                        val = int(((halfY * self.list[chan][y]) + last) / 2)
                         append((i,halfY+off,i,halfY+off+val))
                         append((i,halfY+off,i,halfY+off-val))
                         last = val
@@ -921,10 +899,12 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.parent = parent
         self.surface = surface
         self.type = 0
-        self.numTraj = 3
         self.selected = 0
+        self.server_booted = False
+        self.cue_snd = None
         self.sndPath = None
         self.amplitude = 1
+        self.nchnls = 2
 
         box = wx.BoxSizer(wx.VERTICAL)
 
@@ -937,15 +917,8 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.trajType = wx.Choice(self, -1, choices = ['Free', 'Circle', 'Oscil', 'Line'])
         self.trajType.SetSelection(0)
         popupBox.Add(self.trajType)
-        typeBox.Add(popupBox, 0, wx.RIGHT, 5)
-
-        popup2Box = wx.BoxSizer(wx.VERTICAL)
-        popup2Box.Add(wx.StaticText(self, -1, "Max"), 0, wx.CENTER|wx.ALL, 2)
-        self.trajMax = wx.Choice(self, -1, choices = ['1', '2', '3', '4', '5', '6', '7', '8'], size=(50, -1))
-        self.trajMax.SetSelection(2)
-        popup2Box.Add(self.trajMax)
-        typeBox.Add(popup2Box, 0, wx.RIGHT, 5)
-        
+        typeBox.Add(popupBox, 0, wx.CENTER|wx.RIGHT, 5)
+     
         self.closedToggle = wx.ToggleButton(self, -1, 'Closed', size=(55,-1))
         if PLATFORM in ['win32', 'linux2']:
             self.closedToggle.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
@@ -954,7 +927,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         else:    
             typeBox.Add(self.closedToggle, 0, wx.TOP, 21 )
 
-        box.Add(typeBox, 0, wx.ALL, 5)
+        box.Add(typeBox, 0, wx.CENTER|wx.ALL, 5)
 
         self.notebook = wx.Notebook(self, -1, style=wx.BK_DEFAULT | wx.EXPAND)
         self.drawing = DrawingParameters(self.notebook)
@@ -970,16 +943,25 @@ class ControlPanel(scrolled.ScrolledPanel):
         box.Add(ampBox, 0, wx.LEFT | wx.RIGHT, 5)
         box.AddSpacer(10)
         self.meter = VuMeter(self, size=(200,11))
-        box.Add(self.meter, 0, wx.LEFT, 10)
+        self.meter.setNumSliders(self.nchnls)
+        box.Add(self.meter, 0, wx.BOTTOM|wx.LEFT, 10)
+
+        chnlsBox = wx.BoxSizer(wx.HORIZONTAL)
+        chnlsBox.Add(wx.StaticText(self, -1, "# of channels :"), 0, wx.LEFT | wx.TOP, 12)
+        self.tx_chnls = wx.TextCtrl(self, -1, "2", size=(40, -1), style=wx.TE_PROCESS_ENTER)
+        self.tx_chnls.Bind(wx.EVT_TEXT_ENTER, self.handleNchnls)
+        chnlsBox.Add(self.tx_chnls, 0, wx.TOP|wx.LEFT, 10)
+        box.Add(chnlsBox, 0, wx.ALL, 0)
 
         soundBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tog_inrec = wx.ToggleButton(self, -1, "Rec Source", size=(80,-1))
+        self.tog_server = wx.ToggleButton(self, -1, "Audio on", size=(80,-1))
         if PLATFORM in ['win32', 'linux2']:
-            self.tog_inrec.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
-        soundBox.Add(self.tog_inrec, 0, wx.ALL, 10)
-        self.tog_audio = wx.ToggleButton(self, -1, "Start Audio", size=(80,-1))
+            self.tog_server.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
+        soundBox.Add(self.tog_server, 0, wx.ALL, 10)
+        self.tog_audio = wx.ToggleButton(self, -1, "Start", size=(80,-1))
         if PLATFORM in ['win32', 'linux2']:
             self.tog_audio.SetFont(wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL))
+        self.tog_audio.Disable()    
         soundBox.Add(self.tog_audio, 0, wx.ALL, 10)
         box.Add(soundBox, 0, wx.ALL, 5)
 
@@ -996,14 +978,11 @@ class ControlPanel(scrolled.ScrolledPanel):
 
 
         self.Bind(wx.EVT_CHOICE, self.handleType, self.trajType)
-        self.Bind(wx.EVT_CHOICE, self.handleMax, self.trajMax)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleClosed, self.closedToggle)
-        self.Bind(wx.EVT_TOGGLEBUTTON, self.handleInputRec, self.tog_inrec)
+        self.Bind(wx.EVT_TOGGLEBUTTON, self.handleServer, self.tog_server)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleAudio, self.tog_audio)
         self.tx_output.Bind(wx.EVT_CHAR, self.handleOutput)        
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleRecord, self.tog_record)
-
-        self.listen = Listener(self.meter, self.csoundReady, self.surface.clock, self.surface)
 
         self.SetAutoLayout(True)
 
@@ -1036,20 +1015,6 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.type = type
         self.surface.setMode(type)
         self.checkEnableWidgets()
-       
-    def handleMax(self, event):
-        self.numTraj = event.GetInt() + 1
-        self.surface.numOfTrajectories(self.numTraj)
-        self.setSelected(0)
-        
-    def getMax(self):
-        return self.numTraj
-
-    def setMax(self, max):
-        self.numTraj = max
-        self.trajMax.SetSelection(max-1)
-        self.surface.numOfTrajectories(max)
-        self.setSelected(0)
 
     def handleClosed(self, event):
         self.surface.setClosed(event.GetInt())
@@ -1105,15 +1070,15 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.drawing.sl_scaling.SetValue(scaling)
         self.surface.setOscilScaling(scaling)
 
-    def handleSelected(self, selected):
-        self.selected = selected
-        timeSpeed = self.surface.getTrajectory(selected).getTimeSpeed()
-        step = self.surface.getTrajectory(selected).getStep()
+    def handleSelected(self, event):
+        self.selected = event.GetInt()
+        timeSpeed = self.surface.getTrajectory(self.selected).getTimeSpeed()
+        step = self.surface.getTrajectory(self.selected).getStep()
         self.setTimerSpeed(timeSpeed)
         self.setStep(step)
 
     def setSelected(self, selected):
-        self.playback.tog_traj.setSelected(selected)
+        self.playback.tog_traj.SetSelection(selected)
         self.selected = selected
         timeSpeed = self.surface.getTrajectory(selected).getTimeSpeed()
         step = self.surface.getTrajectory(selected).getStep()
@@ -1125,14 +1090,12 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def handleTimerSpeed(self, val):
         self.surface.getTrajectory(self.selected).setTimeSpeed(val)
-        self.sendTrajSpeed(self.selected, val)
   
     def setTimerSpeed(self, timeSpeed):
         self.playback.sl_timespeed.SetValue(timeSpeed)
 
     def sendTrajSpeed(self, which, speed):
-        speed = 15000. / speed
-        sendControl('/metroVar%d' % which, speed)
+        self.parent.sg_audio.setMetroTime(which, speed * 0.001)
               
     def handleStep(self, val):
         self.surface.getTrajectory(self.selected).setStep(val)
@@ -1152,7 +1115,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.amplitude = amp
 
     def sendAmp(self):
-        sendControl('/globalAmp', self.amplitude)
+        self.parent.sg_audio.server.amp = self.amplitude
             
     def handleLoad(self):
         dlg = wx.FileDialog(self, message="Choose a sound file",
@@ -1163,95 +1126,97 @@ class ControlPanel(scrolled.ScrolledPanel):
                             style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             sndPath = dlg.GetPath()
-            self.loadSound(sndPath)
+            if self.server_booted:
+                self.loadSound(sndPath)
+            else:
+                self.cue_snd = sndPath   
         dlg.Destroy()
 
     def loadSound(self, sndPath, force=False):
         self.sndPath = sndPath
         if self.sndPath:
-            if '/Resources/examples/flute.aif' in self.sndPath:
-                self.sndPath = os.path.join(RESOURCES_PATH, 'examples', 'flute.aif')
-            if '/Resources/examples/comprendrez.aif' in self.sndPath:
-                self.sndPath = os.path.join(RESOURCES_PATH, 'examples', 'comprendrez.aif')
             if os.path.isfile(self.sndPath):
+                self.parent.sg_audio.loadSnd(self.sndPath)
                 chnls, samprate, dur = soundInfo(self.sndPath)
                 self.sndDur = dur
                 self.chnls = chnls
-                self.meter.setNumSliders(self.chnls)
                 self.sndInfoStr = 'Loaded sound: %s,    Sr: %s Hz,    Channels: %s,    Duration: %s sec' % (self.sndPath, samprate, chnls, dur)
                 if self.parent.draw:
                     if not self.sndPath in self.surface.bitmapDict.keys() or force:
                         self.parent.log("Drawing waveform...")
-                        self.surface.analyse(self.sndPath, self.chnls)
+                        self.surface.analyse(self.sndPath)
                     else:
                         self.surface.list = self.surface.bitmapDict[self.sndPath]
                         self.surface.create_bitmap()
                 self.logSndInfo()
+            elif os.path.isfile(os.path.join(self.parent.currentPath, os.path.split(self.sndPath)[1])):
+                self.loadSound(os.path.join(self.parent.currentPath, os.path.split(self.sndPath)[1]), force)  
+            else:
+                self.parent.log('Sound file "%s" does not exist!' % self.sndPath)        
 
     def drawWaveform(self):
         if self.surface.sndBitmap and self.parent.draw:
             self.surface.create_bitmap()
 
-    def handleInputRec(self, event):
+    def getNchnls(self):
+        return self.nchnls
+        
+    def setNchnls(self, x):
+        self.nchnls = x
+        self.tx_chnls.SetValue(str(x))
+        self.meter.setNumSliders(self.nchnls)
+            
+    def handleNchnls(self, event):
+        self.nchnls = int(self.tx_chnls.GetValue())
+        self.meter.setNumSliders(self.nchnls)
+        
+    def handleServer(self, event):
         if event.GetInt() == 1:
-            recordInput(self.parent.audioDriver)
-        else:
-            stopAudio()
-            wx.CallLater(250, self.loadSound, os.path.join(TEMP_PATH, 'sndtemp.aif'), True)
-
+            self.server_booted = True
+            self.parent.sg_audio.boot(self.parent.audioDriver, self.nchnls)
+            self.tog_server.SetLabel("Audio off")
+            self.tog_server.SetValue(1)
+            self.tog_audio.Enable()    
+            self.tx_chnls.Disable()
+            if self.cue_snd != None:
+                self.loadSound(self.cue_snd)
+                self.cue_snd = None
+        else:    
+            self.server_booted = False
+            self.parent.sg_audio.shutdown()
+            self.tog_server.SetLabel("Audio on")            
+            self.tog_server.SetValue(0)
+            self.tog_audio.Disable()  
+            self.tx_chnls.Enable()
+            self.surface.sndBitmap = None
+            self.sndPath = None
+            self.surface.Refresh()  
+            
     def handleAudio(self, event):
         if event.GetInt() == 1:
             if not self.sndPath:
                 self.parent.log('*** No sound loaded! ***')
                 self.tog_audio.SetValue(0)
                 self.parent.menu.Check(7, False)
-                self.parent.moduleFrames[self.parent.currentModule].menu.Check(201, False)
             else:    
+                self.tog_server.Disable()
                 self.tog_audio.SetValue(1)
-                self.tog_audio.SetLabel('Stop audio')
+                self.tog_audio.SetLabel('Stop')
                 self.parent.menu.Check(7, True)
-                self.parent.moduleFrames[self.parent.currentModule].menu.Check(201, True)
-                self.tog_inrec.Disable()
-                self.trajMax.Disable()
-                self.tx_output.Disable()
                 self.tog_record.Enable()
 
-                for item in self.parent.modules:
-                    self.parent.menu3.Enable(self.parent.menu3.FindItem(item), False)
-                for i in range(self.parent.subMenu3.GetMenuItemCount()):
-                    self.parent.subMenu3.Enable(i + 3000, False)
                 for t in self.surface.getAllTrajectories():
                     t.initCounter()
-                args = self.parent.moduleFrames[self.parent.currentModule].getFixedValues()
-                startAudio(self.numTraj, self.sndPath, self.parent.audioDriver, self.tx_output.GetValue(), self.parent.currentModule, *args)
-                if self.parent.currentModule in ['FFTReader','FFTAdsyn']:
-                    self.parent.log('FFT Buffering...')
-                    wx.CallLater(self.sndDur * 1000, self.logSndInfo)
+                self.parent.sg_audio.start()
         else:    
+            self.tog_server.Enable()
             self.tog_audio.SetValue(0)
-            self.tog_audio.SetLabel('Start audio')
+            self.tog_audio.SetLabel('Start')
             self.parent.menu.Check(7, False)
-            self.parent.moduleFrames[self.parent.currentModule].menu.Check(201, False)
-            self.tog_inrec.Enable()
-            self.trajMax.Enable()
-            self.tx_output.Enable()
             self.tog_record.SetValue(0)
             self.tog_record.SetLabel('Start')
             self.tog_record.Disable()
-            for item in self.parent.modules:
-                self.parent.menu3.Enable(self.parent.menu3.FindItem(item), True)
-            for i in range(self.parent.subMenu3.GetMenuItemCount()):
-                self.parent.subMenu3.Enable(i + 3000, True)
-            stopAudio()
-        self.parent.moduleFrames[self.parent.currentModule].activateWidgets(event.GetInt())
-
-    def csoundReady(self, msg):
-        if msg == 1:
-            self.parent.moduleFrames[self.parent.currentModule].initControlValues()
-            for traj in self.surface.getAllTrajectories():
-                self.sendTrajSpeed(traj.getLabel()-1, traj.getTimeSpeed())
-                traj.setActive()
-            self.sendAmp()
+            self.parent.sg_audio.stop()
 
     def handleOutput(self, event):
         key = event.GetKeyCode()
@@ -1262,9 +1227,13 @@ class ControlPanel(scrolled.ScrolledPanel):
     def handleRecord(self, event):
         if event.GetInt() == 1:
             self.tog_record.SetLabel('Stop')
+            if not self.tx_output.GetValue().endswith('.aif'):    
+                self.parent.sg_audio.server.recstart(self.tx_output.GetValue() + '.aif')        
+            else:
+                self.parent.sg_audio.server.recstart(self.tx_output.GetValue())        
         else:
             self.tog_record.SetLabel('Start')
-        sendRecord()        
+            self.parent.sg_audio.server.recstop()
 
     def logSndInfo(self):
         self.parent.log(self.sndInfoStr)
@@ -1323,15 +1292,17 @@ class PlaybackParameters(wx.Panel):
         self.parent = parent
         box = wx.BoxSizer(wx.VERTICAL)
 
-        box.Add(wx.StaticText(self, -1, "Selected trajectory"), 0, wx.CENTER | wx.TOP, 5)
-        self.tog_traj = Selector(self, outFunction=self.parent.GetParent().handleSelected)
+        box.Add(wx.StaticText(self, -1, "Selected trajectory"), 0, wx.CENTER | wx.TOP | wx.BOTTOM, 5)
+        self.tog_traj = wx.Choice(self, -1, choices = [str(i+1) for i in range(24)])
+        self.tog_traj.SetSelection(0)
+        self.tog_traj.Bind(wx.EVT_CHOICE, self.parent.GetParent().handleSelected)
         box.Add(self.tog_traj, 0, wx.CENTER, 5)
 
         box.AddSpacer(10)
 
         box.Add(wx.StaticText(self, -1, "Timer speed"), 0, wx.LEFT, 5)
         timespeedBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_timespeed = ControlSlider(self, 10, 250, 25, size=(195, 16), outFunction=self.parent.GetParent().handleTimerSpeed)
+        self.sl_timespeed = ControlSlider(self, 10, 500, 25, size=(195, 16), outFunction=self.parent.GetParent().handleTimerSpeed)
         timespeedBox.Add(self.sl_timespeed)
         box.Add(timespeedBox, 0, wx.LEFT | wx.RIGHT, 5)
 
@@ -1347,14 +1318,12 @@ class PlaybackParameters(wx.Panel):
 
         self.SetSizer(box)
 
-    def getMax(self):
-        return self.parent.GetParent().getMax()
-
 class MainFrame(wx.Frame):
     def __init__(self, parent, id, pos, size, file):
         wx.Frame.__init__(self, parent, id, "", pos, size)
 
         self.currentFile = None
+        self.currentPath = None
         self.temps = []
         self.draw = True
         self.lowpass = True
@@ -1362,8 +1331,6 @@ class MainFrame(wx.Frame):
         self.editionLevels = [2, 4, 8, 12, 16, 24, 32, 50]
         self.editionLevel = 2
         self.audioDriver = None
-        self.modules = ['Granulator', 'FFTReader', 'FFTAdsyn']
-        self.moduleFrames = {}
         self.recall = self.undos = 0
 
         self.status = wx.StatusBar(self, -1)
@@ -1380,17 +1347,18 @@ class MainFrame(wx.Frame):
         self.menu.Append(4, "Save as...\tShift+Ctrl+S")
         self.Bind(wx.EVT_MENU, self.handleSaveAs, id=4)
         self.menu.AppendSeparator()
-        self.menu.Append(5, "Preferences...\tCtrl+;")
-        self.Bind(wx.EVT_MENU, self.showOSCSettings, id=5)
         self.menu.Append(6, "Open FX Window\tCtrl+P")
         self.Bind(wx.EVT_MENU, self.openFxWindow, id=6)
         self.menu.AppendSeparator()
         self.menu.Append(7, "Run\tCtrl+R", "", wx.ITEM_CHECK)
         self.Bind(wx.EVT_MENU, self.onRun, id=7)
         self.menu.AppendSeparator()
-        self.menu.Append(8, "Quit\tCtrl+Q")  
+        quit_item = self.menu.Append(8, "Quit\tCtrl+Q")  
         self.Bind(wx.EVT_MENU, self.OnClose, id=8)
         self.menuBar.Append(self.menu, "&File")
+
+        if wx.Platform=="__WXMAC__":
+            wx.App.SetMacExitMenuItemId(quit_item.GetId())
 
         self.menu1 = wx.Menu()
         self.menu1.Append(110, "Undo\tCtrl+Z", "")
@@ -1423,23 +1391,6 @@ class MainFrame(wx.Frame):
         self.menu2 = wx.Menu()
         self.menuBar.Append(self.menu2, "&Audio Drivers")
 
-        self.menu3 = wx.Menu()
-        for i, module in enumerate(self.modules):
-            menuId = 300 + i
-            self.menu3.Append(menuId, module + "\tCtrl+%d" % (i+1) , "", wx.ITEM_RADIO)
-            self.Bind(wx.EVT_MENU, self.handleModules, id=menuId)
-            if i == 0:
-                self.menu3.Check(menuId, True)
-                self.currentModule = self.modules[i]
-        exList = os.listdir(os.path.join(RESOURCES_PATH, 'examples'))
-        exList = [f for f in exList if f[-3:] == '.sg']
-        self.subMenu3 = wx.Menu()
-        for i, f in enumerate(exList):
-            self.subMenu3.Append(3000+i, f)
-            self.Bind(wx.EVT_MENU, self.handleExamples, id=3000+i)
-        self.menu3.AppendMenu(menuId+1, "Examples", self.subMenu3)
-        self.menuBar.Append(self.menu3, "&Modules")
-
         menu4 = wx.Menu()
         helpItem = menu4.Append(400, '&About %s %s' % (NAME, VERSION), 'wxPython RULES!!!')
         wx.App.SetMacAboutMenuItemId(helpItem.GetId())
@@ -1447,7 +1398,7 @@ class MainFrame(wx.Frame):
         self.menuBar.Append(menu4, '&Help')
 
         self.SetMenuBar(self.menuBar)
-        
+       
         mainBox = wx.BoxSizer(wx.HORIZONTAL)
         self.panel = DrawingSurface(self)
         self.controls = ControlPanel(self, self.panel)
@@ -1458,14 +1409,11 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_SIZE, self.OnResize)        
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
-        self.SetTitle(self.currentModule)
+        self.SetTitle('Granulator')
+
+        self.sg_audio = SG_Audio(self.panel.clock, self.panel.Refresh, self.controls)
         
-        self.granulatorControls = GranulatorFrame(self, self.panel, sendControl)
-        self.moduleFrames['Granulator'] = self.granulatorControls
-        self.fftreaderControls = FFTReaderFrame(self, self.panel, sendControl)
-        self.moduleFrames['FFTReader'] = self.fftreaderControls
-        self.fftadsynControls = FFTAdsynFrame(self, self.panel, sendControl)
-        self.moduleFrames['FFTAdsyn'] = self.fftadsynControls
+        self.granulatorControls = GranulatorFrame(self, self.panel, self.sg_audio)
         
         self.createInitTempFile()
 
@@ -1480,7 +1428,8 @@ class MainFrame(wx.Frame):
         
     def check(self):
         self.status.SetStatusText('Scanning audio drivers...')
-        self.driversList, selected = checkForDrivers()
+        self.driversList, self.driverIndexes, selected = checkForDrivers()
+        self.audioDriver = selected
         
         for i, driver in enumerate(self.driversList):
             menuId = 200 + i
@@ -1511,7 +1460,7 @@ class MainFrame(wx.Frame):
                     self.panel.list = self.panel.bitmapDict[self.controls.sndPath]
                     self.panel.create_bitmap()
                 else:
-                    self.panel.analyse(self.controls.sndPath, self.controls.chnls)
+                    self.panel.analyse(self.controls.sndPath)
 
     def handleActivateLp(self, evt):
         self.lowpass = self.menu1.IsChecked(101)
@@ -1555,30 +1504,14 @@ class MainFrame(wx.Frame):
 
     def handleDriver(self, evt):
         menuId = evt.GetId()
-        self.audioDriver = menuId - 200
-
-    def handleModules(self, evt):
-        menuId = evt.GetId()
-        self.checkModules(menuId-300)
-
-    def setModules(self, module):
-        ind = self.modules.index(module)
-        self.menu3.Check(ind+300, True)
-        self.checkModules(ind)
-
-    def checkModules(self, menuId):
-        if self.moduleFrames[self.currentModule].IsShown():
-            self.moduleFrames[self.currentModule].Show(False)
-        self.currentModule = self.modules[menuId]
-        self.currentFile = None
-        self.SetTitle(self.currentModule)
+        self.audioDriver = self.driverIndexes[menuId - 200]
         
     def openFxWindow(self, evt):
-        if self.moduleFrames[self.currentModule].IsShown():
-            self.moduleFrames[self.currentModule].Hide()
+        if self.granulatorControls.IsShown():
+            self.granulatorControls.Hide()
         else:
-            self.moduleFrames[self.currentModule].SetTitle(self.currentModule + ' controls')
-            self.moduleFrames[self.currentModule].Show()
+            self.granulatorControls.SetTitle('Granulator controls')
+            self.granulatorControls.Show()
 
     def OnResize(self, evt):
         self.controls.drawWaveform()
@@ -1586,9 +1519,6 @@ class MainFrame(wx.Frame):
 
     def handleUndo(self, evt):
         self.recallTempFile(evt.GetId())
-
-    def handleExamples(self, evt):
-        self.loadFile(os.path.join(RESOURCES_PATH, 'examples', self.subMenu3.GetLabel(evt.GetId())))
 
     def handleOpen(self, evt):
         dlg = wx.FileDialog(self, message="Open SoundGrain file...",
@@ -1603,7 +1533,7 @@ class MainFrame(wx.Frame):
 
     def handleLoad(self, evt):
         self.controls.handleLoad()
-
+        
     def handleSave(self, evt):
         if self.currentFile:
             self.saveFile(self.currentFile)
@@ -1613,7 +1543,7 @@ class MainFrame(wx.Frame):
     def handleSaveAs(self, evt):
         dlg = wx.FileDialog(self, message="Save file as ...", 
                             defaultDir=os.path.expanduser('~'),
-                            defaultFile=self.currentModule + ".sg", 
+                            defaultFile="Granulator.sg", 
                             style=wx.SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
@@ -1635,6 +1565,7 @@ class MainFrame(wx.Frame):
 
     def saveFile(self, path):
         self.currentFile = path
+        self.currentPath = os.path.split(path)[0]
         saveDict = {}
 
         ### Main Frame ###
@@ -1643,22 +1574,21 @@ class MainFrame(wx.Frame):
         saveDict['MainFrame']['lowpass'] = self.lowpass
         saveDict['MainFrame']['fillPoints'] = self.fillPoints
         saveDict['MainFrame']['editionLevel'] = self.editionLevel
-        saveDict['MainFrame']['currentModule'] = self.currentModule
-        saveDict['MainFrame']['size'] = self.panel.GetSizeTuple()
+        saveDict['MainFrame']['size'] = self.GetSizeTuple()
 
         ### Controls Frame ###
-        saveDict['ControlFrame'] = self.moduleFrames[self.currentModule].save()
+        saveDict['ControlFrame'] = self.granulatorControls.save()
 
         ### Control Panel ###
         saveDict['ControlPanel'] = {}
         saveDict['ControlPanel']['type'] = self.controls.getType()
-        saveDict['ControlPanel']['max'] = self.controls.getMax()
         saveDict['ControlPanel']['closed'] = self.controls.getClosed()
         saveDict['ControlPanel']['cutoff'] = self.controls.getCutoff()
         saveDict['ControlPanel']['q'] = self.controls.getQ()
         saveDict['ControlPanel']['period'] = self.controls.getPeriod()
         saveDict['ControlPanel']['scaling'] = self.controls.getScaling()
         saveDict['ControlPanel']['globalamp'] = self.controls.getAmp()
+        saveDict['ControlPanel']['nchnls'] = self.controls.getNchnls()
         saveDict['ControlPanel']['sound'] = self.controls.sndPath
 
         ### Trajectories ###
@@ -1670,46 +1600,50 @@ class MainFrame(wx.Frame):
         f.write(msg)
         f.close()
 
-        self.SetTitle(os.path.split(self.currentFile)[1] + ' - ' + self.currentModule)
+        self.SetTitle(os.path.split(self.currentFile)[1])
 
     def loadFile(self, path):
+        if not self.controls.server_booted:
+            command = wx.CommandEvent(wx.wxEVT_COMMAND_TOGGLEBUTTON_CLICKED)
+            command.SetInt(1)
+            self.controls.handleServer(command) 
         f = open(path, 'r')
         msg = f.read()
         f.close()
         result, method = xmlrpclib.loads(msg)
         dict = result[0]
+        self.currentFile = path
+        self.currentPath = os.path.split(path)[0]
+
         ### Main Frame ###
         self.setDraw(dict['MainFrame']['draw'])
         self.setLowpass(dict['MainFrame']['lowpass'])
         self.setFillPoints(dict['MainFrame']['fillPoints'])
         self.setEditionLevel(dict['MainFrame']['editionLevel'])
-        self.setModules(dict['MainFrame']['currentModule'])
+        self.SetSize(dict['MainFrame']['size'])
+        self.OnResize(wx.SizeEvent(dict['MainFrame']['size']))
 
         ### Control Frame ###
-        self.moduleFrames[self.currentModule].load(dict['ControlFrame'])
+        self.granulatorControls.load(dict['ControlFrame'])
 
         ### Control panel ###
         self.controls.setType(dict['ControlPanel']['type'])
-        self.controls.setMax(dict['ControlPanel']['max'])
         self.controls.setClosed(dict['ControlPanel']['closed'])
         self.controls.setCutoff(dict['ControlPanel']['cutoff'])
         self.controls.setQ(dict['ControlPanel']['q'])
         self.controls.setPeriod(dict['ControlPanel']['period'])
         self.controls.setScaling(dict['ControlPanel']['scaling'])
         self.controls.setAmp(dict['ControlPanel']['globalamp'])
+        self.controls.setNchnls(dict['ControlPanel']['nchnls'])
         self.controls.loadSound(dict['ControlPanel']['sound'])
-
         ### Trajectories ###
         for i, t in enumerate(self.panel.getAllTrajectories()):
             t.setAttributes(dict['Trajectories'][str(i)])
             
         self.controls.setSelected(0)    
-        self.panel.setCurrentSize(dict['MainFrame']['size'])
-        self.panel.OnResize(None)
         self.panel.Refresh()
 
-        self.currentFile = path
-        self.SetTitle(os.path.split(self.currentFile)[1] + ' - ' + self.currentModule)
+        self.SetTitle(os.path.split(self.currentFile)[1])
 
     def createInitTempFile(self):
         d = {}
@@ -1746,14 +1680,9 @@ class MainFrame(wx.Frame):
         else:
             self.menu1.Enable(111, True) 
 
-    def showOSCSettings(self, evt):
-        self.pref = Preferences(self)
-        self.pref.SetPosition((50,50))
-
     def OnClose(self, evt):
         self.controls.meter.OnClose(evt)
-        stopCsound()
-        self.controls.listen.stop()
+        self.sg_audio.server.stop()
         tmpFiles = os.listdir(TEMP_PATH)
         for file in tmpFiles:
             os.remove(os.path.join(TEMP_PATH, file))
@@ -1772,9 +1701,7 @@ class MainFrame(wx.Frame):
 "control granular sound synthesis modules.\n"
 
 "Sound Grain is written with Python and " 
-"uses Csound as its audio engine. Csound 5 " 
-"must be installed on the system to allow " 
-"Sound Grain to run.",350, wx.ClientDC(self))
+"uses pyo as its audio engine.",350, wx.ClientDC(self))
 
         licence = wordwrap(
 "SoundGrain is free software: you can "
@@ -1816,8 +1743,8 @@ if __name__ == '__main__':
     X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
     if X < 900: sizex = X - 40
     else: sizex = 900
-    if PLATFORM in ['win32', 'linux2']: defaultY = 500
-    else: defaultY = 480
+    if PLATFORM in ['win32', 'linux2']: defaultY = 550
+    else: defaultY = 530
     if Y < defaultY: sizey = Y - 40
     else: sizey = defaultY
     f = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), file=file)

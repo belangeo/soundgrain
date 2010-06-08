@@ -20,7 +20,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 import os, sys
 
 NAME = 'Sound Grain'
-VERSION = '2.0'
+VERSION = '3.0'
 
 PLATFORM = sys.platform
 

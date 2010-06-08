@@ -330,7 +330,7 @@ class ControlSlider(wx.Panel):
             if self.integer:
                 val = '%d' % self.GetValue()
             else:
-                val = '%.2f' % self.GetValue()
+                val = '%.3f' % self.GetValue()
         if sys.platform == 'linux2':
             width = len(val) * (dc.GetCharWidth() - 3)
         else:

@@ -22,7 +22,7 @@ from Slider import ControlSlider
 from constants import BACKGROUND_COLOUR
 
 class Module(wx.Frame):
-    def __init__(self, parent, surface, continuousControl):
+    def __init__(self, parent, surface, sg_audio):
         wx.Frame.__init__(self, parent, -1, "Controls")
 
         menuBar = wx.MenuBar()
@@ -41,7 +41,7 @@ class Module(wx.Frame):
 
         self.parent = parent
         self.surface = surface
-        self.continuousControl = continuousControl
+        self.sg_audio = sg_audio
 
         self.panel = wx.Panel(self, -1)
         self.panel.SetBackgroundColour(BACKGROUND_COLOUR)
@@ -74,12 +74,13 @@ class Module(wx.Frame):
     def makeGrainOverlapsBox(self, box):
         box.Add(wx.StaticText(self.panel1, -1, "Number of grains"), 0, wx.LEFT|wx.TOP, 10)
         overlapsBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_overlaps = ControlSlider(self.panel1, 1, 48, self.grainoverlaps, size=(250, 16), integer=True, outFunction=self.handleGrainOverlaps)
+        self.sl_overlaps = ControlSlider(self.panel1, 1, 100, self.grainoverlaps, size=(250, 16), integer=True, outFunction=self.handleGrainOverlaps)
         overlapsBox.Add(self.sl_overlaps, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(overlapsBox, 0, wx.LEFT | wx.RIGHT, 5)
 
     def handleGrainOverlaps(self, val):
         self.grainoverlaps = val
+        self.sg_audio.setNumGrains(self.grainoverlaps)
 
     def getGrainOverlaps(self):
         return self.grainoverlaps
@@ -87,18 +88,39 @@ class Module(wx.Frame):
     def setGrainOverlaps(self, overlaps):
         self.grainoverlaps = overlaps
         self.sl_overlaps.SetValue(overlaps)
+        self.sg_audio.setNumGrains(self.grainoverlaps)
+
+    def makePitchBox(self, box):
+        box.AddSpacer(5)
+        box.Add(wx.StaticText(self.panel1, -1, "Transposition"), 0, wx.LEFT, 10)
+        pitBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_pit = ControlSlider(self.panel1, 0.5, 2., self.pitch, size=(250, 16), outFunction=self.handlePitch)
+        pitBox.Add(self.sl_pit, 0, wx.LEFT | wx.RIGHT, 5)
+        box.Add(pitBox, 0, wx.LEFT | wx.RIGHT, 5)
+
+    def handlePitch(self, val):
+        self.pitch = val
+        self.sg_audio.setBasePitch(self.pitch)  
+
+    def getPitch(self):
+        return self.pitch
+
+    def setPitch(self, pitch):
+        self.pitch = pitch
+        self.sl_pit.SetValue(self.pitch)
+        self.sg_audio.setBasePitch(self.pitch)  
 
     def makeGrainSizeBox(self, box):
         box.AddSpacer(5)
         box.Add(wx.StaticText(self.panel1, -1, "Grain size (ms)"), 0, wx.LEFT, 10)
         sizeBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_size = ControlSlider(self.panel1, 50, 500, self.grainsize, size=(250, 16), integer=True, outFunction=self.handleGrainSize)
+        self.sl_size = ControlSlider(self.panel1, 10, 500, self.grainsize, size=(250, 16), integer=True, outFunction=self.handleGrainSize)
         sizeBox.Add(self.sl_size, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(sizeBox, 0, wx.LEFT | wx.RIGHT, 5)
 
     def handleGrainSize(self, val):
         self.grainsize = val
-        self.continuousControl('/grainsize', self.grainsize)   
+        self.sg_audio.setGrainSize(self.grainsize * 0.001)  
 
     def getGrainSize(self):
         return self.grainsize
@@ -106,6 +128,27 @@ class Module(wx.Frame):
     def setGrainSize(self, size):
         self.grainsize = size
         self.sl_size.SetValue(self.grainsize)
+        self.sg_audio.setGrainSize(self.grainsize * 0.001)  
+
+    def makeRandDurBox(self, box):
+        box.AddSpacer(5)
+        box.Add(wx.StaticText(self.panel1, -1, "Grain duration random"), 0, wx.LEFT, 10)
+        rnddurBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.sl_rnddur = ControlSlider(self.panel1, 0, .5, self.rnddur, size=(250, 16), outFunction=self.handleRandDur)
+        rnddurBox.Add(self.sl_rnddur, 0, wx.LEFT | wx.RIGHT, 5)
+        box.Add(rnddurBox, 0, wx.LEFT | wx.RIGHT, 5)
+
+    def handleRandDur(self, val):
+        self.rnddur = val
+        self.sg_audio.dur_noise.mul = self.rnddur * self.grainsize * 0.001
+
+    def getRandDur(self):
+        return self.rnddur
+
+    def setRandDur(self, rnd):
+        self.rnddur = rnd
+        self.sl_rnddur.SetValue(self.rnddur)
+        self.sg_audio.dur_noise.mul = self.rnddur * self.grainsize * 0.001
 
     def makeRandPosBox(self, box):
         box.AddSpacer(5)
@@ -117,7 +160,7 @@ class Module(wx.Frame):
 
     def handleRandPos(self, val):
         self.rndpos = val
-        self.continuousControl('/rndpos', self.rndpos)   
+        self.sg_audio.pos_noise.mul = self.rndpos
 
     def getRandPos(self):
         return self.rndpos
@@ -125,6 +168,7 @@ class Module(wx.Frame):
     def setRandPos(self, rnd):
         self.rndpos = rnd
         self.sl_rndpos.SetValue(self.rndpos)
+        self.sg_audio.pos_noise.mul = self.rndpos
         
     def makeAmplitudeBox(self, box):
         box.AddSpacer(5)
@@ -137,7 +181,7 @@ class Module(wx.Frame):
 
     def handleAmp(self, val):
         self.amplitude = val
-        self.continuousControl('/amplitude', self.amplitude)   
+        self.sg_audio.amplitude.value = self.amplitude
 
     def getAmp(self):
         return self.amplitude
@@ -145,31 +189,14 @@ class Module(wx.Frame):
     def setAmp(self, amp):
         self.amplitude = amp
         self.sl_amp.SetValue(self.amplitude)
-
-    def makeCutoffBox(self, box):
-        box.AddSpacer(5)
-        box.Add(wx.StaticText(self.panel1, -1, "Lowpass cutoff"), 0, wx.LEFT, 10)
-        cutoffBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_cutoff = ControlSlider(self.panel1, 100, 18000, self.cutoff, size=(250, 16), integer=True, log=True, outFunction=self.handleCutoff)
-        cutoffBox.Add(self.sl_cutoff, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(cutoffBox, 0, wx.LEFT | wx.RIGHT, 5)
-
-    def handleCutoff(self, val):
-        self.cutoff = val
-        self.continuousControl('/cutoff', self.cutoff)   
-
-    def getCutoff(self):
-        return self.cutoff
-
-    def setCutoff(self, cutoff):
-        self.cutoff = cutoff
-        self.sl_cutoff.SetValue(cutoff)
+        self.sg_audio.amplitude.value = self.amplitude
 
     def makeTransBox(self, box):
         box.Add(wx.StaticText(self.panel1, -1, "Random transposition per grain"), 0, wx.CENTER|wx.TOP, 5)
         box.Add(wx.StaticText(self.panel1, -1, "List of transposition ratios"), 0, wx.CENTER|wx.TOP, 1)
         transBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_trans = wx.TextCtrl(self.panel1, -1, "1, ", size=(250, -1))
+        self.tx_trans = wx.TextCtrl(self.panel1, -1, "1, ", size=(250, -1), style=wx.TE_PROCESS_ENTER)
+        self.tx_trans.Bind(wx.EVT_TEXT_ENTER, self.handleTrans)
         transBox.Add(self.tx_trans, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(transBox, 0, wx.ALL, 5)                        
 
@@ -177,134 +204,13 @@ class Module(wx.Frame):
         return [float(value) for value in self.tx_trans.GetValue().split(',') if value not in [" ", ""]]
 
     def setTrans(self, trans):
-        self.tx_trans.SetValue(", ".join(str(t) for t in trans))
+        self.tx_trans.SetValue(", ".join(str(t) for t in trans))           
+        self.sg_audio.trans_noise.choice = self.getTrans()
 
-    def makeFFTSizeBox(self, box):
-        box.Add(wx.StaticText(self.panel1, -1, "FFT size (power of 2)"), 0, wx.LEFT|wx.TOP, 10)
-        fftsizeBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_fftsize = ControlSlider(self.panel1, 5, 14, self.fftsize, size=(250, 16), powoftwo=True, outFunction=self.handleFFTSize)
-        fftsizeBox.Add(self.sl_fftsize, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(fftsizeBox, 0, wx.LEFT | wx.RIGHT, 5)
-
-    def handleFFTSize(self, val):
-        self.fftsize = val
-
-    def getFFTSize(self):
-        return self.fftsize
-
-    def setFFTSize(self, fftsize):
-        self.fftsize = fftsize
-        self.sl_fftsize.SetValue(self.fftsize)
-
-    def makeFFTOverlapsBox(self, box):
-        box.AddSpacer(5)
-        box.Add(wx.StaticText(self.panel1, -1, "FFT Overlaps"), 0, wx.LEFT, 10)
-        overlapsBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_overlaps = ControlSlider(self.panel1, 2, 16, self.overlaps, size=(250, 16), integer=True, outFunction=self.handleOverlaps)
-        overlapsBox.Add(self.sl_overlaps, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(overlapsBox, 0, wx.LEFT | wx.RIGHT, 5)
-
-    def handleOverlaps(self, val):
-        self.overlaps = val
-
-    def getOverlaps(self):
-        return self.overlaps
-
-    def setOverlaps(self, overlaps):
-        self.overlaps = overlaps
-        self.sl_overlaps.SetValue(self.overlaps)
-
-    def makeFFTWinSizeBox(self, box):
-        box.AddSpacer(5)
-        box.Add(wx.StaticText(self.panel1, -1, "FFT window size ( >= FFT size)"), 0, wx.LEFT, 10)
-        winsizeBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_winsize = ControlSlider(self.panel1, 5, 14, self.winsize, size=(250, 16), powoftwo=True, outFunction=self.handleWindowSize)
-        winsizeBox.Add(self.sl_winsize, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(winsizeBox, 0, wx.LEFT | wx.RIGHT, 5)
-
-    def handleWindowSize(self, val):
-        self.winsize = val
-
-    def getWindowSize(self):
-        return self.winsize
-
-    def setWindowSize(self, winsize):
-        self.winsize = winsize
-        self.sl_winsize.SetValue(self.winsize)
-
-    def makeNumBinsBox(self, box):
-        box.AddSpacer(5)
-        box.Add(wx.StaticText(self.panel1, -1, "Number of bins to synthesize"), 0, wx.LEFT, 10)
-        numbinsBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_numbins = ControlSlider(self.panel1, 1, 200, self.numbins, size=(250, 16), integer=True, outFunction=self.handleNumBins)
-        numbinsBox.Add(self.sl_numbins, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(numbinsBox, 0, wx.LEFT | wx.RIGHT, 5)
-
-    def handleNumBins(self, val):
-        self.numbins = val
-
-    def getNumBins(self):
-        return self.numbins
-
-    def setNumBins(self, num):
-        self.numbins = num
-        self.sl_numbins.SetValue(self.numbins)
-
-    def makeFirstBinBox(self, box):
-        box.AddSpacer(5)
-        box.Add(wx.StaticText(self.panel1, -1, "First bin"), 0, wx.LEFT, 10)
-        firstBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_first = ControlSlider(self.panel1, 0, 50, self.first, size=(250, 16), integer=True, outFunction=self.handleFirst)
-        firstBox.Add(self.sl_first, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(firstBox, 0, wx.LEFT | wx.RIGHT, 5)
-
-    def handleFirst(self, val):
-        self.first = val
-
-    def getFirst(self):
-        return self.first
-
-    def setFirst(self, first):
-        self.first = first
-        self.sl_first.SetValue(self.first)
-
-    def makeIncrementBox(self, box):
-        box.AddSpacer(5)
-        box.Add(wx.StaticText(self.panel1, -1, "Bin increment"), 0, wx.LEFT, 10)
-        incrBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_incr = ControlSlider(self.panel1, 1, 50, self.incr, size=(250, 16), integer=True, outFunction=self.handleIncr)
-        incrBox.Add(self.sl_incr, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(incrBox, 0, wx.LEFT | wx.RIGHT, 5)
-           
-    def handleIncr(self, val):
-        self.incr = val
-
-    def getIncr(self):
-        return self.incr
-
-    def setIncr(self, incr):
-        self.incr = incr    
-        self.sl_incr.SetValue(self.incr)    
-
-    def makeTranspoBox(self, box):
-        box.AddSpacer(5)
-        box.Add(wx.StaticText(self.panel1, -1, "Sound transposition"), 0, wx.LEFT, 10)
-        transpoBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_transpo = ControlSlider(self.panel1, 0, 2, self.transpo, size=(250, 16), outFunction=self.handleTranspo)
-        transpoBox.Add(self.sl_transpo, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(transpoBox, 0, wx.LEFT | wx.RIGHT, 5)
-   
-    def handleTranspo(self, val):
-        self.transpo = val
-        self.continuousControl('/transpo', self.transpo)   
-
-    def getTranspo(self):
-        return self.transpo
-
-    def setTranspo(self, transpo):
-        self.transpo = transpo
-        self.sl_transpo.SetValue(transpo)
-   
+    def handleTrans(self, event):
+        self.sg_audio.trans_noise.choice = self.getTrans()
+        
+    ### Second window ###
     def makeYaxisTranspoBox(self, box, label=None):
         if label == None: lab = "Transposition"
         else: lab = label
@@ -312,180 +218,222 @@ class Module(wx.Frame):
         textBox = wx.BoxSizer(wx.HORIZONTAL)
         self.tx_ytrans_ch = wx.CheckBox(self.panel2, -1, "")
         self.tx_ytrans_ch.SetValue(1)
+        self.tx_ytrans_ch.Bind(wx.EVT_CHECKBOX, self.handleTransCheck)
         textBox.Add(self.tx_ytrans_ch, 0, wx.LEFT | wx.RIGHT, 10)
         textBox.Add(wx.StaticText(self.panel2, -1, "Min: "), 0, wx.TOP, 4)
-        self.tx_tr_ymin = wx.TextCtrl(self.panel2, -1, "0.", size=(50, -1))
+        self.tx_tr_ymin = wx.TextCtrl(self.panel2, -1, "0.", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        self.tx_tr_ymin.Bind(wx.EVT_TEXT_ENTER, self.handleTransYMin)
         textBox.Add(self.tx_tr_ymin, 0, wx.RIGHT, 20)
         textBox.Add(wx.StaticText(self.panel2, -1, "Max: "), 0, wx.TOP, 4)
-        self.tx_tr_ymax = wx.TextCtrl(self.panel2, -1, "1.", size=(50, -1))
+        self.tx_tr_ymax = wx.TextCtrl(self.panel2, -1, "1.", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        self.tx_tr_ymax.Bind(wx.EVT_TEXT_ENTER, self.handleTransYMax)
         textBox.Add(self.tx_tr_ymax, 0, wx.RIGHT, 20)
-        box.Add(textBox, 0, wx.LEFT | wx.RIGHT, 10)
+        box.Add(textBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
     def getTransCheck(self):
         return self.tx_ytrans_ch.GetValue()
 
     def setTransCheck(self, value):
         self.tx_ytrans_ch.SetValue(value)
-                        
+        self.sg_audio.pitch_check = self.tx_ytrans_ch.GetValue()
+    
+    def handleTransCheck(self, event):
+        self.sg_audio.pitch_check = self.tx_ytrans_ch.GetValue()
+   
     def getTransYMin(self):
         return float(self.tx_tr_ymin.GetValue())
 
     def setTransYMin(self, ymin):
         self.tx_tr_ymin.SetValue(str(ymin))
-    
+        self.sg_audio.pitch_map.setMin(float(self.tx_tr_ymin.GetValue()))
+
+    def handleTransYMin(self, event):
+        self.sg_audio.pitch_map.setMin(float(self.tx_tr_ymin.GetValue()))
+        
     def getTransYMax(self):
         return float(self.tx_tr_ymax.GetValue())
 
     def setTransYMax(self, ymax):
         self.tx_tr_ymax.SetValue(str(ymax))
+        self.sg_audio.pitch_map.setMax(float(self.tx_tr_ymax.GetValue()))
 
-    def makeYaxisCutoffBox(self, box, label=None):
-        if label == None: lab = "Lowpass cutoff"
-        else: lab = label
-        box.AddSpacer(5)
-        box.Add(wx.StaticText(self.panel2, -1, lab), 0, wx.CENTER|wx.TOP, 5)
-        self.tx_filtype = wx.Choice(self.panel2, -1, choices = ['Lowpass', 'Highpass', 'Bandpass', 'Bandreject'])
-        self.tx_filtype.SetSelection(0)
-        box.Add(self.tx_filtype, 0, wx.CENTER | wx.TOP, 5)
-        textBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_ycutoff_ch = wx.CheckBox(self.panel2, -1, "")
-        self.tx_ycutoff_ch.SetValue(0)
-        textBox.Add(self.tx_ycutoff_ch, 0, wx.LEFT | wx.RIGHT, 10)
-        textBox.Add(wx.StaticText(self.panel2, -1, "Min: "), 0, wx.TOP, 4)
-        self.tx_cut_ymin = wx.TextCtrl(self.panel2, -1, "100", size=(50, -1))
-        textBox.Add(self.tx_cut_ymin, 0, wx.RIGHT, 20)
-        textBox.Add(wx.StaticText(self.panel2, -1, "Max: "), 0, wx.TOP, 4)
-        self.tx_cut_ymax = wx.TextCtrl(self.panel2, -1, "10000", size=(50, -1))
-        textBox.Add(self.tx_cut_ymax, 0, wx.RIGHT, 20)
-        box.Add(textBox, 0, wx.ALL, 10)
+    def handleTransYMax(self, event):
+        self.sg_audio.pitch_map.setMax(float(self.tx_tr_ymax.GetValue()))
 
-    def getCutoffCheck(self):
-        return self.tx_ycutoff_ch.GetValue()
-
-    def setCutoffCheck(self, value):
-        self.tx_ycutoff_ch.SetValue(value)
-
-    def getFilterType(self):
-        return self.tx_filtype.GetSelection()
-
-    def setFilterType(self, filtype):
-        self.tx_filtype.SetSelection(filtype)
-                        
-    def getCutoffYMin(self):
-        return float(self.tx_cut_ymin.GetValue())
-
-    def setCutoffYMin(self, ymin):
-        self.tx_cut_ymin.SetValue(str(ymin))
-    
-    def getCutoffYMax(self):
-        return float(self.tx_cut_ymax.GetValue())
-
-    def setCutoffYMax(self, ymax):
-        self.tx_cut_ymax.SetValue(str(ymax))
-
-    def makeYaxisRingBox(self, box, label=None):
-        if label == None: lab = "Ring Mod frequency"
-        else: lab = label
-        box.Add(wx.StaticText(self.panel2, -1, lab), 0, wx.CENTER|wx.TOP, 5)
-        self.tx_ringwav = wx.Choice(self.panel2, -1, choices = ['Sine', 'Square', 'Sawtooth'])
-        self.tx_ringwav.SetSelection(0)
-        box.Add(self.tx_ringwav, 0, wx.CENTER | wx.TOP | wx.BOTTOM, 5)
-        textBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_yring_ch = wx.CheckBox(self.panel2, -1, "")
-        self.tx_yring_ch.SetValue(0)
-        textBox.Add(self.tx_yring_ch, 0, wx.LEFT | wx.RIGHT, 10)
-        textBox.Add(wx.StaticText(self.panel2, -1, "Min: "), 0, wx.TOP, 4)
-        self.tx_ring_ymin = wx.TextCtrl(self.panel2, -1, "0.", size=(50, -1))
-        textBox.Add(self.tx_ring_ymin, 0, wx.RIGHT, 20)
-        textBox.Add(wx.StaticText(self.panel2, -1, "Max: "), 0, wx.TOP, 4)
-        self.tx_ring_ymax = wx.TextCtrl(self.panel2, -1, "100.", size=(50, -1))
-        textBox.Add(self.tx_ring_ymax, 0, wx.RIGHT, 20)
-        box.AddSpacer(5)
-        box.Add(textBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
-
-    def getRingCheck(self):
-        return self.tx_yring_ch.GetValue()
-
-    def setRingCheck(self, value):
-        self.tx_yring_ch.SetValue(value)
-
-    def getRingWav(self):
-        return self.tx_ringwav.GetSelection()
-
-    def setRingWav(self, wav):
-        self.tx_ringwav.SetSelection(wav)
-                        
-    def getRingYMin(self):
-        return float(self.tx_ring_ymin.GetValue())
-
-    def setRingYMin(self, ymin):
-        self.tx_ring_ymin.SetValue(str(ymin))
-    
-    def getRingYMax(self):
-        return float(self.tx_ring_ymax.GetValue())
-
-    def setRingYMax(self, ymax):
-        self.tx_ring_ymax.SetValue(str(ymax))
-
-    def makeYaxisDistoBox(self, box, label=None):
-        if label == None: lab = "Distortion drive"
+    def makeYaxisAmpBox(self, box, label=None):
+        if label == None: lab = "Amplitude"
         else: lab = label
         box.Add(wx.StaticText(self.panel2, -1, lab), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
         textBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_ydisto_ch = wx.CheckBox(self.panel2, -1, "")
-        self.tx_ydisto_ch.SetValue(0)
-        textBox.Add(self.tx_ydisto_ch, 0, wx.LEFT | wx.RIGHT, 10)
+        self.tx_yamp_ch = wx.CheckBox(self.panel2, -1, "")
+        self.tx_yamp_ch.SetValue(0)
+        self.tx_yamp_ch.Bind(wx.EVT_CHECKBOX, self.handleAmpCheck)
+        textBox.Add(self.tx_yamp_ch, 0, wx.LEFT | wx.RIGHT, 10)
         textBox.Add(wx.StaticText(self.panel2, -1, "Min: "), 0, wx.TOP, 4)
-        self.tx_disto_ymin = wx.TextCtrl(self.panel2, -1, "0.", size=(50, -1))
-        textBox.Add(self.tx_disto_ymin, 0, wx.RIGHT, 20)
+        self.tx_amp_ymin = wx.TextCtrl(self.panel2, -1, "0.", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        self.tx_amp_ymin.Bind(wx.EVT_TEXT_ENTER, self.handleAmpYMin)
+        textBox.Add(self.tx_amp_ymin, 0, wx.RIGHT, 20)
         textBox.Add(wx.StaticText(self.panel2, -1, "Max: "), 0, wx.TOP, 4)
-        self.tx_disto_ymax = wx.TextCtrl(self.panel2, -1, "1.", size=(50, -1))
-        textBox.Add(self.tx_disto_ymax, 0, wx.RIGHT, 20)
+        self.tx_amp_ymax = wx.TextCtrl(self.panel2, -1, "1.", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        self.tx_amp_ymax.Bind(wx.EVT_TEXT_ENTER, self.handleAmpYMax)
+        textBox.Add(self.tx_amp_ymax, 0, wx.RIGHT, 20)
         box.Add(textBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
-        
-    def getDistoCheck(self):
-        return self.tx_ydisto_ch.GetValue()
 
-    def setDistoCheck(self, value):
-        self.tx_ydisto_ch.SetValue(value)
-                 
-    def getDistoYMin(self):
-        return float(self.tx_disto_ymin.GetValue())
+    def getAmpCheck(self):
+        return self.tx_yamp_ch.GetValue()
 
-    def setDistoYMin(self, ymin):
-        self.tx_disto_ymin.SetValue(str(ymin))
-    
-    def getDistoYMax(self):
-        return float(self.tx_disto_ymax.GetValue())
+    def setAmpCheck(self, value):
+        self.tx_yamp_ch.SetValue(value)
+        self.sg_audio.amp_check = self.tx_yamp_ch.GetValue()
 
-    def setDistoYMax(self, ymax):
-        self.tx_disto_ymax.SetValue(str(ymax))
+    def handleAmpCheck(self, event):
+        self.sg_audio.amp_check = self.tx_yamp_ch.GetValue()
+
+    def getAmpYMin(self):
+        return float(self.tx_amp_ymin.GetValue())
+
+    def setAmpYMin(self, ymin):
+        self.tx_amp_ymin.SetValue(str(ymin))
+        self.sg_audio.amp_map.setMin(float(self.tx_amp_ymin.GetValue()))
+
+    def handleAmpYMin(self, event):
+        self.sg_audio.amp_map.setMin(float(self.tx_amp_ymin.GetValue()))
+
+    def getAmpYMax(self):
+        return float(self.tx_amp_ymax.GetValue())
+
+    def setAmpYMax(self, ymax):
+        self.tx_amp_ymax.SetValue(str(ymax))
+        self.sg_audio.amp_map.setMax(float(self.tx_amp_ymax.GetValue()))
+
+    def handleAmpYMax(self, event):
+        self.sg_audio.amp_map.setMax(float(self.tx_amp_ymax.GetValue()))
+
+    def makeYaxisDurBox(self, box, label=None):
+        if label == None: lab = "Grains duration random"
+        else: lab = label
+        box.Add(wx.StaticText(self.panel2, -1, lab), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
+        textBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.tx_ydur_ch = wx.CheckBox(self.panel2, -1, "")
+        self.tx_ydur_ch.SetValue(0)
+        self.tx_ydur_ch.Bind(wx.EVT_CHECKBOX, self.handleDurCheck)
+        textBox.Add(self.tx_ydur_ch, 0, wx.LEFT | wx.RIGHT, 10)
+        textBox.Add(wx.StaticText(self.panel2, -1, "Min: "), 0, wx.TOP, 4)
+        self.tx_dur_ymin = wx.TextCtrl(self.panel2, -1, "0.", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        self.tx_dur_ymin.Bind(wx.EVT_TEXT_ENTER, self.handleDurYMin)
+        textBox.Add(self.tx_dur_ymin, 0, wx.RIGHT, 20)
+        textBox.Add(wx.StaticText(self.panel2, -1, "Max: "), 0, wx.TOP, 4)
+        self.tx_dur_ymax = wx.TextCtrl(self.panel2, -1, "0.5", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        self.tx_dur_ymax.Bind(wx.EVT_TEXT_ENTER, self.handleDurYMax)
+        textBox.Add(self.tx_dur_ymax, 0, wx.RIGHT, 20)
+        box.Add(textBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+    def getDurCheck(self):
+        return self.tx_ydur_ch.GetValue()
+
+    def setDurCheck(self, value):
+        self.tx_ydur_ch.SetValue(value)
+        self.sg_audio.dur_check = self.tx_ydur_ch.GetValue()
+
+    def handleDurCheck(self, event):
+        self.sg_audio.dur_check = self.tx_ydur_ch.GetValue()
+
+    def getDurYMin(self):
+        return float(self.tx_dur_ymin.GetValue())
+
+    def setDurYMin(self, ymin):
+        self.tx_dur_ymin.SetValue(str(ymin))
+        self.sg_audio.dur_map.setMin(float(self.tx_dur_ymin.GetValue()))
+
+    def handleDurYMin(self, event):
+        self.sg_audio.dur_map.setMin(float(self.tx_dur_ymin.GetValue()))
+
+    def getDurYMax(self):
+        return float(self.tx_dur_ymax.GetValue())
+
+    def setDurYMax(self, ymax):
+        self.tx_dur_ymax.SetValue(str(ymax))
+        self.sg_audio.dur_map.setMax(float(self.tx_dur_ymax.GetValue()))
+
+    def handleDurYMax(self, event):
+        self.sg_audio.dur_map.setMax(float(self.tx_dur_ymax.GetValue()))
+
+    def makeYaxisPosBox(self, box, label=None):
+        if label == None: lab = "Grains Position random"
+        else: lab = label
+        box.Add(wx.StaticText(self.panel2, -1, lab), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
+        textBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.tx_ypos_ch = wx.CheckBox(self.panel2, -1, "")
+        self.tx_ypos_ch.SetValue(0)
+        self.tx_ypos_ch.Bind(wx.EVT_CHECKBOX, self.handlePosCheck)
+        textBox.Add(self.tx_ypos_ch, 0, wx.LEFT | wx.RIGHT, 10)
+        textBox.Add(wx.StaticText(self.panel2, -1, "Min: "), 0, wx.TOP, 4)
+        self.tx_pos_ymin = wx.TextCtrl(self.panel2, -1, "0.", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        self.tx_pos_ymin.Bind(wx.EVT_TEXT_ENTER, self.handlePosYMin)
+        textBox.Add(self.tx_pos_ymin, 0, wx.RIGHT, 20)
+        textBox.Add(wx.StaticText(self.panel2, -1, "Max: "), 0, wx.TOP, 4)
+        self.tx_pos_ymax = wx.TextCtrl(self.panel2, -1, "0.5", size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        self.tx_pos_ymax.Bind(wx.EVT_TEXT_ENTER, self.handlePosYMax)
+        textBox.Add(self.tx_pos_ymax, 0, wx.RIGHT, 20)
+        box.Add(textBox, 0, wx.LEFT | wx.RIGHT, 10)
+
+    def getPosCheck(self):
+        return self.tx_ypos_ch.GetValue()
+
+    def setPosCheck(self, value):
+        self.tx_ypos_ch.SetValue(value)
+        self.sg_audio.pos_check = self.tx_ypos_ch.GetValue()
+
+    def handlePosCheck(self, event):
+        self.sg_audio.pos_check = self.tx_ypos_ch.GetValue()
+
+    def getPosYMin(self):
+        return float(self.tx_pos_ymin.GetValue())
+
+    def setPosYMin(self, ymin):
+        self.tx_pos_ymin.SetValue(str(ymin))
+        self.sg_audio.pos_map.setMin(float(self.tx_pos_ymin.GetValue()))
+
+    def handlePosYMin(self, event):
+        self.sg_audio.pos_map.setMin(float(self.tx_pos_ymin.GetValue()))
+
+    def getPosYMax(self):
+        return float(self.tx_pos_ymax.GetValue())
+
+    def setPosYMax(self, ymax):
+        self.tx_pos_ymax.SetValue(str(ymax))
+        self.sg_audio.pos_map.setMax(float(self.tx_pos_ymax.GetValue()))
+
+    def handlePosYMax(self, event):
+        self.sg_audio.pos_map.setMax(float(self.tx_pos_ymax.GetValue()))
                      
 class GranulatorFrame(Module): 
     def __init__(self, parent, surface, continuousControl):
         Module.__init__(self, parent, surface, continuousControl)
   
         self.grainoverlaps = 8
+        self.pitch = 1.
         self.grainsize = 200
+        self.rnddur = 0
         self.rndpos = 0
-        self.cutoff = 10000
         self.amplitude = 0.7
         
         box = wx.BoxSizer(wx.VERTICAL)
         
         self.makeGrainOverlapsBox(self.box1)
+        self.makePitchBox(self.box1)
         self.makeGrainSizeBox(self.box1)
+        self.makeRandDurBox(self.box1)
         self.makeRandPosBox(self.box1)
-        self.makeCutoffBox(self.box1)
         self.makeAmplitudeBox(self.box1)
         self.makeTransBox(self.box1)
         self.panel1.SetSizer(self.box1)
         self.notebook.AddPage(self.panel1, "Granulator")
         
         self.makeYaxisTranspoBox(self.box2)
-        self.makeYaxisCutoffBox(self.box2)
-        self.makeYaxisRingBox(self.box2)
-        self.makeYaxisDistoBox(self.box2)
+        self.makeYaxisAmpBox(self.box2)
+        self.makeYaxisDurBox(self.box2)
+        self.makeYaxisPosBox(self.box2)
         self.panel2.SetSizer(self.box2)
         self.notebook.AddPage(self.panel2, "Y Axis")
         
@@ -497,245 +445,46 @@ class GranulatorFrame(Module):
         self.SetMaxSize(self.GetSize())
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
 
-        self.widgets = [self.sl_overlaps, self.tx_ytrans_ch, self.tx_ycutoff_ch, self.tx_filtype, 
-                        self.tx_yring_ch, self.tx_ringwav, self.tx_ydisto_ch]
-        self.controls = {'/amplitude': self.getAmp, '/cutoff': self.getCutoff, '/grainsize': self.getGrainSize, '/rndpos': self.getRandPos}
-
         self.Show(False)
-
-    def getFixedValues(self):
-        return [self.grainoverlaps, self.getTrans(), self.getTransCheck(), self.getTransYMin(), self.getTransYMax(),
-                self.getCutoffCheck(), self.getCutoffYMin(), self.getCutoffYMax(), self.getFilterType(),
-                self.getRingCheck(), self.getRingYMin(), self.getRingYMax(), self.getRingWav(), self.getDistoCheck(), self.getDistoYMin(), self.getDistoYMax()]
 
     def save(self):
         return {'grainoverlaps': self.getGrainOverlaps(),
                 'grainsize': self.getGrainSize(),
+                'pitch': self.getPitch(),
+                'rnddur': self.getRandDur(),
                 'rndpos': self.getRandPos(),
-                'cutoff': self.getCutoff(),
                 'amp': self.getAmp(),
                 'trans': self.getTrans(),
                 'transCheck': self.getTransCheck(),
                 'transYmin': self.getTransYMin(),
                 'transYmax': self.getTransYMax(),
-                'cutoffCheck': self.getCutoffCheck(),
-                'cutoffYmin': self.getCutoffYMin(),
-                'cutoffYmax': self.getCutoffYMax(),
-                'filterType': self.getFilterType(),
-                'ringCheck': self.getRingCheck(),
-                'ringYmin': self.getRingYMin(),
-                'ringYmax': self.getRingYMax(),
-                'ringwav': self.getRingWav(),
-                'distoCheck': self.getDistoCheck(),
-                'distoYmin': self.getDistoYMin(),
-                'distoYmax': self.getDistoYMax()}
+                'ampCheck': self.getAmpCheck(),
+                'ampYmin': self.getAmpYMin(),
+                'ampYmax': self.getAmpYMax(),
+                'durCheck': self.getDurCheck(),
+                'durYmin': self.getDurYMin(),
+                'durYmax': self.getDurYMax(),
+                'posCheck': self.getPosCheck(),
+                'posYmin': self.getPosYMin(),
+                'posYmax': self.getPosYMax()}
 
     def load(self, dict):
         self.setGrainOverlaps(dict['grainoverlaps'])
+        self.setPitch(dict['pitch'])
         self.setGrainSize(dict['grainsize'])
+        self.setRandDur(dict['rnddur'])
         self.setRandPos(dict['rndpos'])
-        self.setCutoff(dict['cutoff'])
         self.setAmp(dict['amp'])
         self.setTrans(dict['trans'])
         self.setTransCheck(dict['transCheck'])
         self.setTransYMin(dict['transYmin'])
         self.setTransYMax(dict['transYmax'])
-        self.setCutoffCheck(dict['cutoffCheck'])
-        self.setCutoffYMin(dict['cutoffYmin'])
-        self.setCutoffYMax(dict['cutoffYmax'])
-        self.setFilterType(dict['filterType'])
-        self.setRingCheck(dict['ringCheck'])
-        self.setRingYMin(dict['ringYmin'])
-        self.setRingYMax(dict['ringYmax'])
-        self.setRingWav(dict['ringwav'])
-        self.setDistoCheck(dict['distoCheck'])
-        self.setDistoYMin(dict['distoYmin'])
-        self.setDistoYMax(dict['distoYmax'])
-
-class FFTReaderFrame(Module): 
-    def __init__(self, parent, surface, continuousControl):
-        Module.__init__(self, parent, surface, continuousControl)
-
-        self.fftsize = 1024        
-        self.overlaps = 8
-        self.winsize = 2048 
-        self.cutoff = 10000
-        self.amplitude = 0.7
-
-        box = wx.BoxSizer(wx.VERTICAL)
-        
-        self.makeFFTSizeBox(self.box1)
-        self.makeFFTOverlapsBox(self.box1)
-        self.makeFFTWinSizeBox(self.box1)
-        self.makeCutoffBox(self.box1)
-        self.makeAmplitudeBox(self.box1)
-        self.panel1.SetSizerAndFit(self.box1)
-        self.notebook.AddPage(self.panel1, "FFT Reader")
-
-        self.makeYaxisTranspoBox(self.box2)
-        self.makeYaxisCutoffBox(self.box2)
-        self.makeYaxisRingBox(self.box2)
-        self.makeYaxisDistoBox(self.box2)        
-        self.panel2.SetSizerAndFit(self.box2)
-        self.notebook.AddPage(self.panel2, "Y Axis")
-        
-        box.Add(self.notebook)        
-        self.panel.SetSizerAndFit(box)
-       
-        self.Fit()
-        self.SetMinSize(self.GetSize())
-        self.SetMaxSize(self.GetSize())
-        self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
-
-        self.widgets = [self.sl_fftsize, self.sl_overlaps, self.sl_winsize,
-                        self.tx_ytrans_ch, self.tx_ycutoff_ch, self.tx_filtype, self.tx_yring_ch, self.tx_ringwav, self.tx_ydisto_ch]
-        self.controls = {'/amplitude': self.getAmp, '/cutoff': self.getCutoff}
-
-        self.Show(False)
-
-    def getFixedValues(self):
-        return [self.fftsize, self.overlaps, self.winsize, self.getTransCheck(), self.getTransYMin(), 
-                self.getTransYMax(), self.getCutoffCheck(), self.getCutoffYMin(), self.getCutoffYMax(), self.getFilterType(),
-                self.getRingCheck(), self.getRingYMin(), self.getRingYMax(), self.getRingWav(), self.getDistoCheck(), self.getDistoYMin(), self.getDistoYMax()]
-
-    def save(self):
-        return {'fftsize': self.getFFTSize(),
-                'overlaps': self.getOverlaps(),
-                'winsize': self.getWindowSize(),
-                'cutoff': self.getCutoff(),
-                'amp': self.getAmp(),
-                'transCheck': self.getTransCheck(),
-                'transYmin': self.getTransYMin(),
-                'transYmax': self.getTransYMax(),
-                'cutoffCheck': self.getCutoffCheck(),
-                'cutoffYmin': self.getCutoffYMin(),
-                'cutoffYmax': self.getCutoffYMax(),
-                'filterType': self.getFilterType(),
-                'ringCheck': self.getRingCheck(),
-                'ringYmin': self.getRingYMin(),
-                'ringYmax': self.getRingYMax(),
-                'ringwav': self.getRingWav(),
-                'distoCheck': self.getDistoCheck(),
-                'distoYmin': self.getDistoYMin(),
-                'distoYmax': self.getDistoYMax()}
-
-    def load(self, dict):
-        self.setFFTSize(dict['fftsize'])
-        self.setOverlaps(dict['overlaps'])
-        self.setWindowSize(dict['winsize'])
-        self.setCutoff(dict['cutoff'])
-        self.setAmp(dict['amp'])
-        self.setTransCheck(dict['transCheck'])
-        self.setTransYMin(dict['transYmin'])
-        self.setTransYMax(dict['transYmax'])
-        self.setCutoffCheck(dict['cutoffCheck'])
-        self.setCutoffYMin(dict['cutoffYmin'])
-        self.setCutoffYMax(dict['cutoffYmax'])
-        self.setFilterType(dict['filterType'])
-        self.setRingCheck(dict['ringCheck'])
-        self.setRingYMin(dict['ringYmin'])
-        self.setRingYMax(dict['ringYmax'])
-        self.setRingWav(dict['ringwav'])
-        self.setDistoCheck(dict['distoCheck'])
-        self.setDistoYMin(dict['distoYmin'])
-        self.setDistoYMax(dict['distoYmax'])
-
-class FFTAdsynFrame(Module): 
-    def __init__(self, parent, surface, continuousControl):
-        Module.__init__(self, parent, surface, continuousControl)
-
-        self.fftsize = 1024        
-        self.overlaps = 8
-        self.winsize = 2048 
-        self.numbins = 50
-        self.first = 0
-        self.incr = 3        
-        self.cutoff = 10000
-        self.amplitude = 0.7
-
-        box = wx.BoxSizer(wx.VERTICAL)
-        self.makeFFTSizeBox(self.box1)
-        self.makeFFTOverlapsBox(self.box1)
-        self.makeFFTWinSizeBox(self.box1)
-        self.makeNumBinsBox(self.box1)
-        self.makeFirstBinBox(self.box1)
-        self.makeIncrementBox(self.box1)
-        self.makeCutoffBox(self.box1)
-        self.makeAmplitudeBox(self.box1)
-        self.panel1.SetSizerAndFit(self.box1)
-        self.notebook.AddPage(self.panel1, "FFT Adsyn")
-
-        self.makeYaxisTranspoBox(self.box2)
-        self.makeYaxisCutoffBox(self.box2)
-        self.makeYaxisRingBox(self.box2)
-        self.makeYaxisDistoBox(self.box2)
-        self.panel2.SetSizerAndFit(self.box2)
-        self.notebook.AddPage(self.panel2, "Y Axis")
-        
-        box.Add(self.notebook)        
-        self.panel.SetSizerAndFit(box)
-        
-        self.Fit()
-        self.SetMinSize(self.GetSize())
-        self.SetMaxSize(self.GetSize())
-        self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
-
-        self.widgets = [self.sl_fftsize, self.sl_overlaps, self.sl_winsize, self.sl_numbins, self.sl_first, self.sl_incr,
-                        self.tx_ytrans_ch, self.tx_ycutoff_ch, self.tx_filtype, self.tx_yring_ch, self.tx_ringwav, self.tx_ydisto_ch]
-        self.controls = {'/amplitude': self.getAmp, '/cutoff': self.getCutoff}
-
-        self.Show(False)
-
-    def getFixedValues(self):
-        return [self.fftsize, self.overlaps, self.winsize, self.numbins, self.first, self.incr, self.getTransCheck(), 
-                self.getTransYMin(), self.getTransYMax(), self.getCutoffCheck(), self.getCutoffYMin(), self.getCutoffYMax(), 
-                self.getFilterType(), self.getRingCheck(), self.getRingYMin(), self.getRingYMax(), self.getRingWav(), self.getDistoCheck(), 
-                self.getDistoYMin(), self.getDistoYMax()]
-
-    def save(self):
-        return {'fftsize': self.getFFTSize(),
-                'overlaps': self.getOverlaps(),
-                'winsize': self.getWindowSize(),
-                'numbins': self.getNumBins(),
-                'first': self.getFirst(),
-                'incr': self.getIncr(),
-                'cutoff': self.getCutoff(),
-                'amp': self.getAmp(),
-                'transCheck': self.getTransCheck(),
-                'transYmin': self.getTransYMin(),
-                'transYmax': self.getTransYMax(),
-                'cutoffCheck': self.getCutoffCheck(),
-                'cutoffYmin': self.getCutoffYMin(),
-                'cutoffYmax': self.getCutoffYMax(),
-                'filterType': self.getFilterType(),
-                'ringCheck': self.getRingCheck(),
-                'ringYmin': self.getRingYMin(),
-                'ringYmax': self.getRingYMax(),
-                'ringwav': self.getRingWav(),
-                'distoCheck': self.getDistoCheck(),
-                'distoYmin': self.getDistoYMin(),
-                'distoYmax': self.getDistoYMax()}
-
-    def load(self, dict):
-        self.setFFTSize(dict['fftsize'])
-        self.setOverlaps(dict['overlaps'])
-        self.setWindowSize(dict['winsize'])
-        self.setNumBins(dict['numbins'])
-        self.setFirst(dict['first'])
-        self.setIncr(dict['incr'])
-        self.setCutoff(dict['cutoff'])
-        self.setAmp(dict['amp'])
-        self.setTransCheck(dict['transCheck'])
-        self.setTransYMin(dict['transYmin'])
-        self.setTransYMax(dict['transYmax'])
-        self.setCutoffCheck(dict['cutoffCheck'])
-        self.setCutoffYMin(dict['cutoffYmin'])
-        self.setCutoffYMax(dict['cutoffYmax'])
-        self.setFilterType(dict['filterType'])
-        self.setRingCheck(dict['ringCheck'])
-        self.setRingYMin(dict['ringYmin'])
-        self.setRingYMax(dict['ringYmax'])
-        self.setRingWav(dict['ringwav'])
-        self.setDistoCheck(dict['distoCheck'])
-        self.setDistoYMin(dict['distoYmin'])
-        self.setDistoYMax(dict['distoYmax'])
+        self.setAmpCheck(dict['ampCheck'])
+        self.setAmpYMin(dict['ampYmin'])
+        self.setAmpYMax(dict['ampYmax'])
+        self.setDurCheck(dict['durCheck'])
+        self.setDurYMin(dict['durYmin'])
+        self.setDurYMax(dict['durYmax'])
+        self.setPosCheck(dict['posCheck'])
+        self.setPosYMin(dict['posYmin'])
+        self.setPosYMax(dict['posYmax'])
