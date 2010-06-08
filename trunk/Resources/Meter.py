@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 import wx, math, os, sys
-from Biquad import BiquadLP
 from constants import *
 
 class VuMeter(wx.Panel):
@@ -57,13 +56,13 @@ class VuMeter(wx.Panel):
             self.parent.SetSize((parentSize[0], parentSize[1]+gap))
         self.Refresh()
 
-    def setAmplitude(self, amplitudeList=[]):
-        if amplitudeList[0] < 0: 
+    def setRms(self, *args):
+        if args[0] < 0: 
             return
-        if not amplitudeList:
+        if not args:
             self.amplitude = [0 for i in range(self.numSliders)]                
         else:
-            self.amplitude = amplitudeList
+            self.amplitude = args
         self.Refresh()    
         
     def OnPaint(self, event):
@@ -73,7 +72,8 @@ class VuMeter(wx.Panel):
         dc.Clear()
         dc.DrawRectangle(0,0,w,h)
         for i in range(self.numSliders):
-            width = int(self.amplitude[i] * w * 1.2)
+            db = math.log10(self.amplitude[i]+0.00001) * 0.2 + 1.
+            width = int(db*w)
             dc.DrawBitmap(self.backBitmap, 0, i*5)
             dc.SetClippingRegion(0, i*5, width, 5)
             dc.DrawBitmap(self.bitmap, 0, i*5)
