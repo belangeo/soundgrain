@@ -8,7 +8,6 @@ cd SoundGrain_v3.0
 find . -name .svn -depth -exec rm -rf {} \;
 find . -name *.pyc -depth -exec rm -f {} \;
 find . -name .* -depth -exec rm -f {} \;
-rm SoundGrain.app/Contents/Resources/SoundGrain.ico
 mkdir SoundGrain.app/Contents/Resources/psyco
 cp /Library/Frameworks/Python.framework/Versions/2.6/lib/Python2.6/site-packages/psyco/* SoundGrain.app/Contents/Resources/psyco
 cd ..
