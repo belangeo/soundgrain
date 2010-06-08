@@ -1226,11 +1226,14 @@ class ControlPanel(scrolled.ScrolledPanel):
                 
     def handleRecord(self, event):
         if event.GetInt() == 1:
-            self.tog_record.SetLabel('Stop')
-            if not self.tx_output.GetValue().endswith('.aif'):    
-                self.parent.sg_audio.server.recstart(self.tx_output.GetValue() + '.aif')        
+            path = self.tx_output.GetValue()
+            if not path.endswith('.aif'):
+                path = path + '.aif'
+            if os.path.isabs(path):   
+                self.parent.sg_audio.server.recstart(path)        
             else:
-                self.parent.sg_audio.server.recstart(self.tx_output.GetValue())        
+                self.parent.sg_audio.server.recstart(os.path.join(os.path.expanduser('~'), path))        
+            self.tog_record.SetLabel('Stop')
         else:
             self.tog_record.SetLabel('Start')
             self.parent.sg_audio.server.recstop()
