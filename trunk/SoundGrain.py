@@ -1341,6 +1341,8 @@ class MainFrame(wx.Frame):
 
         self.menuBar = wx.MenuBar()
         self.menu = wx.Menu()
+        self.menu.Append(11, "New...\tCtrl+N")
+        self.Bind(wx.EVT_MENU, self.handleNew, id=11)
         self.menu.Append(1, "Open...\tCtrl+O")
         self.Bind(wx.EVT_MENU, self.handleOpen, id=1)
         self.menu.Append(2, "Open Soundfile...\tShift+Ctrl+O")
@@ -1523,6 +1525,10 @@ class MainFrame(wx.Frame):
     def handleUndo(self, evt):
         self.recallTempFile(evt.GetId())
 
+    def handleNew(self, evt):
+        self.panel.sndBitmap = None
+        self.loadFile(os.path.join(RESOURCES_PATH, 'new_soundgrain_file.sg'))
+        
     def handleOpen(self, evt):
         dlg = wx.FileDialog(self, message="Open SoundGrain file...",
                             defaultDir=os.path.expanduser('~'), 
