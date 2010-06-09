@@ -12,6 +12,6 @@ mkdir SoundGrain.app/Contents/Resources/psyco
 cp /Library/Frameworks/Python.framework/Versions/2.6/lib/Python2.6/site-packages/psyco/* SoundGrain.app/Contents/Resources/psyco
 cd ..
 cp -R SoundGrain_v3.0/SoundGrain.app .
-tar -cjvf SoundGrain_v3.0.tar.bz2 SoundGrain.app
+tar -cjvf SoundGrain_v3.0.1.tar.bz2 SoundGrain.app
 rm -rf SoundGrain_v3.0
 rm -rf SoundGrain.app
