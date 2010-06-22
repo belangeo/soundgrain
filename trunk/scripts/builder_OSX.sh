@@ -1,6 +1,6 @@
 rm -rf build dist
 py2applet --make-setup SoundGrain.py Resources/*
-python setup.py py2app
+python setup.py py2app --plist=scripts/info.plist
 rm -f setup.py
 rm -rf build
 mv dist SoundGrain_v3.0
