@@ -1735,6 +1735,17 @@ class MainFrame(wx.Frame):
         info.SetWebSite('http://code.google.com/p/soundgrain')
         info.SetLicence(licence)
         wx.AboutBox(info)
+
+class SoundGrainApp(wx.PySimpleApp):
+    def __init__(self, *args, **kwargs):
+        wx.PySimpleApp.__init__(self, *args, **kwargs)
+        self.loadFile = None
+    
+    def setLoadFileFunc(self, func):
+        self.loadFile = func
+            
+    def MacOpenFile(self, filename):
+        self.loadFile(filename)
               
 if __name__ == '__main__': 
     try:
@@ -1748,7 +1759,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         file = sys.argv[1]
 
-    app = wx.PySimpleApp()
+    app = SoundGrainApp()
     X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
     if X < 900: sizex = X - 40
     else: sizex = 900
@@ -1757,4 +1768,5 @@ if __name__ == '__main__':
     if Y < defaultY: sizey = Y - 40
     else: sizey = defaultY
     f = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), file=file)
+    app.setLoadFileFunc(f.loadFile)
     app.MainLoop()
