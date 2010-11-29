@@ -17,6 +17,8 @@ This is a short list of features that I want to add during the development of ve
 
     - Add "add"
 
+- Remove "Audio on" button, boot and shutdown should be automatic
+
 ----
 
 - Trajectory Behavior changes with objects user can drag and drop on the drawing surface. 
