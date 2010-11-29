@@ -13,6 +13,12 @@ This is a short list of features that I want to add during the development of ve
 
     - infinite reverb
 
+- Selected trajectory:
+
+    - Add "add"
+
+----
+
 - Trajectory Behavior changes with objects user can drag and drop on the drawing surface. 
 
     - wall to change direction of the ball
