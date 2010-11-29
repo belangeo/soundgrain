@@ -21,7 +21,7 @@ This is a short list of features that I want to add during the development of ve
 
 ----
 
-List of features that I want to add during the development of a future version
+*List of features that I want to add during the development of a future version*
 
 
 - Trajectory Behavior changes with objects user can drag and drop on the drawing surface. 
