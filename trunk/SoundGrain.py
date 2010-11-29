@@ -27,8 +27,7 @@ from Resources.constants import *
 from Resources.audio import *
 from Resources.Biquad_Filter import BiquadLP
 from Resources.Modules import *
-from Resources.Meter import VuMeter
-from Resources.Slider import ControlSlider
+from pyolib._wxwidgets import ControlSlider, VuMeter
 
 trajTypes = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 
@@ -1692,9 +1691,9 @@ class MainFrame(wx.Frame):
     def OnClose(self, evt):
         self.controls.meter.OnClose(evt)
         self.sg_audio.server.stop()
-        tmpFiles = os.listdir(TEMP_PATH)
-        for file in tmpFiles:
-            os.remove(os.path.join(TEMP_PATH, file))
+        #tmpFiles = os.listdir(TEMP_PATH)
+        #for file in tmpFiles:
+        #    os.remove(os.path.join(TEMP_PATH, file))
         self.Destroy()
         sys.exit()
 
