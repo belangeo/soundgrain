@@ -27,6 +27,8 @@ This is a short list of features that I want to add during the development of ve
 
     - Add "pan" control (or pan setting per trajectory in the main frame)
 
+- Add audio level per trajectory
+
 - Always remember the input file
 
 - Fix number of channels bug
