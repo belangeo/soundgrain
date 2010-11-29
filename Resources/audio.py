@@ -107,7 +107,10 @@ class SG_Audio:
         self.server_started = False
         self.num_grains = 8
         self.activeStreams = []
-        self.server = Server(duplex=0)
+        if PLATFORM == "darwin":
+            self.server = Server(buffersize=512, duplex=0, audio="coreaudio")
+        else:
+            self.server = Server(buffersize=512, duplex=0)
         self.pitch_check = 1
         self.pitch_map = Map(0, 1, "lin")
         self.amp_check = 0

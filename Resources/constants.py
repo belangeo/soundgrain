@@ -20,7 +20,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 import os, sys
 
 NAME = 'Sound Grain'
-VERSION = '3.0.1'
+VERSION = '4.0'
 
 PLATFORM = sys.platform
 
@@ -33,10 +33,9 @@ else:
     RESOURCES_PATH = os.path.join(os.getcwd(), 'Resources')
 
 IMAGES_PATH = os.path.join(RESOURCES_PATH, 'images')
-OUNK_PATH = os.path.join(os.path.expanduser('~'), '.ounk')
-TEMP_PATH = os.path.join(os.path.expanduser('~'), '.soundgrain')
+#TEMP_PATH = os.path.join(os.path.expanduser('~'), '.soundgrain')
 
-if not os.path.isdir(TEMP_PATH):
-    os.mkdir(TEMP_PATH)
+#if not os.path.isdir(TEMP_PATH):
+#    os.mkdir(TEMP_PATH)
 
 BACKGROUND_COLOUR = "#ECE6EA"  
