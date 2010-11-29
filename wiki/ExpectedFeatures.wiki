@@ -27,6 +27,9 @@ This is a short list of features that I want to add during the development of ve
 
     - Add "pan"
 
+- Always remember the input file
+
+
 ----
 
 *List of features that I want to add during the development of a future version*
