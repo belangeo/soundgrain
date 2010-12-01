@@ -33,9 +33,5 @@ else:
     RESOURCES_PATH = os.path.join(os.getcwd(), 'Resources')
 
 IMAGES_PATH = os.path.join(RESOURCES_PATH, 'images')
-#TEMP_PATH = os.path.join(os.path.expanduser('~'), '.soundgrain')
-
-#if not os.path.isdir(TEMP_PATH):
-#    os.mkdir(TEMP_PATH)
 
 BACKGROUND_COLOUR = "#ECE6EA"  

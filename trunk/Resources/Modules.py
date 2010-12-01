@@ -24,7 +24,6 @@ from constants import BACKGROUND_COLOUR
 class Module(wx.Frame):
     def __init__(self, parent, surface, sg_audio):
         wx.Frame.__init__(self, parent, -1, "Controls")
-
         menuBar = wx.MenuBar()
         self.menu = wx.Menu()
         self.menu.Append(200, 'Close\tCtrl+W', "")
@@ -32,7 +31,6 @@ class Module(wx.Frame):
         self.menu.AppendSeparator()
         self.menu.Append(201, "Run\tCtrl+R", "", wx.ITEM_CHECK)
         menuBar.Append(self.menu, "&File")
-
         self.SetMenuBar(menuBar)
 
         self.Bind(wx.EVT_CLOSE, self.handleClose)
@@ -59,24 +57,16 @@ class Module(wx.Frame):
     def handleClose(self, event):
         self.Show(False)
 
-    def activateWidgets(self, audioState):
-        if audioState:
-            for widget in self.widgets:
-                widget.Disable()
-        else:
-            for widget in self.widgets:
-                widget.Enable()
-
-    def initControlValues(self):
-        for key, func in self.controls.iteritems():
-            self.continuousControl(key, func())
-
-    def makeGrainOverlapsBox(self, box):
-        box.Add(wx.StaticText(self.panel1, -1, "Number of grains"), 0, wx.LEFT|wx.TOP, 10)
-        overlapsBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_overlaps = ControlSlider(self.panel1, 1, 100, self.grainoverlaps, size=(250, 16), integer=True, outFunction=self.handleGrainOverlaps)
-        overlapsBox.Add(self.sl_overlaps, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(overlapsBox, 0, wx.LEFT | wx.RIGHT, 5)
+    ########################################################################################################    
+    ### First window ###
+    ########################################################################################################
+    def makeSliderBox(self, box, label, minval, maxval, val, integer, callback):
+        box.Add(wx.StaticText(self.panel1, -1, label), 0, wx.LEFT, 10)
+        sliderBox = wx.BoxSizer(wx.HORIZONTAL)
+        slider = ControlSlider(self.panel1, minval, maxval, val, size=(250, 16), integer=integer, outFunction=callback)
+        sliderBox.Add(slider, 0, wx.LEFT | wx.RIGHT, 5)
+        box.Add(sliderBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+        return slider
 
     def handleGrainOverlaps(self, val):
         self.grainoverlaps = val
@@ -90,14 +80,6 @@ class Module(wx.Frame):
         self.sl_overlaps.SetValue(overlaps)
         self.sg_audio.setNumGrains(self.grainoverlaps)
 
-    def makePitchBox(self, box):
-        box.AddSpacer(5)
-        box.Add(wx.StaticText(self.panel1, -1, "Transposition"), 0, wx.LEFT, 10)
-        pitBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_pit = ControlSlider(self.panel1, 0.5, 2., self.pitch, size=(250, 16), outFunction=self.handlePitch)
-        pitBox.Add(self.sl_pit, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(pitBox, 0, wx.LEFT | wx.RIGHT, 5)
-
     def handlePitch(self, val):
         self.pitch = val
         self.sg_audio.setBasePitch(self.pitch)  
@@ -109,14 +91,6 @@ class Module(wx.Frame):
         self.pitch = pitch
         self.sl_pit.SetValue(self.pitch)
         self.sg_audio.setBasePitch(self.pitch)  
-
-    def makeGrainSizeBox(self, box):
-        box.AddSpacer(5)
-        box.Add(wx.StaticText(self.panel1, -1, "Grain size (ms)"), 0, wx.LEFT, 10)
-        sizeBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_size = ControlSlider(self.panel1, 10, 500, self.grainsize, size=(250, 16), integer=True, outFunction=self.handleGrainSize)
-        sizeBox.Add(self.sl_size, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(sizeBox, 0, wx.LEFT | wx.RIGHT, 5)
 
     def handleGrainSize(self, val):
         self.grainsize = val
@@ -130,14 +104,6 @@ class Module(wx.Frame):
         self.sl_size.SetValue(self.grainsize)
         self.sg_audio.setGrainSize(self.grainsize * 0.001)  
 
-    def makeRandDurBox(self, box):
-        box.AddSpacer(5)
-        box.Add(wx.StaticText(self.panel1, -1, "Grain duration random"), 0, wx.LEFT, 10)
-        rnddurBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_rnddur = ControlSlider(self.panel1, 0, .5, self.rnddur, size=(250, 16), outFunction=self.handleRandDur)
-        rnddurBox.Add(self.sl_rnddur, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(rnddurBox, 0, wx.LEFT | wx.RIGHT, 5)
-
     def handleRandDur(self, val):
         self.rnddur = val
         self.sg_audio.dur_noise.mul = self.rnddur * self.grainsize * 0.001
@@ -150,14 +116,6 @@ class Module(wx.Frame):
         self.sl_rnddur.SetValue(self.rnddur)
         self.sg_audio.dur_noise.mul = self.rnddur * self.grainsize * 0.001
 
-    def makeRandPosBox(self, box):
-        box.AddSpacer(5)
-        box.Add(wx.StaticText(self.panel1, -1, "Position random"), 0, wx.LEFT, 10)
-        rndposBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_rndpos = ControlSlider(self.panel1, 0, .5, self.rndpos, size=(250, 16), outFunction=self.handleRandPos)
-        rndposBox.Add(self.sl_rndpos, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(rndposBox, 0, wx.LEFT | wx.RIGHT, 5)
-
     def handleRandPos(self, val):
         self.rndpos = val
         self.sg_audio.pos_noise.mul = self.rndpos
@@ -169,15 +127,6 @@ class Module(wx.Frame):
         self.rndpos = rnd
         self.sl_rndpos.SetValue(self.rndpos)
         self.sg_audio.pos_noise.mul = self.rndpos
-        
-    def makeAmplitudeBox(self, box):
-        box.AddSpacer(5)
-        box.Add(wx.StaticText(self.panel1, -1, "Amplitude"), 0, wx.LEFT, 10)
-        ampBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_amp = ControlSlider(self.panel1, 0, 4, self.amplitude, size=(250, 16), outFunction=self.handleAmp)
-        ampBox.Add(self.sl_amp, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(ampBox, 0, wx.LEFT | wx.RIGHT, 5)
-        box.AddSpacer(5)
 
     def handleAmp(self, val):
         self.amplitude = val
@@ -209,26 +158,27 @@ class Module(wx.Frame):
 
     def handleTrans(self, event):
         self.sg_audio.trans_noise.choice = self.getTrans()
-        
+    
+    ########################################################################################################    
     ### Second window ###
-    def makeYaxisTranspoBox(self, box, label=None):
-        if label == None: lab = "Transposition"
-        else: lab = label
-        box.Add(wx.StaticText(self.panel2, -1, lab), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
+    ########################################################################################################
+    def makeYaxisBox(self, box, label, checked, ch_callback, minval, min_callback, maxval, max_callback):
+        box.Add(wx.StaticText(self.panel2, -1, label), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
         textBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_ytrans_ch = wx.CheckBox(self.panel2, -1, "")
-        self.tx_ytrans_ch.SetValue(1)
-        self.tx_ytrans_ch.Bind(wx.EVT_CHECKBOX, self.handleTransCheck)
-        textBox.Add(self.tx_ytrans_ch, 0, wx.LEFT | wx.RIGHT, 10)
+        tx_check = wx.CheckBox(self.panel2, -1, "")
+        tx_check.SetValue(checked)
+        tx_check.Bind(wx.EVT_CHECKBOX, ch_callback)
+        textBox.Add(tx_check, 0, wx.LEFT | wx.RIGHT, 10)
         textBox.Add(wx.StaticText(self.panel2, -1, "Min: "), 0, wx.TOP, 4)
-        self.tx_tr_ymin = wx.TextCtrl(self.panel2, -1, "0.", size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        self.tx_tr_ymin.Bind(wx.EVT_TEXT_ENTER, self.handleTransYMin)
-        textBox.Add(self.tx_tr_ymin, 0, wx.RIGHT, 20)
+        tx_min = wx.TextCtrl(self.panel2, -1, minval, size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        tx_min.Bind(wx.EVT_TEXT_ENTER, min_callback)
+        textBox.Add(tx_min, 0, wx.RIGHT, 20)
         textBox.Add(wx.StaticText(self.panel2, -1, "Max: "), 0, wx.TOP, 4)
-        self.tx_tr_ymax = wx.TextCtrl(self.panel2, -1, "1.", size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        self.tx_tr_ymax.Bind(wx.EVT_TEXT_ENTER, self.handleTransYMax)
-        textBox.Add(self.tx_tr_ymax, 0, wx.RIGHT, 20)
+        tx_max = wx.TextCtrl(self.panel2, -1, maxval, size=(50, -1), style=wx.TE_PROCESS_ENTER)
+        tx_max.Bind(wx.EVT_TEXT_ENTER, max_callback)
+        textBox.Add(tx_max, 0, wx.RIGHT, 20)
         box.Add(textBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        return tx_check, tx_min, tx_max
 
     def getTransCheck(self):
         return self.tx_ytrans_ch.GetValue()
@@ -260,25 +210,6 @@ class Module(wx.Frame):
     def handleTransYMax(self, event):
         self.sg_audio.pitch_map.setMax(float(self.tx_tr_ymax.GetValue()))
 
-    def makeYaxisAmpBox(self, box, label=None):
-        if label == None: lab = "Amplitude"
-        else: lab = label
-        box.Add(wx.StaticText(self.panel2, -1, lab), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
-        textBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_yamp_ch = wx.CheckBox(self.panel2, -1, "")
-        self.tx_yamp_ch.SetValue(0)
-        self.tx_yamp_ch.Bind(wx.EVT_CHECKBOX, self.handleAmpCheck)
-        textBox.Add(self.tx_yamp_ch, 0, wx.LEFT | wx.RIGHT, 10)
-        textBox.Add(wx.StaticText(self.panel2, -1, "Min: "), 0, wx.TOP, 4)
-        self.tx_amp_ymin = wx.TextCtrl(self.panel2, -1, "0.", size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        self.tx_amp_ymin.Bind(wx.EVT_TEXT_ENTER, self.handleAmpYMin)
-        textBox.Add(self.tx_amp_ymin, 0, wx.RIGHT, 20)
-        textBox.Add(wx.StaticText(self.panel2, -1, "Max: "), 0, wx.TOP, 4)
-        self.tx_amp_ymax = wx.TextCtrl(self.panel2, -1, "1.", size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        self.tx_amp_ymax.Bind(wx.EVT_TEXT_ENTER, self.handleAmpYMax)
-        textBox.Add(self.tx_amp_ymax, 0, wx.RIGHT, 20)
-        box.Add(textBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
-
     def getAmpCheck(self):
         return self.tx_yamp_ch.GetValue()
 
@@ -309,25 +240,6 @@ class Module(wx.Frame):
     def handleAmpYMax(self, event):
         self.sg_audio.amp_map.setMax(float(self.tx_amp_ymax.GetValue()))
 
-    def makeYaxisDurBox(self, box, label=None):
-        if label == None: lab = "Grains duration random"
-        else: lab = label
-        box.Add(wx.StaticText(self.panel2, -1, lab), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
-        textBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_ydur_ch = wx.CheckBox(self.panel2, -1, "")
-        self.tx_ydur_ch.SetValue(0)
-        self.tx_ydur_ch.Bind(wx.EVT_CHECKBOX, self.handleDurCheck)
-        textBox.Add(self.tx_ydur_ch, 0, wx.LEFT | wx.RIGHT, 10)
-        textBox.Add(wx.StaticText(self.panel2, -1, "Min: "), 0, wx.TOP, 4)
-        self.tx_dur_ymin = wx.TextCtrl(self.panel2, -1, "0.", size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        self.tx_dur_ymin.Bind(wx.EVT_TEXT_ENTER, self.handleDurYMin)
-        textBox.Add(self.tx_dur_ymin, 0, wx.RIGHT, 20)
-        textBox.Add(wx.StaticText(self.panel2, -1, "Max: "), 0, wx.TOP, 4)
-        self.tx_dur_ymax = wx.TextCtrl(self.panel2, -1, "0.5", size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        self.tx_dur_ymax.Bind(wx.EVT_TEXT_ENTER, self.handleDurYMax)
-        textBox.Add(self.tx_dur_ymax, 0, wx.RIGHT, 20)
-        box.Add(textBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
-
     def getDurCheck(self):
         return self.tx_ydur_ch.GetValue()
 
@@ -357,25 +269,6 @@ class Module(wx.Frame):
 
     def handleDurYMax(self, event):
         self.sg_audio.dur_map.setMax(float(self.tx_dur_ymax.GetValue()))
-
-    def makeYaxisPosBox(self, box, label=None):
-        if label == None: lab = "Grains Position random"
-        else: lab = label
-        box.Add(wx.StaticText(self.panel2, -1, lab), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
-        textBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_ypos_ch = wx.CheckBox(self.panel2, -1, "")
-        self.tx_ypos_ch.SetValue(0)
-        self.tx_ypos_ch.Bind(wx.EVT_CHECKBOX, self.handlePosCheck)
-        textBox.Add(self.tx_ypos_ch, 0, wx.LEFT | wx.RIGHT, 10)
-        textBox.Add(wx.StaticText(self.panel2, -1, "Min: "), 0, wx.TOP, 4)
-        self.tx_pos_ymin = wx.TextCtrl(self.panel2, -1, "0.", size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        self.tx_pos_ymin.Bind(wx.EVT_TEXT_ENTER, self.handlePosYMin)
-        textBox.Add(self.tx_pos_ymin, 0, wx.RIGHT, 20)
-        textBox.Add(wx.StaticText(self.panel2, -1, "Max: "), 0, wx.TOP, 4)
-        self.tx_pos_ymax = wx.TextCtrl(self.panel2, -1, "0.5", size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        self.tx_pos_ymax.Bind(wx.EVT_TEXT_ENTER, self.handlePosYMax)
-        textBox.Add(self.tx_pos_ymax, 0, wx.RIGHT, 20)
-        box.Add(textBox, 0, wx.LEFT | wx.RIGHT, 10)
 
     def getPosCheck(self):
         return self.tx_ypos_ch.GetValue()
@@ -408,8 +301,8 @@ class Module(wx.Frame):
         self.sg_audio.pos_map.setMax(float(self.tx_pos_ymax.GetValue()))
                      
 class GranulatorFrame(Module): 
-    def __init__(self, parent, surface, continuousControl):
-        Module.__init__(self, parent, surface, continuousControl)
+    def __init__(self, parent, surface, sg_audio):
+        Module.__init__(self, parent, surface, sg_audio)
   
         self.grainoverlaps = 8
         self.pitch = 1.
@@ -420,20 +313,25 @@ class GranulatorFrame(Module):
         
         box = wx.BoxSizer(wx.VERTICAL)
         
-        self.makeGrainOverlapsBox(self.box1)
-        self.makePitchBox(self.box1)
-        self.makeGrainSizeBox(self.box1)
-        self.makeRandDurBox(self.box1)
-        self.makeRandPosBox(self.box1)
-        self.makeAmplitudeBox(self.box1)
+        self.box1.AddSpacer(10)
+        self.sl_overlaps = self.makeSliderBox(self.box1, "Number of grains", 1, 100, self.grainoverlaps, True, self.handleGrainOverlaps)
+        self.sl_pit = self.makeSliderBox(self.box1, "Transposition", 0.5, 2., self.pitch, False, self.handlePitch)
+        self.sl_size = self.makeSliderBox(self.box1, "Grain size (ms)", 10, 500, self.grainsize, True, self.handleGrainSize)
+        self.sl_rnddur = self.makeSliderBox(self.box1, "Grain duration random", 0, 0.5, self.rnddur, False, self.handleRandDur)
+        self.sl_rndpos = self.makeSliderBox(self.box1, "Position random", 0, 0.5, self.rndpos, False, self.handleRandPos)
+        self.sl_amp = self.makeSliderBox(self.box1, "Amplitude", 0, 4, self.amplitude, False, self.handleAmp)
         self.makeTransBox(self.box1)
         self.panel1.SetSizer(self.box1)
         self.notebook.AddPage(self.panel1, "Granulator")
         
-        self.makeYaxisTranspoBox(self.box2)
-        self.makeYaxisAmpBox(self.box2)
-        self.makeYaxisDurBox(self.box2)
-        self.makeYaxisPosBox(self.box2)
+        self.tx_ytrans_ch, self.tx_tr_ymin, self.tx_tr_ymax = self.makeYaxisBox(self.box2, "Transposition", 1, self.handleTransCheck, 
+                                                                                "0.", self.handleTransYMin, "1.", self.handleTransYMax)
+        self.tx_yamp_ch, self.tx_amp_ymin, self.tx_amp_ymax = self.makeYaxisBox(self.box2, "Amplitude", 0, self.handleAmpCheck, 
+                                                                                "0.", self.handleAmpYMin, "1.", self.handleAmpYMax)
+        self.tx_ydur_ch, self.tx_dur_ymin, self.tx_dur_ymax = self.makeYaxisBox(self.box2, "Grains duration random", 0, self.handleDurCheck, 
+                                                                                "0.", self.handleDurYMin, "0.5", self.handleDurYMax)
+        self.tx_ypos_ch, self.tx_pos_ymin, self.tx_pos_ymax = self.makeYaxisBox(self.box2, "Grains Position random", 0, self.handlePosCheck, 
+                                                                                "0.", self.handlePosYMin, "0.5", self.handlePosYMax)
         self.panel2.SetSizer(self.box2)
         self.notebook.AddPage(self.panel2, "Y Axis")
         
@@ -444,7 +342,6 @@ class GranulatorFrame(Module):
         self.SetMinSize(self.GetSize())
         self.SetMaxSize(self.GetSize())
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
-
         self.Show(False)
 
     def save(self):
