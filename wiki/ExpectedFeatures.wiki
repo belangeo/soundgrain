@@ -15,7 +15,9 @@ This is a short list of features that I want to add during the development of ve
 
 - Selected trajectory:
 
-    - Add "all"
+    - Add "all" (Bind Cmd+A)
+
+    - Bind Delete key to delete the selected trajectory
 
 - Remove "Audio on" button, boot and shutdown should be automatic
 
