@@ -40,11 +40,11 @@ class DrawingSurface(wx.Panel):
         self.useMario = False
         self.marios = [wx.Bitmap(os.path.join(IMAGES_PATH, 'Mario%d.png' % i), wx.BITMAP_TYPE_PNG) for i in [1,2,3,2,4,5,6,5]]
         if PLATFORM in ['win32', 'linux2']:
-            self.font = wx.Font(7, wx.NORMAL, wx.NORMAL, wx.NORMAL)
+            self.font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)
             self.font_pos = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)
         else:
-            self.font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)
-            self.font_pos = wx.Font(9, wx.NORMAL, wx.NORMAL, wx.NORMAL)
+            self.font = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL)
+            self.font_pos = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL)
         self.trajectories = [Trajectory(self, i+1) for i in range(24)]
         self.screenOffset = 2
         self.sndBitmap = None
@@ -91,6 +91,8 @@ class DrawingSurface(wx.Panel):
                 t.setRadius(t.getCenter()[0] - t.getFirstPoint()[0])    
             t.setInitPoints()
         self.currentSize = (w,h)
+        self.parent.controls.drawWaveform()
+        wx.CallAfter(self.Refresh)
 
     def clock(self, which):
         t = self.trajectories[which]
@@ -156,14 +158,31 @@ class DrawingSurface(wx.Panel):
         for t in self.getActiveTrajectories():
             if t.getInsideRect(evt.GetPosition()):
                 t.clear()
+                if len(self.getActiveTrajectories()) > 0:
+                    self.setSelected(self.getActiveTrajectories()[0])
+                else:
+                    self.setSelected(self.getTrajectory(0))    
                 self.Refresh()
                 return
 
+    def setSelectedById(self, id):
+        self.selected = self.trajectories[id]
+
     def setSelected(self, traj):
         self.selected = traj
-        self.parent.controls.setSelected(self.trajectories.index(self.selected))
+        self.parent.controls.setSelected(self.selected.getId())
 
     def KeyDown(self, evt):
+        if evt.GetKeyCode() in [wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE]:
+            if self.selected != None:
+                self.selected.clear()
+                if len(self.getActiveTrajectories()) > 0:
+                    self.setSelected(self.getActiveTrajectories()[0])
+                else:
+                    self.setSelected(self.getTrajectory(0))    
+            self.Refresh()
+            return
+
         off = {wx.WXK_UP: [0,1], wx.WXK_DOWN: [0,-1], wx.WXK_LEFT: [1,0], wx.WXK_RIGHT: [-1,0]}.get(evt.GetKeyCode(), [0,0])
         # Move selected trajectory
         if evt.ShiftDown() and off != [0,0]:
@@ -433,8 +452,12 @@ class DrawingSurface(wx.Panel):
             dc.DrawLine(2, ygrid, w-2, ygrid)
              
         for i, t in enumerate(self.getActiveTrajectories()):
-            dc.SetBrush(wx.Brush(self.fillcolor, wx.SOLID))
-            dc.SetPen(wx.Pen(self.fillcolor, width=1, style=wx.SOLID))
+            col = t.getColour()
+            bcol = t.getBorderColour()
+            dc.SetBrush(wx.Brush(col, wx.SOLID))
+            dc.SetPen(wx.Pen(col, width=1, style=wx.SOLID))
+            #dc.SetBrush(wx.Brush(self.fillcolor, wx.SOLID))
+            #dc.SetPen(wx.Pen(self.fillcolor, width=1, style=wx.SOLID))
             if len(t.getPoints()) > 1:
                 dc.DrawLines(t.getPoints())
                 if t.circlePos:
@@ -445,14 +468,16 @@ class DrawingSurface(wx.Panel):
                         else: marioff = 4
                         bitmario = self.marios[t.mario + marioff]
                         dc.DrawBitmap(bitmario, t.circlePos[0]-8, t.circlePos[1]-8, True)
-                if i == self.parent.controls.getSelected():
-                    dc.SetPen(wx.Pen(wx.Color(255,190,190), width=1, style=wx.SOLID))
+                if t.getId() == self.parent.controls.getSelected():
+                    dc.SetPen(wx.Pen("#EEEEEE", width=2, style=wx.SOLID))
+                    #dc.SetPen(wx.Pen(wx.Color(255,190,190), width=1, style=wx.SOLID))
                 else:
-                    dc.SetPen(wx.Pen(self.fillcolor, width=1, style=wx.SOLID))
-                dc.DrawRoundedRectanglePointSize((t.getFirstPoint()[0],t.getFirstPoint()[1]), (10,10), 2)
-                dc.SetTextForeground("#FFFFFF")
+                    dc.SetPen(wx.Pen(col, width=1, style=wx.SOLID))
+                    #dc.SetPen(wx.Pen(self.fillcolor, width=1, style=wx.SOLID))
+                dc.DrawRoundedRectanglePointSize((t.getFirstPoint()[0],t.getFirstPoint()[1]), (13,13), 2)
+                dc.SetTextForeground("#000000")
                 dc.SetFont(self.font)
-                dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0],t.getFirstPoint()[1], 10, 10), wx.ALIGN_CENTER)
+                dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0],t.getFirstPoint()[1], 13, 13), wx.ALIGN_CENTER)
                 if t.getType() not in ['free', 'line']:
                     dc.SetBrush(wx.Brush(self.losacolor, wx.SOLID))
                     dc.SetPen(wx.Pen(self.losacolor, width=1, style=wx.SOLID))
@@ -460,7 +485,11 @@ class DrawingSurface(wx.Panel):
         if self.pointerPos != None:
             dc.SetTextForeground("#FFFFFF")
             dc.SetFont(self.font_pos)
-            dc.DrawText("X: %d   Y: %d" % self.pointerPos, w-70, h-15)
+            xvalue = self.pointerPos[0] / float(w) * self.parent.controls.sndDur
+            yminvalue = self.parent.granulatorControls.getTransYMin()
+            ymaxvalue = self.parent.granulatorControls.getTransYMax()
+            yvalue = (h - self.pointerPos[1]) / float(h) * (ymaxvalue - yminvalue) + yminvalue
+            dc.DrawText("X: %.3f   Y: %.3f" % (xvalue, yvalue), w-90, h-13)
 
     def clip(self, off, exXs, exYs):
         Xs = [p[0] for p in self.selected.getPoints()]
@@ -605,6 +634,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.selected = 0
         self.selectedOkToChange = True
         self.sndPath = None
+        self.sndDur = 0.0
         self.amplitude = 1
         self.nchnls = 2
         self.samplingRate = 44100
@@ -831,6 +861,7 @@ class ControlPanel(scrolled.ScrolledPanel):
     def setSelected(self, selected):
         self.playback.tog_traj.SetSelection(selected)
         self.selected = selected
+        self.surface.setSelectedById(selected)
         self.resetPlaybackSliders()
 
     def getSelected(self):
@@ -896,7 +927,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.amplitude = amp
 
     def sendAmp(self):
-        self.parent.sg_audio.server.amp = self.amplitude
+        self.parent.sg_audio.setGlobalAmp(self.amplitude)
             
     def handleLoad(self):
         dlg = wx.FileDialog(self, message="Choose a sound file",
@@ -1247,7 +1278,6 @@ class MainFrame(wx.Frame):
         mainBox.Add(self.controls, 0, wx.EXPAND, 5)
         self.SetSizer(mainBox)
         
-        self.Bind(wx.EVT_SIZE, self.OnResize)        
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
         self.SetTitle('Granulator')
@@ -1262,7 +1292,7 @@ class MainFrame(wx.Frame):
         
         self.Show()
         wx.CallAfter(self.check)
- 
+
     def onRun(self, event):
         self.controls.handleAudio(event)
         
@@ -1358,10 +1388,6 @@ class MainFrame(wx.Frame):
         else:
             self.granulatorControls.SetTitle('Granulator controls')
             self.granulatorControls.Show()
-
-    def OnResize(self, evt):
-        self.controls.drawWaveform()
-        evt.Skip()
 
     def handleUndo(self, evt):
         self.recallTempFile(evt.GetId())
@@ -1459,7 +1485,6 @@ class MainFrame(wx.Frame):
         self.setFillPoints(dict['MainFrame']['fillPoints'])
         self.setEditionLevel(dict['MainFrame']['editionLevel'])
         self.SetSize(dict['MainFrame']['size'])
-        self.OnResize(wx.SizeEvent(dict['MainFrame']['size']))
         ### Control Frame ###
         self.granulatorControls.load(dict['ControlFrame'])
         ### Control panel ###

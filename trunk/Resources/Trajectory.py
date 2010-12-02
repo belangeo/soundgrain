@@ -19,13 +19,53 @@ You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 import wx
-from math import sin, pi, sqrt
+from math import sin, pi, sqrt, floor
 from Resources.Biquad_Filter import BiquadLP
+
+def chooseColour(i, numlines=24):
+    def clip(x):
+        val = int(x*255)
+        if val < 0: val = 0
+        elif val > 255: val = 255
+        else: val = val
+        return val
+
+    def colour(i, numlines, sat, bright):        
+        hue = (i / float(numlines)) * 180 + 15
+        if sat == 0:
+            r = g = b = val
+        else:
+            segment = floor(hue / 60) % 6
+            fraction = hue / 60 - segment
+            t1 = bright * (1 - sat)
+            t2 = bright * (1 - (sat * fraction))
+            t3 = bright * (1 - (sat * (1 - fraction)))
+            if segment == 0:
+                r, g, b = bright, t3, t1
+            elif segment == 1:
+                r, g, b = t2, bright, t1
+            elif segment == 2:
+                r, g, b = t1, bright, t3
+            elif segment == 3:
+                r, g, b = t1, t2, bright
+            elif segment == 4:
+                r, g, b = t3, t1, bright
+            elif segment == 5:
+                r, g, b = bright, t1, t2
+        return wx.Colour(clip(r),clip(g),clip(b))
+
+    labelColour = colour(i, numlines, 1, 1)
+    objectColour = colour(i, numlines, .95, .85)
+
+    return objectColour, labelColour
+
 
 class Trajectory:
     def __init__(self, parent, label):
         self.parent = parent
         self.label = label
+        self.id = int(self.label)-1
+        self.colour, self.bordercolour = chooseColour(int(self.label)-1)
         self.activeLp = True
         self.editLevel = 2
         self.timeSpeed = 25
@@ -95,6 +135,15 @@ class Trajectory:
 
     def getLabel(self):
         return self.label
+
+    def getId(self):
+        return self.id
+
+    def getColour(self):
+        return self.colour
+
+    def getBorderColour(self):
+        return self.bordercolour
 
     def setTimeSpeed(self, speed):
         self.timeSpeed = speed
