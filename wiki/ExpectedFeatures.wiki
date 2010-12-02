@@ -60,4 +60,7 @@ This is a short list of features that I want to add during the development of ve
 
 - Automation on trajectory's position
 
+- MIDI support (each note adds a trajectory with a memorized shape)
+
+
 - Algorithmic behavior of trajectory (oscillation, jittering, physical modeling, ...)
