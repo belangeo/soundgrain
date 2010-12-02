@@ -299,6 +299,36 @@ class Module(wx.Frame):
 
     def handlePosYMax(self, event):
         self.sg_audio.pos_map.setMax(float(self.tx_pos_ymax.GetValue()))
+
+    def getPanCheck(self):
+        return self.tx_ypan_ch.GetValue()
+
+    def setPanCheck(self, value):
+        self.tx_ypan_ch.SetValue(value)
+        self.sg_audio.setPanCheck(self.tx_ypan_ch.GetValue())
+
+    def handlePanCheck(self, event):
+        self.sg_audio.setPanCheck(self.tx_ypan_ch.GetValue())
+
+    def getPanYMin(self):
+        return float(self.tx_pan_ymin.GetValue())
+
+    def setPanYMin(self, ymin):
+        self.tx_pan_ymin.SetValue(str(ymin))
+        self.sg_audio.pan_map.setMin(float(self.tx_pan_ymin.GetValue()))
+
+    def handlePanYMin(self, event):
+        self.sg_audio.pan_map.setMin(float(self.tx_pan_ymin.GetValue()))
+
+    def getPanYMax(self):
+        return float(self.tx_pan_ymax.GetValue())
+
+    def setPanYMax(self, ymax):
+        self.tx_pan_ymax.SetValue(str(ymax))
+        self.sg_audio.pan_map.setMax(float(self.tx_pan_ymax.GetValue()))
+
+    def handlePanYMax(self, event):
+        self.sg_audio.pan_map.setMax(float(self.tx_pan_ymax.GetValue()))
                      
 class GranulatorFrame(Module): 
     def __init__(self, parent, surface, sg_audio):
@@ -315,7 +345,7 @@ class GranulatorFrame(Module):
         
         self.box1.AddSpacer(10)
         self.sl_overlaps = self.makeSliderBox(self.box1, "Number of grains", 1, 100, self.grainoverlaps, True, self.handleGrainOverlaps)
-        self.sl_pit = self.makeSliderBox(self.box1, "Transposition", 0.5, 2., self.pitch, False, self.handlePitch)
+        self.sl_pit = self.makeSliderBox(self.box1, "Transposition", 0.25, 2., self.pitch, False, self.handlePitch)
         self.sl_size = self.makeSliderBox(self.box1, "Grain size (ms)", 10, 500, self.grainsize, True, self.handleGrainSize)
         self.sl_rnddur = self.makeSliderBox(self.box1, "Grain duration random", 0, 0.5, self.rnddur, False, self.handleRandDur)
         self.sl_rndpos = self.makeSliderBox(self.box1, "Position random", 0, 0.5, self.rndpos, False, self.handleRandPos)
@@ -332,6 +362,8 @@ class GranulatorFrame(Module):
                                                                                 "0.", self.handleDurYMin, "0.5", self.handleDurYMax)
         self.tx_ypos_ch, self.tx_pos_ymin, self.tx_pos_ymax = self.makeYaxisBox(self.box2, "Grains Position random", 0, self.handlePosCheck, 
                                                                                 "0.", self.handlePosYMin, "0.5", self.handlePosYMax)
+        self.tx_ypan_ch, self.tx_pan_ymin, self.tx_pan_ymax = self.makeYaxisBox(self.box2, "Panning", 0, self.handlePanCheck, 
+                                                                                "0.", self.handlePanYMin, "1.", self.handlePanYMax)
         self.panel2.SetSizer(self.box2)
         self.notebook.AddPage(self.panel2, "Y Axis")
         
@@ -363,7 +395,10 @@ class GranulatorFrame(Module):
                 'durYmax': self.getDurYMax(),
                 'posCheck': self.getPosCheck(),
                 'posYmin': self.getPosYMin(),
-                'posYmax': self.getPosYMax()}
+                'posYmax': self.getPosYMax(),
+                'panCheck': self.getPanCheck(),
+                'panYmin': self.getPanYMin(),
+                'panYmax': self.getPanYMax()}
 
     def load(self, dict):
         self.setGrainOverlaps(dict['grainoverlaps'])
@@ -385,3 +420,6 @@ class GranulatorFrame(Module):
         self.setPosCheck(dict['posCheck'])
         self.setPosYMin(dict['posYmin'])
         self.setPosYMax(dict['posYmax'])
+        self.setPanCheck(dict.get('panCheck', False))
+        self.setPanYMin(dict.get('panYmin', 0.))
+        self.setPanYMax(dict.get('panYmax', 1.))

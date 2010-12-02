@@ -31,7 +31,7 @@ def checkForDrivers():
     return driverList, driverIndexes, selectedDriver
 
 class Granulator_Stream:
-    def __init__(self, order, env, trans_noise, dur_noise, num_grains, amplitude, clock_func, srScale):
+    def __init__(self, order, env, trans_noise, dur_noise, num_grains, amplitude, clock_func, srScale, chnls):
         self.order = order
         self.env = env
         self.trans_noise = trans_noise
@@ -40,6 +40,7 @@ class Granulator_Stream:
         self.amplitude = amplitude
         self.clock_func = clock_func
         self.srScale = srScale
+        self.chnls = chnls
         
         self.metro = Metro(time=0.025)
         self.duration = Noise(mul=0, add=.2)
@@ -47,6 +48,7 @@ class Granulator_Stream:
         self.pitch = SigTo(value=1, time=0.01)
         self.traj_amp = SigTo(value=1, time=0.01, init=1)
         self.amp = SigTo(value=1, time=0.01)
+        self.pan = SigTo(value=0.5, time=0.01)
         self.y_dur = Noise(mul=0)
         self.y_pos = Noise(mul=0)
         self.fader = SigTo(value=0, mul=1./(math.log(self.num_grains)+1.))
@@ -64,6 +66,7 @@ class Granulator_Stream:
                                     grains=self.num_grains, basedur=self.duration.add, 
                                     mul=self.fader*self.amplitude*self.amp*self.traj_amp
                                     ).stop()
+        self.panner = SPan(input=self.granulator, outs=self.chnls, pan=self.pan).stop()                       
 
     def ajustLength(self):
         self.position.mul = self.table.getSize()
@@ -86,7 +89,15 @@ class Granulator_Stream:
             self.granulator.basedur = x
         except:
             pass
-    
+
+    def togglePan(self, state):
+        if state:
+            self.granulator.play()
+            self.panner.out()
+        else:
+            self.granulator.out(self.order)
+            self.panner.stop()    
+
     def setActive(self, val):
         if val == 1:
             self.metro.play()
@@ -109,6 +120,7 @@ class SG_Audio:
         self.num_grains = 8
         self.activeStreams = []
         self.samplingRate = 44100
+        self.globalAmplitude = 1.0
         if PLATFORM == "darwin":
             self.server = Server(sr=self.samplingRate, buffersize=512, duplex=0, audio="coreaudio")
         else:
@@ -121,6 +133,8 @@ class SG_Audio:
         self.dur_map = Map(0, 1, "lin")
         self.pos_check = 0
         self.pos_map = Map(0, 1, "lin")
+        self.pan_check = 0
+        self.pan_map = Map(0, 1, "lin")
 
     def boot(self, driver, chnls, samplingRate):
         self.server.setOutputDevice(driver)
@@ -141,7 +155,7 @@ class SG_Audio:
         self.streams = {}
         for i in range(24):
             self.streams[i] = Granulator_Stream(i, self.env, self.trans_noise, self.dur_noise, 
-                                                self.num_grains, self.amplitude, self.clock, self.srScale)
+                                                self.num_grains, self.amplitude, self.clock, self.srScale, chnls)                                    
         
     def shutdown(self):
         self.server.shutdown()
@@ -178,6 +192,10 @@ class SG_Audio:
         if self.server_started:
             for which in self.activeStreams:
                 self.streams[which].setActive(1)
+
+    def setGlobalAmp(self, val):
+        self.globalAmplitude = val
+        self.server.amp = self.globalAmplitude
 
     def getViewTable(self):
         self.env_extract = []
@@ -228,10 +246,23 @@ class SG_Audio:
             self.streams[which].amp.value = amp
         else:
             self.streams[which].amp.value = 1
+        if self.pan_check:
+            pan = self.pan_map.get(x)
+            self.streams[which].pan.value = pan
+        else:
+            pass
+
+    def setPanCheck(self, state):
+        self.pan_check = state
+        for which in self.activeStreams:
+            self.streams[which].togglePan(state)
 
     def setActive(self, which, val):
-        try: self.streams[which].setActive(val)
-        except: pass 
+        try: 
+            self.streams[which].setActive(val)
+            self.streams[which].togglePan(self.pan_check)
+        except: 
+            pass 
         if val == 1:
             self.activeStreams.append(which)
         else:
@@ -241,9 +272,11 @@ class SG_Audio:
     def start(self):
         for which in self.activeStreams:
             self.streams[which].setActive(1)
+            self.streams[which].togglePan(self.pan_check)
         self.refresh_met.play()
         self.server.start() 
-        self.server_started = True    
+        self.server.amp = self.globalAmplitude
+        self.server_started = True
             
     def stop(self):
         self.refresh_met.stop()
