@@ -15,6 +15,8 @@ This is a short list of features that I want to add during the development of ve
 
 - Grid on the canvas and display of pointer position
 
+- html page for shortcuts and commands
+
 - ~~Selected trajectory:~~
 
     - ~~Add "all"~~
