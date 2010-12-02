@@ -13,7 +13,7 @@ This is a short list of features that I want to add during the development of ve
 
     - infinite reverb
 
-- Selected trajectory:
+- ~~Selected trajectory:~~
 
     - ~~Add "all"~~
 
@@ -25,7 +25,7 @@ This is a short list of features that I want to add during the development of ve
 
 - ~~Add project sampling rate~~
 
-- Record to disk settings:
+- ~~Record to disk settings:~~
 
     - ~~File format, sample type, date and time automatically added to filename~~
 
