@@ -55,3 +55,7 @@ This is a short list of features that I want to add during the development of ve
     - blur to create a moment of confusion and jitter on the trajectory
 
     - trampoline to give a swing to the ball 
+
+- Automation on trajectory's position
+
+- Algorithmic behavior of trajectory (oscillation, jittering, physical modeling, ...)
