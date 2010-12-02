@@ -41,7 +41,8 @@ class Granulator_Stream:
         self.clock_func = clock_func
         self.srScale = srScale
         self.chnls = chnls
-        
+        self.granulator = None
+
         self.metro = Metro(time=0.025)
         self.duration = Noise(mul=0, add=.2)
         self.base_pitch = SigTo(value=1, time=0.01)
@@ -91,6 +92,8 @@ class Granulator_Stream:
             pass
 
     def togglePan(self, state):
+        if self.granulator == None:
+            return
         if state:
             self.granulator.play()
             self.panner.out()
