@@ -13,13 +13,13 @@ This is a short list of features that I want to add during the development of ve
 
     - infinite reverb
 
+- Grid on the canvas and display of pointer position
+
 - ~~Selected trajectory:~~
 
     - ~~Add "all"~~
 
     - ~~Bind Delete key to delete the selected trajectory~~
-
-- Grid on the canvas and display of pointer position
 
 - ~~Remove "Audio on" button, boot and shutdown should be automatic~~
 
@@ -29,9 +29,9 @@ This is a short list of features that I want to add during the development of ve
 
     - ~~File format, sample type, date and time automatically added to filename~~
 
-- Y axis:
+- ~~Y axis:~~
 
-    - Add "pan" control
+    - ~~Add "pan" control~~
 
 - ~~Add audio level per trajectory~~
 
