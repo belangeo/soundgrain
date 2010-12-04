@@ -85,6 +85,7 @@ class Trajectory:
         self.step = 1
         self.lpx = BiquadLP()
         self.lpy = BiquadLP()
+        self.transpo = 1
 
     def clear(self):
         self.type = None
@@ -94,6 +95,7 @@ class Trajectory:
         self.initPoints = []
         self.points = []
         self.circlePos = None
+        self.setTranspo(1.)
 
     def getAttributes(self):
         return {'activeLp': self.activeLp, 
@@ -127,6 +129,14 @@ class Trajectory:
         self.filterCut = dict['filterCut']
         self.setPoints(dict['points'])
 
+    def setTranspo(self, x):
+        self.transpo = x
+        if self.id >= 0:
+            self.parent.parent.sg_audio.setTranspo(self.id, self.transpo)
+        
+    def getTranspo(self):
+        return self.transpo
+
     def getFreeze(self):
         return self.freeze
 
@@ -147,7 +157,8 @@ class Trajectory:
 
     def setTimeSpeed(self, speed):
         self.timeSpeed = speed
-        self.parent.parent.sg_audio.setMetroTime(self.label-1, speed * 0.001)
+        if self.id >= 0:
+            self.parent.parent.sg_audio.setMetroTime(self.id, speed * 0.001)
 
     def getTimeSpeed(self):
         return self.timeSpeed
@@ -183,9 +194,9 @@ class Trajectory:
         if state != None:
             self.active = state
         if self.active:
-            self.parent.parent.sg_audio.setActive(self.label-1, 1)
+            self.parent.parent.sg_audio.setActive(self.id, 1)
         else:
-            self.parent.parent.sg_audio.setActive(self.label-1, 0)
+            self.parent.parent.sg_audio.setActive(self.id, 0)
             
     def getActive(self):
         return self.active
@@ -246,7 +257,10 @@ class Trajectory:
             elif self.points[first][1] < self.points[second][1]: ydir = 1
             else: ydir = -1
             
-            p = (int(round(filllpx.filter(self.points[first][0]))), int(round(filllpy.filter(self.points[first][1]))))
+            if self.activeLp:
+                p = (int(round(filllpx.filter(self.points[first][0]))), int(round(filllpy.filter(self.points[first][1]))))
+            else: 
+                p = (self.points[first][0], self.points[first][1])
             if not templist:
                 templist.append(p)
             else:
@@ -256,7 +270,10 @@ class Trajectory:
             if step > 3:       
                 xpt = self.points[first][0] + xdir * xscale
                 ypt = self.points[first][1] + ydir * yscale
-                p = (int(round(filllpx.filter(xpt))),int(round(filllpy.filter(ypt))))
+                if self.activeLp:
+                    p = (int(round(filllpx.filter(xpt))),int(round(filllpy.filter(ypt))))
+                else:
+                    p = (xpt, ypt)    
                 gate = self.removeMatch(templist, p)
                 if gate:
                     templist.append(p)
