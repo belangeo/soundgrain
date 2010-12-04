@@ -46,9 +46,11 @@ class DrawingSurface(wx.Panel):
             self.font = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL)
             self.font_pos = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL)
         self.trajectories = [Trajectory(self, i+1) for i in range(24)]
+        self.memorizedTrajectory = Trajectory(self, -1)
+        self.memorizedId = {}
         self.screenOffset = 2
         self.sndBitmap = None
-        self.selected = None
+        self.selected = self.trajectories[0]
         self.bitmapDict = {}
         self.closed = 0
         self.oscilPeriod = 2
@@ -171,6 +173,75 @@ class DrawingSurface(wx.Panel):
     def setSelected(self, traj):
         self.selected = traj
         self.parent.controls.setSelected(self.selected.getId())
+
+    def Memorize(self):
+        t = self.selected
+        self.memorizedTrajectory.setType(t.getType())
+        self.memorizedTrajectory.setTimeSpeed(t.getTimeSpeed())
+        self.memorizedTrajectory.setStep(t.getStep())
+        self.memorizedTrajectory.activateLp(self.parent.lowpass)
+        self.memorizedTrajectory.setEditionLevel(self.parent.editionLevel)
+        self.memorizedTrajectory.setPoints(t.getPoints())
+        self.memorizedTrajectory.setInitPoints()
+        if self.memorizedTrajectory.getType() not in  ['free', 'line']:
+            self.memorizedTrajectory.setRadius(t.getRadius())
+            self.memorizedTrajectory.setCenter(t.getCenter())
+
+    def addTrajFromMemory(self, index, pitch, normy):
+        t = self.memorizedTrajectory
+        for new_t in self.trajectories:
+            if not new_t.getActive():
+                self.memorizedId[index] = new_t.getId()
+                new_t.setTimeSpeed(t.getTimeSpeed())
+                new_t.setTranspo(pitch)
+                new_t.setStep(t.getStep())
+                new_t.setActive(True)
+                new_t.setType(self.mode)
+                new_t.lpx.reinit()
+                new_t.lpy.reinit()
+                new_t.activateLp(self.parent.lowpass)
+                new_t.setEditionLevel(self.parent.editionLevel)
+                new_t.setPoints(t.getPoints())
+                new_t.setInitPoints()
+                if new_t.getType() == 'free':
+                    pass
+                else:
+                    new_t.setCenter(t.getCenter())
+                    new_t.setRadius(t.getRadius())
+                break
+        Xs = [p[0] for p in new_t.getPoints()]
+        extremeXs = (min(Xs), max(Xs))
+        Ys = [p[1] for p in new_t.getPoints()]
+        extremeYs = (min(Ys), max(Ys))                
+        if new_t.getType() not in  ['free', 'line']:
+            curCenter = new_t.getCenter()
+        downPos = new_t.getFirstPoint()
+        w,h = self.GetSize()
+        normx = pitch*0.25
+        if normx > 1: normx = 1. 
+        x,y = int(normx*w), int((1.-normy)*h)
+        x = downPos[0]
+        if new_t.getType() in ['free', 'line']:
+            offset = (downPos[0] - x, downPos[1] - y)
+            clipedOffset = self.clip(offset, extremeXs, extremeYs)
+            new_t.move(clipedOffset)
+        else:
+            offset = (downPos[0] - x, downPos[1] - y)
+            center, clipedOffset = self.clipCircleMove(new_t.getRadius(), curCenter, offset)
+            new_t.setCenter(center)
+            new_t.move(clipedOffset)
+        self.Refresh()
+
+    def deleteMemorizedTraj(self, index):
+        id = self.memorizedId[index]
+        t = self.trajectories[id]
+        t.clear()
+        if len(self.getActiveTrajectories()) > 0:
+            self.setSelected(self.getActiveTrajectories()[0])
+        else:
+            self.setSelected(self.getTrajectory(0))    
+        self.Refresh()
+        return
 
     def KeyDown(self, evt):
         if evt.GetKeyCode() in [wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE]:
@@ -432,16 +503,16 @@ class DrawingSurface(wx.Panel):
         if not self.sndBitmap:
             dc.SetBrush(wx.Brush(self.backgroundcolor, wx.SOLID))
             dc.Clear()
-            
+
             dc.SetPen(wx.Pen(self.outlinecolor, width=1, style=wx.SOLID))
             dc.DrawRectangle(x, y, w, h)
-    
+
             dc.SetBrush(wx.Brush(self.fillcolor, wx.SOLID))
             dc.SetPen(wx.Pen(self.fillcolor, width=1, style=wx.SOLID))
         else:
             dc.DrawBitmap(self.sndBitmap,0,0)
-        
-        dc.SetPen(wx.Pen(wx.Colour(20,20,20), width=1, style=wx.SOLID))
+
+        dc.SetPen(wx.Pen(wx.Colour(25,25,25), width=1, style=wx.SOLID))
         num = 10
         xstep = w / float(num)
         ystep = h / float(num)
@@ -453,11 +524,8 @@ class DrawingSurface(wx.Panel):
              
         for i, t in enumerate(self.getActiveTrajectories()):
             col = t.getColour()
-            bcol = t.getBorderColour()
             dc.SetBrush(wx.Brush(col, wx.SOLID))
             dc.SetPen(wx.Pen(col, width=1, style=wx.SOLID))
-            #dc.SetBrush(wx.Brush(self.fillcolor, wx.SOLID))
-            #dc.SetPen(wx.Pen(self.fillcolor, width=1, style=wx.SOLID))
             if len(t.getPoints()) > 1:
                 dc.DrawLines(t.getPoints())
                 if t.circlePos:
@@ -470,10 +538,8 @@ class DrawingSurface(wx.Panel):
                         dc.DrawBitmap(bitmario, t.circlePos[0]-8, t.circlePos[1]-8, True)
                 if t.getId() == self.parent.controls.getSelected():
                     dc.SetPen(wx.Pen("#EEEEEE", width=2, style=wx.SOLID))
-                    #dc.SetPen(wx.Pen(wx.Color(255,190,190), width=1, style=wx.SOLID))
                 else:
                     dc.SetPen(wx.Pen(col, width=1, style=wx.SOLID))
-                    #dc.SetPen(wx.Pen(self.fillcolor, width=1, style=wx.SOLID))
                 dc.DrawRoundedRectanglePointSize((t.getFirstPoint()[0],t.getFirstPoint()[1]), (13,13), 2)
                 dc.SetTextForeground("#000000")
                 dc.SetFont(self.font)
@@ -486,9 +552,9 @@ class DrawingSurface(wx.Panel):
             dc.SetTextForeground("#FFFFFF")
             dc.SetFont(self.font_pos)
             xvalue = self.pointerPos[0] / float(w) * self.parent.controls.sndDur
-            yminvalue = self.parent.granulatorControls.getTransYMin()
-            ymaxvalue = self.parent.granulatorControls.getTransYMax()
-            yvalue = (h - self.pointerPos[1]) / float(h) * (ymaxvalue - yminvalue) + yminvalue
+            #yminvalue = self.parent.granulatorControls.getTransYMin()
+            #ymaxvalue = self.parent.granulatorControls.getTransYMax()
+            yvalue = (h - self.pointerPos[1]) / float(h) #* (ymaxvalue - yminvalue) + yminvalue
             dc.DrawText("X: %.3f   Y: %.3f" % (xvalue, yvalue), w-90, h-13)
 
     def clip(self, off, exXs, exYs):
@@ -648,7 +714,7 @@ class ControlPanel(scrolled.ScrolledPanel):
 
         typeBox = wx.BoxSizer(wx.HORIZONTAL)
         popupBox = wx.BoxSizer(wx.VERTICAL)
-        popupBox.Add(wx.StaticText(self, -1, "Type"), 0, wx.CENTER|wx.ALL, 2)
+        #popupBox.Add(wx.StaticText(self, -1, "Type"), 0, wx.CENTER|wx.ALL, 2)
         self.trajType = wx.Choice(self, -1, choices = ['Free', 'Circle', 'Oscil', 'Line'])
         self.trajType.SetSelection(0)
         popupBox.Add(self.trajType)
@@ -658,11 +724,8 @@ class ControlPanel(scrolled.ScrolledPanel):
         font = self.closedToggle.GetFont()
         if PLATFORM in ['win32', 'linux2']:
             font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)        
-        self.closedToggle.SetFont(font)
-        if PLATFORM == 'win32':
-            typeBox.Add(self.closedToggle, 0, wx.TOP, 15 )
-        else:    
-            typeBox.Add(self.closedToggle, 0, wx.TOP, 21 )
+        self.closedToggle.SetFont(font)   
+        typeBox.Add(self.closedToggle, wx.CENTER|wx.RIGHT, 5 )
         box.Add(typeBox, 0, wx.CENTER|wx.ALL, 5)
 
         self.notebook = wx.Notebook(self, -1, style=wx.BK_DEFAULT | wx.EXPAND)
@@ -1254,7 +1317,7 @@ class MainFrame(wx.Frame):
             menuId = 1000 + i
             self.submenu1.Append(menuId, str(level), "", wx.ITEM_RADIO)
             self.Bind(wx.EVT_MENU, self.handlesEditionLevels, id=menuId)
-        self.menu1.AppendMenu(103, "Edition levels", self.submenu1)
+        self.menu1.AppendMenu(999, "Edition levels", self.submenu1)
         self.menu1.InsertSeparator(7)
         self.menu1.Append(103, "Reinit counters\tCtrl+T", "")
         self.Bind(wx.EVT_MENU, self.handleReinit, id=103)
@@ -1262,6 +1325,11 @@ class MainFrame(wx.Frame):
 
         self.menu2 = wx.Menu()
         self.menuBar.Append(self.menu2, "&Audio Drivers")
+
+        self.menu3 = wx.Menu()
+        self.menu3.Append(204, "Memorize shape\tShift+Ctrl+M", "")
+        self.Bind(wx.EVT_MENU, self.handleMemorize, id=204)
+        self.menuBar.Append(self.menu3, "&Midi")
 
         menu4 = wx.Menu()
         helpItem = menu4.Append(400, '&About %s %s' % (NAME, VERSION), 'wxPython RULES!!!')
@@ -1281,7 +1349,7 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
         self.SetTitle('Granulator')
-        self.sg_audio = SG_Audio(self.panel.clock, self.panel.Refresh, self.controls)        
+        self.sg_audio = SG_Audio(self.panel.clock, self.panel.Refresh, self.controls, self.panel.addTrajFromMemory, self.panel.deleteMemorizedTraj)        
         self.granulatorControls = GranulatorFrame(self, self.panel, self.sg_audio)       
         self.createInitTempFile()
 
@@ -1316,6 +1384,9 @@ class MainFrame(wx.Frame):
     def handleReinit(self, evt):
         for t in self.panel.getAllTrajectories():
             t.initCounter()
+
+    def handleMemorize(self, evt):
+        self.panel.Memorize()
 
     def handleDrawWave(self, evt):
         self.draw = self.menu1.IsChecked(100)
@@ -1543,6 +1614,7 @@ class MainFrame(wx.Frame):
             d = self.temps[self.recall]
             for i, t in enumerate(self.panel.getAllTrajectories()):
                 t.setAttributes(eval(d[i]))
+            self.Refresh()    
         if self.recall >= len(self.temps) - 1:
             self.menu1.Enable(110, False)
         else:

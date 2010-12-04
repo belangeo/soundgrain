@@ -47,6 +47,7 @@ class Granulator_Stream:
         self.duration = Noise(mul=0, add=.2)
         self.base_pitch = SigTo(value=1, time=0.01)
         self.pitch = SigTo(value=1, time=0.01)
+        self.transpo = SigTo(value=1, time=0.001)
         self.traj_amp = SigTo(value=1, time=0.01, init=1)
         self.amp = SigTo(value=1, time=0.01)
         self.pan = SigTo(value=0.5, time=0.01)
@@ -61,7 +62,7 @@ class Granulator_Stream:
         self.pos_rnd = pos_rnd
         self.position = SigTo(value=0, time=0.01, mul=self.table.getSize())
         self.y_pos_rnd = Sig(self.y_pos, mul=self.table.getSize())
-        self.granulator = Granulator(table=self.table, env=self.env, pitch=self.base_pitch*self.pitch*self.srScale,
+        self.granulator = Granulator(table=self.table, env=self.env, pitch=self.base_pitch*self.pitch*self.srScale*self.transpo,
                                     pos=self.position+self.pos_rnd+self.y_pos_rnd,
                                     dur=self.duration*self.trans_noise+self.dur_noise+self.y_dur,
                                     grains=self.num_grains, basedur=self.duration.add, 
@@ -115,17 +116,19 @@ class Granulator_Stream:
         self.clock_func(self.order)
 
 class SG_Audio:
-    def __init__(self, clock, refresh, controls):
+    def __init__(self, clock, refresh, controls, createTraj, deleteTraj):
         self.clock = clock
         self.refresh = refresh
         self.controls = controls
+        self.createTraj = createTraj
+        self.deleteTraj = deleteTraj
         self.server_started = False
         self.num_grains = 8
         self.activeStreams = []
         self.samplingRate = 44100
         self.globalAmplitude = 1.0
         if PLATFORM == "darwin":
-            self.server = Server(sr=self.samplingRate, buffersize=512, duplex=0, audio="coreaudio")
+            self.server = Server(sr=self.samplingRate, buffersize=512, duplex=0)
         else:
             self.server = Server(sr=self.samplingRate, buffersize=512, duplex=0)
         self.pitch_check = 1
@@ -146,6 +149,15 @@ class SG_Audio:
         self.server.setSamplingRate(samplingRate)
         self.server._server.setAmpCallable(self.controls.meter)
         self.server.boot()
+        self.notein = Notein(poly=10, scale=2)
+        self.noteinpitch = Sig(self.notein["pitch"])
+        self.noteinvelocity = Sig(self.notein["velocity"])
+        self.noteonThresh = Thresh(self.notein["velocity"])
+        self.noteonfuncs = [self.nf1, self.nf2, self.nf3, self.nf4, self.nf5, self.nf6, self.nf7, self.nf8, self.nf9, self.nf10]
+        self.noteonFunc = TrigFunc(self.noteonThresh, self.noteonfuncs)
+        self.noteoffThresh = Thresh(self.notein["velocity"], threshold=.001, dir=1)
+        self.noteofffuncs = [self.nf11, self.nf22, self.nf33, self.nf44, self.nf55, self.nf66, self.nf77, self.nf88, self.nf99, self.nf1010]
+        self.noteoffFunc = TrigFunc(self.noteoffThresh, self.noteofffuncs)
         self.env = HannTable()
         self.refresh_met = Metro(.05)
         self.refresh_func = TrigFunc(self.refresh_met, self.refresh_screen)
@@ -159,7 +171,7 @@ class SG_Audio:
         for i in range(24):
             self.streams[i] = Granulator_Stream(i, self.env, self.trans_noise, self.dur_noise, 
                                                 self.num_grains, self.amplitude, self.clock, self.srScale, chnls)                                    
-        
+
     def shutdown(self):
         self.server.shutdown()
         self.streams = {}
@@ -221,6 +233,9 @@ class SG_Audio:
 
     def setMetroTime(self, which, x):
         self.streams[which].metro.time = x
+
+    def setTranspo(self, which, x):
+        self.streams[which].transpo.value = x
 
     def setTrajAmplitude(self, which, x):
         self.streams[which].traj_amp.value = x
@@ -288,3 +303,103 @@ class SG_Audio:
 
     def refresh_screen(self): 
         wx.CallAfter(self.refresh)        
+
+    def nf1(self):
+        pits = self.noteinpitch.get(True)
+        vels = self.noteinvelocity.get(True)
+        pit, vel = pits[0], vels[0]
+        self.createTraj(0, pit, vel)
+
+    def nf2(self):
+        pits = self.noteinpitch.get(True)
+        vels = self.noteinvelocity.get(True)
+        pit, vel = pits[1], vels[1]
+        self.createTraj(1, pit, vel)
+
+    def nf3(self):
+        pits = self.noteinpitch.get(True)
+        vels = self.noteinvelocity.get(True)
+        pit, vel = pits[2], vels[2]
+        self.createTraj(2, pit, vel)
+
+    def nf4(self):
+        pits = self.noteinpitch.get(True)
+        vels = self.noteinvelocity.get(True)
+        pit, vel = pits[3], vels[3]
+        self.createTraj(3, pit, vel)
+
+    def nf5(self):
+        pits = self.noteinpitch.get(True)
+        vels = self.noteinvelocity.get(True)
+        pit, vel = pits[4], vels[4]
+        self.createTraj(4, pit, vel)
+
+    def nf6(self):
+        pits = self.noteinpitch.get(True)
+        vels = self.noteinvelocity.get(True)
+        pit, vel = pits[5], vels[5]
+        self.createTraj(5, pit, vel)
+
+    def nf7(self):
+        pits = self.noteinpitch.get(True)
+        vels = self.noteinvelocity.get(True)
+        pit, vel = pits[6], vels[6]
+        self.createTraj(6, pit, vel)
+
+    def nf8(self):
+        pits = self.noteinpitch.get(True)
+        vels = self.noteinvelocity.get(True)
+        pit, vel = pits[7], vels[7]
+        self.createTraj(7, pit, vel)
+
+    def nf9(self):
+        pits = self.noteinpitch.get(True)
+        vels = self.noteinvelocity.get(True)
+        pit, vel = pits[8], vels[8]
+        self.createTraj(8, pit, vel)
+
+    def nf10(self):
+        pits = self.noteinpitch.get(True)
+        vels = self.noteinvelocity.get(True)
+        pit, vel = pits[9], vels[9]
+        self.createTraj(9, pit, vel)
+
+    def nf11(self):
+        vels = self.noteinvelocity.get(True)
+        self.deleteTraj(0)
+        
+    def nf22(self):
+        vels = self.noteinvelocity.get(True)
+        self.deleteTraj(1)
+
+    def nf33(self):
+        vels = self.noteinvelocity.get(True)
+        self.deleteTraj(2)
+
+    def nf44(self):
+        vels = self.noteinvelocity.get(True)
+        self.deleteTraj(3)
+
+    def nf55(self):
+        vels = self.noteinvelocity.get(True)
+        self.deleteTraj(4)
+
+    def nf66(self):
+        vels = self.noteinvelocity.get(True)
+        self.deleteTraj(5)
+
+    def nf77(self):
+        vels = self.noteinvelocity.get(True)
+        self.deleteTraj(6)
+
+    def nf88(self):
+        vels = self.noteinvelocity.get(True)
+        self.deleteTraj(7)
+
+    def nf99(self):
+        vels = self.noteinvelocity.get(True)
+        self.deleteTraj(8)
+
+    def nf1010(self):
+        vels = self.noteinvelocity.get(True)
+        self.deleteTraj(9)
