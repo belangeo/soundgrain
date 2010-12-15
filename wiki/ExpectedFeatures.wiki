@@ -5,15 +5,13 @@ This is a short list of features that I want to add during the development of ve
 
 = Details =
 
-- Fractal trajectories with random choice for path of the ball when lines are splitting.
+- MIDI support (each note adds a trajectory with a memorized shape)
 
 - Temporary effects with circles user can drag and drop on the drawing surface.
 
-    - multitap delays
+    - Delay, Reverb, Harmonizer, RingMod, Waveguide
 
-    - infinite reverb
-
-- Grid on the canvas and display of pointer position
+- ~~Display of pointer position~~
 
 - html page for shortcuts and commands
 
@@ -50,6 +48,9 @@ This is a short list of features that I want to add during the development of ve
 *List of features that I want to add during the development of a future version*
 
 
+- Fractal trajectories with random choice for path of the ball when lines are splitting.
+
+
 - Trajectory Behavior changes with objects user can drag and drop on the drawing surface. 
 
     - wall to change direction of the ball
@@ -60,7 +61,4 @@ This is a short list of features that I want to add during the development of ve
 
 - Automation on trajectory's position
 
-- MIDI support (each note adds a trajectory with a memorized shape)
-
-
-- Algorithmic behavior of trajectory (oscillation, jittering, physical modeling, ...)
+- Algorithmic behavior of trajectories (oscillation, jittering, physical modeling, ...)
