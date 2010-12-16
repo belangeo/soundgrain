@@ -15,6 +15,8 @@ This is a short list of features that I want to add during the development of ve
 
 - html page for shortcuts and commands
 
+- Modulation mask with a .png file
+
 - ~~Selected trajectory:~~
 
     - ~~Add "all"~~
