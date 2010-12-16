@@ -5,11 +5,11 @@ This is a short list of features that I want to add during the development of ve
 
 = Details =
 
-- MIDI support (each note adds a trajectory with a memorized shape)
+- ~~MIDI support (each note adds a trajectory with a memorized shape)~~
 
 - Temporary effects with circles user can drag and drop on the drawing surface.
 
-    - Delay, Reverb, Harmonizer, RingMod, Waveguide
+    - Delay, Reverb, Harmonizer, !RingMod, Waveguide
 
 - ~~Display of pointer position~~
 
