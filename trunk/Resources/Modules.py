@@ -60,10 +60,10 @@ class Module(wx.Frame):
     ########################################################################################################    
     ### First window ###
     ########################################################################################################
-    def makeSliderBox(self, box, label, minval, maxval, val, integer, callback):
+    def makeSliderBox(self, box, label, minval, maxval, val, integer, log, callback):
         box.Add(wx.StaticText(self.panel1, -1, label), 0, wx.LEFT, 10)
         sliderBox = wx.BoxSizer(wx.HORIZONTAL)
-        slider = ControlSlider(self.panel1, minval, maxval, val, size=(250, 16), integer=integer, outFunction=callback)
+        slider = ControlSlider(self.panel1, minval, maxval, val, size=(250, 16), log=log, integer=integer, outFunction=callback)
         sliderBox.Add(slider, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(sliderBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         return slider
@@ -344,12 +344,12 @@ class GranulatorFrame(Module):
         box = wx.BoxSizer(wx.VERTICAL)
         
         self.box1.AddSpacer(10)
-        self.sl_overlaps = self.makeSliderBox(self.box1, "Number of grains", 1, 100, self.grainoverlaps, True, self.handleGrainOverlaps)
-        self.sl_pit = self.makeSliderBox(self.box1, "Transposition", 0.25, 2., self.pitch, False, self.handlePitch)
-        self.sl_size = self.makeSliderBox(self.box1, "Grain size (ms)", 10, 500, self.grainsize, True, self.handleGrainSize)
-        self.sl_rnddur = self.makeSliderBox(self.box1, "Grain duration random", 0, 0.5, self.rnddur, False, self.handleRandDur)
-        self.sl_rndpos = self.makeSliderBox(self.box1, "Position random", 0, 0.5, self.rndpos, False, self.handleRandPos)
-        self.sl_amp = self.makeSliderBox(self.box1, "Amplitude", 0, 4, self.amplitude, False, self.handleAmp)
+        self.sl_overlaps = self.makeSliderBox(self.box1, "Number of grains", 1, 100, self.grainoverlaps, True, False, self.handleGrainOverlaps)
+        self.sl_pit = self.makeSliderBox(self.box1, "Transposition", 0.25, 2., self.pitch, False, False, self.handlePitch)
+        self.sl_size = self.makeSliderBox(self.box1, "Grain size (ms)", 10, 500, self.grainsize, True, False, self.handleGrainSize)
+        self.sl_rnddur = self.makeSliderBox(self.box1, "Grain duration random", 0.001, 0.5, self.rnddur, False, True, self.handleRandDur)
+        self.sl_rndpos = self.makeSliderBox(self.box1, "Position random", 0.001, 0.5, self.rndpos, False, True, self.handleRandPos)
+        self.sl_amp = self.makeSliderBox(self.box1, "Amplitude", 0, 4, self.amplitude, False, False, self.handleAmp)
         self.makeTransBox(self.box1)
         self.panel1.SetSizer(self.box1)
         self.notebook.AddPage(self.panel1, "Granulator")

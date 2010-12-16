@@ -27,6 +27,7 @@ from Resources.audio import *
 from Resources.Modules import *
 from pyolib._wxwidgets import ControlSlider, VuMeter
 from Resources.Trajectory import Trajectory
+from Resources.MidiSettings import MidiSettings
 
 trajTypes = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 
@@ -48,6 +49,9 @@ class DrawingSurface(wx.Panel):
         self.trajectories = [Trajectory(self, i+1) for i in range(24)]
         self.memorizedTrajectory = Trajectory(self, -1)
         self.memorizedId = {}
+        self.midiTranspose = True
+        self.midiXposition = 0
+        self.midiOctaveSpread = 2
         self.screenOffset = 2
         self.sndBitmap = None
         self.selected = self.trajectories[0]
@@ -107,7 +111,16 @@ class DrawingSurface(wx.Panel):
                 y = 1 - t.getPointPos()[1]/h
                 self.parent.sg_audio.setXposition(which, x)
                 self.parent.sg_audio.setYposition(which, y)
-                
+
+    def setMidiTranspose(self, value):
+        self.midiTranspose = value
+
+    def setMidiXposition(self, value):
+        self.midiXposition = value
+
+    def setMidiOctaveSpread(self, value):
+        self.midiOctaveSpread = value
+
     def setOscilPeriod(self, period):
         self.oscilPeriod = period
 
@@ -175,6 +188,7 @@ class DrawingSurface(wx.Panel):
         self.parent.controls.setSelected(self.selected.getId())
 
     def Memorize(self):
+        w,h = self.GetSize()
         t = self.selected
         self.memorizedTrajectory.setType(t.getType())
         self.memorizedTrajectory.setTimeSpeed(t.getTimeSpeed())
@@ -186,6 +200,10 @@ class DrawingSurface(wx.Panel):
         if self.memorizedTrajectory.getType() not in  ['free', 'line']:
             self.memorizedTrajectory.setRadius(t.getRadius())
             self.memorizedTrajectory.setCenter(t.getCenter())
+        if self.midiXposition:
+            off = (w/2) - self.memorizedTrajectory.getFirstPoint()[0]
+            self.memorizedTrajectory.move((off, 0))
+            self.memorizedTrajectory.setInitPoints()
 
     def addTrajFromMemory(self, index, pitch, normy):
         t = self.memorizedTrajectory
@@ -193,7 +211,10 @@ class DrawingSurface(wx.Panel):
             if not new_t.getActive():
                 self.memorizedId[index] = new_t.getId()
                 new_t.setTimeSpeed(t.getTimeSpeed())
-                new_t.setTranspo(pitch)
+                if self.midiTranspose:
+                    new_t.setTranspo(pitch)
+                else:
+                    new_t.setTranspo(1.0)
                 new_t.setStep(t.getStep())
                 new_t.setActive(True)
                 new_t.setType(self.mode)
@@ -217,16 +238,20 @@ class DrawingSurface(wx.Panel):
             curCenter = new_t.getCenter()
         downPos = new_t.getFirstPoint()
         w,h = self.GetSize()
-        normx = pitch*0.25
-        if normx > 1: normx = 1. 
-        x,y = int(normx*w), int((1.-normy)*h)
-        x = downPos[0]
+        if not self.midiXposition:
+            x, y = downPos[0], int((1.-normy)*h)
+        else:
+            if pitch <= 1:
+                normx = int((w/2) - (w * (1. - pitch) / self.midiOctaveSpread))
+            else:
+                normx = int((w/2) + (w * (1. - (1. / pitch)) / self.midiOctaveSpread))
+            x,y = normx, int((1.-normy)*h)
         if new_t.getType() in ['free', 'line']:
             offset = (downPos[0] - x, downPos[1] - y)
             clipedOffset = self.clip(offset, extremeXs, extremeYs)
             new_t.move(clipedOffset)
         else:
-            offset = (downPos[0] - x, downPos[1] - y)
+            offset = (downPos[0] - centerPosOffset - x, downPos[1] - y)
             center, clipedOffset = self.clipCircleMove(new_t.getRadius(), curCenter, offset)
             new_t.setCenter(center)
             new_t.move(clipedOffset)
@@ -552,9 +577,7 @@ class DrawingSurface(wx.Panel):
             dc.SetTextForeground("#FFFFFF")
             dc.SetFont(self.font_pos)
             xvalue = self.pointerPos[0] / float(w) * self.parent.controls.sndDur
-            #yminvalue = self.parent.granulatorControls.getTransYMin()
-            #ymaxvalue = self.parent.granulatorControls.getTransYMax()
-            yvalue = (h - self.pointerPos[1]) / float(h) #* (ymaxvalue - yminvalue) + yminvalue
+            yvalue = (h - self.pointerPos[1]) / float(h)
             dc.DrawText("X: %.3f   Y: %.3f" % (xvalue, yvalue), w-90, h-13)
 
     def clip(self, off, exXs, exYs):
@@ -704,6 +727,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.amplitude = 1
         self.nchnls = 2
         self.samplingRate = 44100
+        self.midiInterface = None
         self.fileformat = 0
         self.sampletype = 0
         self.tempState = None
@@ -1088,7 +1112,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.sampletype = event.GetInt()
 
     def bootServer(self):
-        self.parent.sg_audio.boot(self.parent.audioDriver, self.nchnls, self.samplingRate)
+        self.parent.sg_audio.boot(self.parent.audioDriver, self.nchnls, self.samplingRate, self.midiInterface)
         self.tog_audio.Enable()    
         if self.sndPath != None:
             self.loadSound(self.sndPath)
@@ -1113,6 +1137,7 @@ class ControlPanel(scrolled.ScrolledPanel):
                 self.tx_chnls.SetBackgroundColour("#EEEEEE")
                 self.pop_sr.Disable()
                 self.parent.enableDrivers(False)
+                self.parent.midiSettings.popupInterface.Disable()
                 self.tog_audio.SetLabel('Stop')
                 self.tog_audio.SetValue(1)
                 self.parent.menu.Check(7, True)
@@ -1126,6 +1151,7 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.tx_chnls.SetBackgroundColour("#FFFFFF")
             self.pop_sr.Enable()
             self.parent.enableDrivers(True)
+            self.parent.midiSettings.popupInterface.Enable()
             self.tog_audio.SetLabel('Start')
             self.tog_audio.SetValue(0)
             self.parent.menu.Check(7, False)
@@ -1329,6 +1355,8 @@ class MainFrame(wx.Frame):
         self.menu3 = wx.Menu()
         self.menu3.Append(204, "Memorize shape\tShift+Ctrl+M", "")
         self.Bind(wx.EVT_MENU, self.handleMemorize, id=204)
+        self.menu3.Append(205, "Midi Settings...", "")
+        self.Bind(wx.EVT_MENU, self.showMidiSettings, id=205)
         self.menuBar.Append(self.menu3, "&Midi")
 
         menu4 = wx.Menu()
@@ -1351,6 +1379,7 @@ class MainFrame(wx.Frame):
         self.SetTitle('Granulator')
         self.sg_audio = SG_Audio(self.panel.clock, self.panel.Refresh, self.controls, self.panel.addTrajFromMemory, self.panel.deleteMemorizedTraj)        
         self.granulatorControls = GranulatorFrame(self, self.panel, self.sg_audio)       
+        self.midiSettings = MidiSettings(self, self.panel, self.sg_audio)       
         self.createInitTempFile()
 
         if file:
@@ -1376,6 +1405,9 @@ class MainFrame(wx.Frame):
             if driver == selected:
                 self.menu2.Check(menuId, True)
         self.status.SetStatusText('Audio drivers loaded')
+
+    def showMidiSettings(self, evt):
+        self.midiSettings.Show()
 
     def enableDrivers(self, state):
         for i in range(len(self.driversList)):
@@ -1519,6 +1551,8 @@ class MainFrame(wx.Frame):
         saveDict['MainFrame']['size'] = self.GetSizeTuple()
         ### Controls Frame ###
         saveDict['ControlFrame'] = self.granulatorControls.save()
+        ### Midi Frame ###
+        saveDict['MidiSettings'] = self.midiSettings.save()
         ### Control Panel ###
         saveDict['ControlPanel'] = {}
         saveDict['ControlPanel']['type'] = self.controls.getType()
@@ -1537,6 +1571,7 @@ class MainFrame(wx.Frame):
         saveDict['Trajectories'] = {}
         for i, t in enumerate(self.panel.getAllTrajectories()):
             saveDict['Trajectories'][str(i)] = t.getAttributes()
+        saveDict['MemorizedTrajectory'] = self.panel.memorizedTrajectory.getAttributes()
         return saveDict
         
     def saveFile(self, path):
@@ -1558,6 +1593,8 @@ class MainFrame(wx.Frame):
         self.SetSize(dict['MainFrame']['size'])
         ### Control Frame ###
         self.granulatorControls.load(dict['ControlFrame'])
+        ### Midi Frame ###
+        self.midiSettings.load(dict.get("MidiSettings", None))
         ### Control panel ###
         self.controls.setType(dict['ControlPanel']['type'])
         self.controls.setClosed(dict['ControlPanel']['closed'])
@@ -1574,8 +1611,12 @@ class MainFrame(wx.Frame):
         ### Trajectories ###
         for i, t in enumerate(self.panel.getAllTrajectories()):
             t.setAttributes(dict['Trajectories'][str(i)])
-        
+        if dict.has_key('MemorizedTrajectory'):
+            self.panel.memorizedTrajectory.setAttributes(dict['MemorizedTrajectory'])
+
     def loadFile(self, path):
+        if self.midiSettings.IsShown():
+            self.midiSettings.Hide()
         f = open(path, 'r')
         msg = f.read()
         f.close()
@@ -1625,6 +1666,8 @@ class MainFrame(wx.Frame):
             self.menu1.Enable(111, True) 
 
     def OnClose(self, evt):
+        if self.granulatorControls.IsShown():
+            self.granulatorControls.Hide()
         self.controls.meter.OnClose(evt)
         self.sg_audio.server.stop()
         self.controls.shutdownServer()

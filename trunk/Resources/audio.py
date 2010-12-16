@@ -127,6 +127,8 @@ class SG_Audio:
         self.activeStreams = []
         self.samplingRate = 44100
         self.globalAmplitude = 1.0
+        self.midiTriggerMethod = 0
+        self.midiPitches = []
         if PLATFORM == "darwin":
             self.server = Server(sr=self.samplingRate, buffersize=512, duplex=0)
         else:
@@ -142,22 +144,22 @@ class SG_Audio:
         self.pan_check = 0
         self.pan_map = Map(0, 1, "lin")
 
-    def boot(self, driver, chnls, samplingRate):
+    def boot(self, driver, chnls, samplingRate, midiInterface):
         self.server.setOutputDevice(driver)
         self.server.setNchnls(chnls)
         self.samplingRate = samplingRate
         self.server.setSamplingRate(samplingRate)
+        if midiInterface != None:
+            self.server.setMidiInputDevice(midiInterface)
         self.server._server.setAmpCallable(self.controls.meter)
         self.server.boot()
-        self.notein = Notein(poly=10, scale=2)
+        self.notein = Notein(poly=10)
         self.noteinpitch = Sig(self.notein["pitch"])
         self.noteinvelocity = Sig(self.notein["velocity"])
         self.noteonThresh = Thresh(self.notein["velocity"])
-        self.noteonfuncs = [self.nf1, self.nf2, self.nf3, self.nf4, self.nf5, self.nf6, self.nf7, self.nf8, self.nf9, self.nf10]
-        self.noteonFunc = TrigFunc(self.noteonThresh, self.noteonfuncs)
+        self.noteonFunc = TrigFunc(self.noteonThresh, self.noteon, range(10))
         self.noteoffThresh = Thresh(self.notein["velocity"], threshold=.001, dir=1)
-        self.noteofffuncs = [self.nf11, self.nf22, self.nf33, self.nf44, self.nf55, self.nf66, self.nf77, self.nf88, self.nf99, self.nf1010]
-        self.noteoffFunc = TrigFunc(self.noteoffThresh, self.noteofffuncs)
+        self.noteoffFunc = TrigFunc(self.noteoffThresh, self.noteoff, range(10))
         self.env = HannTable()
         self.refresh_met = Metro(.05)
         self.refresh_func = TrigFunc(self.refresh_met, self.refresh_screen)
@@ -217,6 +219,12 @@ class SG_Audio:
         for i in range(len(self.table)):
             self.env_extract.append([math.fabs(x) for i, x in enumerate(self.table[i].getTable()) if i % 64 == 0])
         return self.env_extract
+
+    def setMidiMethod(self, value):
+        self.midiTriggerMethod = value
+
+    def getMidiMethod(self):
+        return self.midiTriggerMethod
 
     def setNumGrains(self, x):
         self.num_grains = x
@@ -304,102 +312,23 @@ class SG_Audio:
     def refresh_screen(self): 
         wx.CallAfter(self.refresh)        
 
-    def nf1(self):
-        pits = self.noteinpitch.get(True)
-        vels = self.noteinvelocity.get(True)
-        pit, vel = pits[0], vels[0]
-        self.createTraj(0, pit, vel)
+    def noteon(self, voice):
+        if self.midiTriggerMethod == 0:
+            pits = self.noteinpitch.get(True)
+            vels = self.noteinvelocity.get(True)
+            pit, vel = midiToTranspo(pits[voice]), vels[voice]
+            self.createTraj(voice, pit, vel)
+        elif self.midiTriggerMethod == 1:
+            pits = self.noteinpitch.get(True)
+            vels = self.noteinvelocity.get(True)
+            pit, vel = pits[voice], vels[voice]
+            if pit not in self.midiPitches:
+                self.midiPitches.append(pit)
+                self.createTraj(pit, midiToTranspo(pit), vel)
+            else:
+                self.midiPitches.remove(pit)
+                self.deleteTraj(pit)
 
-    def nf2(self):
-        pits = self.noteinpitch.get(True)
-        vels = self.noteinvelocity.get(True)
-        pit, vel = pits[1], vels[1]
-        self.createTraj(1, pit, vel)
-
-    def nf3(self):
-        pits = self.noteinpitch.get(True)
-        vels = self.noteinvelocity.get(True)
-        pit, vel = pits[2], vels[2]
-        self.createTraj(2, pit, vel)
-
-    def nf4(self):
-        pits = self.noteinpitch.get(True)
-        vels = self.noteinvelocity.get(True)
-        pit, vel = pits[3], vels[3]
-        self.createTraj(3, pit, vel)
-
-    def nf5(self):
-        pits = self.noteinpitch.get(True)
-        vels = self.noteinvelocity.get(True)
-        pit, vel = pits[4], vels[4]
-        self.createTraj(4, pit, vel)
-
-    def nf6(self):
-        pits = self.noteinpitch.get(True)
-        vels = self.noteinvelocity.get(True)
-        pit, vel = pits[5], vels[5]
-        self.createTraj(5, pit, vel)
-
-    def nf7(self):
-        pits = self.noteinpitch.get(True)
-        vels = self.noteinvelocity.get(True)
-        pit, vel = pits[6], vels[6]
-        self.createTraj(6, pit, vel)
-
-    def nf8(self):
-        pits = self.noteinpitch.get(True)
-        vels = self.noteinvelocity.get(True)
-        pit, vel = pits[7], vels[7]
-        self.createTraj(7, pit, vel)
-
-    def nf9(self):
-        pits = self.noteinpitch.get(True)
-        vels = self.noteinvelocity.get(True)
-        pit, vel = pits[8], vels[8]
-        self.createTraj(8, pit, vel)
-
-    def nf10(self):
-        pits = self.noteinpitch.get(True)
-        vels = self.noteinvelocity.get(True)
-        pit, vel = pits[9], vels[9]
-        self.createTraj(9, pit, vel)
-
-    def nf11(self):
-        vels = self.noteinvelocity.get(True)
-        self.deleteTraj(0)
-        
-    def nf22(self):
-        vels = self.noteinvelocity.get(True)
-        self.deleteTraj(1)
-
-    def nf33(self):
-        vels = self.noteinvelocity.get(True)
-        self.deleteTraj(2)
-
-    def nf44(self):
-        vels = self.noteinvelocity.get(True)
-        self.deleteTraj(3)
-
-    def nf55(self):
-        vels = self.noteinvelocity.get(True)
-        self.deleteTraj(4)
-
-    def nf66(self):
-        vels = self.noteinvelocity.get(True)
-        self.deleteTraj(5)
-
-    def nf77(self):
-        vels = self.noteinvelocity.get(True)
-        self.deleteTraj(6)
-
-    def nf88(self):
-        vels = self.noteinvelocity.get(True)
-        self.deleteTraj(7)
-
-    def nf99(self):
-        vels = self.noteinvelocity.get(True)
-        self.deleteTraj(8)
-
-    def nf1010(self):
-        vels = self.noteinvelocity.get(True)
-        self.deleteTraj(9)
+    def noteoff(self, voice):
+        if self.midiTriggerMethod == 0:
+            self.deleteTraj(voice)
