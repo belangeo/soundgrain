@@ -23,7 +23,7 @@ from constants import BACKGROUND_COLOUR
 from pyo import *
 
 class MidiSettings(wx.Frame):
-    def __init__(self, parent, surface, sg_audio):
+    def __init__(self, parent, surface, sg_audio, miDriver):
         wx.Frame.__init__(self, parent, -1, "Midi Settings")
         menuBar = wx.MenuBar()
         self.menu = wx.Menu()
@@ -49,12 +49,21 @@ class MidiSettings(wx.Frame):
         box.Add(wx.StaticText(self.panel, id=-1, label="Midi interface"), 0, wx.CENTER|wx.ALL, 2)
         self.interfaceList, self.interfaceIndexes = pm_get_input_devices()
         if self.interfaceList != []:
-            self.selectedInterface = pm_get_default_input()
+            selected = pm_get_default_input()
+            if miDriver == None:
+                self.selectedInterface = selected
+            else:
+                if miDriver in self.interfaceList:
+                    self.selectedInterface = self.interfaceIndexes[self.interfaceList.index(miDriver)]
+                else:
+                    self.selectedInterface = selected                    
             self.popupInterface = wx.Choice(self.panel, id=-1, size=(200, 20), choices=self.interfaceList)
             if self.selectedInterface:
                 self.popupInterface.SetSelection(self.interfaceIndexes.index(self.selectedInterface))
             self.popupInterface.Bind(wx.EVT_CHOICE, self.changeInterface)
-        else:    
+            self.parent.controls.midiInterface = self.selectedInterface
+        else:
+            self.selectedInterface = None
             self.popupInterface = wx.Choice(self.panel, id=-1, size=(200, -1), choices=["No interface"])
         box.Add(self.popupInterface, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
 
@@ -93,8 +102,15 @@ class MidiSettings(wx.Frame):
     def handleClose(self, event):
         self.Show(False)
 
+    def getInterface(self):
+        if self.selectedInterface == None:
+            return None
+        else:
+            return self.interfaceList[self.interfaceIndexes.index(self.selectedInterface)]
+
     def changeInterface(self, evt):
-        self.parent.controls.midiInterface = self.popupInterface.GetSelection()
+        self.selectedInterface = self.popupInterface.GetSelection()
+        self.parent.controls.midiInterface = self.selectedInterface
         self.parent.controls.shutdownServer()
         self.parent.controls.bootServer()
 

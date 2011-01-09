@@ -1527,7 +1527,17 @@ class MainFrame(wx.Frame):
         self.menuBar.Append(menu5, '&Help')
 
         self.SetMenuBar(self.menuBar)
-       
+
+        preffile = os.path.join(os.path.expanduser("~"), ".soundgrain-init")
+        if os.path.isfile(preffile):
+            with open(preffile, "r") as f:
+                lines = f.readlines()
+                auDriver = lines[0].split("=")[1].replace("\n", "")
+                miDriver = lines[1].split("=")[1].replace("\n", "")
+        else:
+            auDriver = None
+            miDriver = None
+
         mainBox = wx.BoxSizer(wx.HORIZONTAL)
         self.panel = DrawingSurface(self)
         self.controls = ControlPanel(self, self.panel)
@@ -1539,35 +1549,40 @@ class MainFrame(wx.Frame):
 
         self.SetTitle('Granulator')
         self.envelopeFrame = EnvelopeFrame(self)
-        self.sg_audio = SG_Audio(self.panel.clock, self.panel.Refresh, self.controls, self.panel.addTrajFromMemory, 
-                                 self.panel.deleteMemorizedTraj, self.envelopeFrame)        
-        self.granulatorControls = GranulatorFrame(self, self.panel, self.sg_audio)       
-        self.midiSettings = MidiSettings(self, self.panel, self.sg_audio)       
+        self.sg_audio = SG_Audio(self.panel.clock, self.panel.Refresh, self.controls, self.panel.addTrajFromMemory,
+                                 self.panel.deleteMemorizedTraj, self.envelopeFrame)
+        self.granulatorControls = GranulatorFrame(self, self.panel, self.sg_audio)
+        self.midiSettings = MidiSettings(self, self.panel, self.sg_audio, miDriver)
         self.createInitTempFile()
 
         if file:
             self.loadFile(file)
 
-        self.controls.bootServer()
-        
         self.Show()
-        wx.CallAfter(self.check)
+        wx.CallAfter(self.check, auDriver)
 
     def onRun(self, event):
         self.controls.handleAudio(event)
         
-    def check(self):
+    def check(self, pref=None):
         self.status.SetStatusText('Scanning audio drivers...')
         self.driversList, self.driverIndexes, selected = checkForDrivers()
-        self.audioDriver = selected
+        if pref == None:
+            self.audioDriver = selected
+        else:
+            if pref in self.driversList:
+                self.audioDriver = self.driverIndexes[self.driversList.index(pref)]
+            else:
+                self.audioDriver = selected
         
         for i, driver in enumerate(self.driversList):
             menuId = 200 + i
             self.menu2.Append(menuId, driver, "", wx.ITEM_RADIO)
             self.Bind(wx.EVT_MENU, self.handleDriver, id=menuId)
-            if driver == selected:
+            if driver == self.driversList[self.driverIndexes.index(self.audioDriver)]:
                 self.menu2.Check(menuId, True)
         self.status.SetStatusText('Audio drivers loaded')
+        self.controls.bootServer()
 
     def showMidiSettings(self, evt):
         self.midiSettings.Show()
@@ -1852,6 +1867,11 @@ class MainFrame(wx.Frame):
             self.menu1.Enable(111, True) 
 
     def OnClose(self, evt):
+        auDriver = self.driversList[self.driverIndexes.index(self.audioDriver)]
+        miDriver = self.midiSettings.getInterface()
+        with open(os.path.join(os.path.expanduser("~"), ".soundgrain-init"), "w") as f:
+            f.write("audioDriver=%s\n" % auDriver)
+            f.write("midiDriver=%s\n" % miDriver)
         if self.granulatorControls.IsShown():
             self.granulatorControls.Hide()
         self.controls.meter.OnClose(evt)
