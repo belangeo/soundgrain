@@ -22,6 +22,7 @@ import wx
 from wx.lib.wordwrap import wordwrap
 import  wx.lib.scrolledpanel as scrolled
 import wx.html
+import wx.richtext
 
 from Resources.constants import *
 from Resources.audio import *
@@ -1863,8 +1864,11 @@ class MainFrame(wx.Frame):
         self.status.SetStatusText(text)
 
     def openCommandsPage(self, event):
-        self.commands = CommandsPage(self)
-        self.commands.Show()
+        f = os.path.join(RESOURCES_PATH, "commands.pdf")
+        if sys.platform == 'win32':
+            os.startfile(f)
+        else:
+            os.system('open %s' % f)
 
     def showAbout(self, evt):
         info = wx.AboutDialogInfo()
@@ -1900,23 +1904,6 @@ class MainFrame(wx.Frame):
         info.SetWebSite('http://code.google.com/p/soundgrain')
         info.SetLicence(licence)
         wx.AboutBox(info)
-
-class CommandsPage(wx.Frame):
-    def __init__(self, parent, size=(600, 600)):
-        wx.Frame.__init__(self, parent, size=size)
-        menuBar = wx.MenuBar()
-        menu = wx.Menu()
-        menu.Append(1, "Close\tCtrl-W", "Close this window")
-        self.Bind(wx.EVT_MENU, self.OnTimeToClose, id=1)
-        menuBar.Append(menu, "&File")
-        self.SetMenuBar(menuBar)
-
-        self.html1 = wx.html.HtmlWindow(self, -1, size=size)
-        self.html1.LoadPage(os.path.join(RESOURCES_PATH, "commands.html"))
-        self.SetFocus()
-
-    def OnTimeToClose(self, evt):
-        self.Destroy()
 
 class SoundGrainApp(wx.PySimpleApp):
     def __init__(self, *args, **kwargs):
