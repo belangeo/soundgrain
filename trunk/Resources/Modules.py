@@ -69,8 +69,9 @@ class Module(wx.Frame):
         return slider
 
     def handleGrainOverlaps(self, val):
-        self.grainoverlaps = val
-        self.sg_audio.setNumGrains(self.grainoverlaps)
+        if val != self.grainoverlaps:
+            self.grainoverlaps = val
+            self.sg_audio.setNumGrains(self.grainoverlaps)
 
     def getGrainOverlaps(self):
         return self.grainoverlaps
@@ -128,18 +129,6 @@ class Module(wx.Frame):
         self.sl_rndpos.SetValue(self.rndpos)
         self.sg_audio.pos_noise.mul = self.rndpos
 
-    def handleAmp(self, val):
-        self.amplitude = val
-        self.sg_audio.amplitude.value = self.amplitude
-
-    def getAmp(self):
-        return self.amplitude
-
-    def setAmp(self, amp):
-        self.amplitude = amp
-        self.sl_amp.SetValue(self.amplitude)
-        self.sg_audio.amplitude.value = self.amplitude
-
     def makeTransBox(self, box):
         box.Add(wx.StaticText(self.panel1, -1, "Random transposition per grain"), 0, wx.CENTER|wx.TOP, 5)
         box.Add(wx.StaticText(self.panel1, -1, "List of transposition ratios"), 0, wx.CENTER|wx.TOP, 1)
@@ -177,7 +166,8 @@ class Module(wx.Frame):
         tx_max = wx.TextCtrl(self.panel2, -1, maxval, size=(50, -1), style=wx.TE_PROCESS_ENTER)
         tx_max.Bind(wx.EVT_TEXT_ENTER, max_callback)
         textBox.Add(tx_max, 0, wx.RIGHT, 20)
-        box.Add(textBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        box.Add(textBox, 0, wx.LEFT | wx.RIGHT, 10)
+        box.AddSpacer(5)
         return tx_check, tx_min, tx_max
 
     def getTransCheck(self):
@@ -254,11 +244,17 @@ class Module(wx.Frame):
         return float(self.tx_dur_ymin.GetValue())
 
     def setDurYMin(self, ymin):
+        if ymin <= 0.:
+            ymin = 0.001
         self.tx_dur_ymin.SetValue(str(ymin))
         self.sg_audio.dur_map.setMin(float(self.tx_dur_ymin.GetValue()))
 
     def handleDurYMin(self, event):
-        self.sg_audio.dur_map.setMin(float(self.tx_dur_ymin.GetValue()))
+        ymin = float(self.tx_dur_ymin.GetValue())
+        if ymin <= 0.:
+            ymin = 0.001
+            self.tx_dur_ymin.SetValue(str(ymin))
+        self.sg_audio.dur_map.setMin(ymin)
 
     def getDurYMax(self):
         return float(self.tx_dur_ymax.GetValue())
@@ -284,11 +280,17 @@ class Module(wx.Frame):
         return float(self.tx_pos_ymin.GetValue())
 
     def setPosYMin(self, ymin):
+        if ymin <= 0.:
+            ymin = 0.001
         self.tx_pos_ymin.SetValue(str(ymin))
         self.sg_audio.pos_map.setMin(float(self.tx_pos_ymin.GetValue()))
 
     def handlePosYMin(self, event):
-        self.sg_audio.pos_map.setMin(float(self.tx_pos_ymin.GetValue()))
+        ymin = float(self.tx_pos_ymin.GetValue())
+        if ymin <= 0.:
+            ymin = 0.001
+            self.tx_pos_ymin.SetValue(str(ymin))
+        self.sg_audio.pos_map.setMin(ymin)
 
     def getPosYMax(self):
         return float(self.tx_pos_ymax.GetValue())
@@ -349,7 +351,6 @@ class GranulatorFrame(Module):
         self.sl_size = self.makeSliderBox(self.box1, "Grain size (ms)", 10, 500, self.grainsize, True, False, self.handleGrainSize)
         self.sl_rnddur = self.makeSliderBox(self.box1, "Grain duration random", 0.001, 0.5, self.rnddur, False, True, self.handleRandDur)
         self.sl_rndpos = self.makeSliderBox(self.box1, "Position random", 0.001, 0.5, self.rndpos, False, True, self.handleRandPos)
-        self.sl_amp = self.makeSliderBox(self.box1, "Amplitude", 0, 4, self.amplitude, False, False, self.handleAmp)
         self.makeTransBox(self.box1)
         self.panel1.SetSizer(self.box1)
         self.notebook.AddPage(self.panel1, "Granulator")
@@ -359,9 +360,9 @@ class GranulatorFrame(Module):
         self.tx_yamp_ch, self.tx_amp_ymin, self.tx_amp_ymax = self.makeYaxisBox(self.box2, "Amplitude", 0, self.handleAmpCheck, 
                                                                                 "0.", self.handleAmpYMin, "1.", self.handleAmpYMax)
         self.tx_ydur_ch, self.tx_dur_ymin, self.tx_dur_ymax = self.makeYaxisBox(self.box2, "Grains duration random", 0, self.handleDurCheck, 
-                                                                                "0.", self.handleDurYMin, "0.5", self.handleDurYMax)
+                                                                                "0.001", self.handleDurYMin, "0.5", self.handleDurYMax)
         self.tx_ypos_ch, self.tx_pos_ymin, self.tx_pos_ymax = self.makeYaxisBox(self.box2, "Grains Position random", 0, self.handlePosCheck, 
-                                                                                "0.", self.handlePosYMin, "0.5", self.handlePosYMax)
+                                                                                "0.001", self.handlePosYMin, "0.5", self.handlePosYMax)
         self.tx_ypan_ch, self.tx_pan_ymin, self.tx_pan_ymax = self.makeYaxisBox(self.box2, "Panning", 0, self.handlePanCheck, 
                                                                                 "0.", self.handlePanYMin, "1.", self.handlePanYMax)
         self.panel2.SetSizer(self.box2)
@@ -382,7 +383,6 @@ class GranulatorFrame(Module):
                 'pitch': self.getPitch(),
                 'rnddur': self.getRandDur(),
                 'rndpos': self.getRandPos(),
-                'amp': self.getAmp(),
                 'trans': self.getTrans(),
                 'transCheck': self.getTransCheck(),
                 'transYmin': self.getTransYMin(),
@@ -406,7 +406,6 @@ class GranulatorFrame(Module):
         self.setGrainSize(dict['grainsize'])
         self.setRandDur(dict['rnddur'])
         self.setRandPos(dict['rndpos'])
-        self.setAmp(dict['amp'])
         self.setTrans(dict['trans'])
         self.setTransCheck(dict['transCheck'])
         self.setTransYMin(dict['transYmin'])

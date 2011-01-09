@@ -17,9 +17,11 @@ You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import math, time, wx
+import math, time, random, wx
 from constants import *
 from pyo import *
+
+USE_MIDI = True
 
 def soundInfo(sndfile):
     num_frames, dur, samprate, chans = sndinfo(sndfile)
@@ -30,45 +32,68 @@ def checkForDrivers():
     selectedDriver = pa_get_default_output()
     return driverList, driverIndexes, selectedDriver
 
+class Fx:
+    def __init__(self, input, fx=0, chnls=2):
+        self.input = input
+        self.fx = fx
+        if fx == 0:
+            self.process = WGVerb(self.input, feedback=.95, cutoff=5000, mix=1, mul=.7)
+        elif fx == 1:
+            self.process = Delay(self.input, delay=.1, feedback=.75)
+        elif fx == 2:
+            self.process = Disto(self.input, drive=.9, slope=.75, mul=.2)
+        elif fx == 3:
+            self.process = Waveguide(self.input, freq=100, dur=30, mul=.5)
+        elif fx == 4:
+            self.rsine = Sine(freq=100)
+            self.process = self.input * self.rsine
+        elif fx == 5:
+            self.process = Degrade(self.input, bitdepth=8, srscale=0.25)
+        elif fx == 6:
+            self.process = Harmonizer(self.input, transpo=-7, feedback=0.25)
+        self.pan = SPan(self.process, outs=chnls, pan=0.5).out()
+
 class Granulator_Stream:
-    def __init__(self, order, env, trans_noise, dur_noise, num_grains, amplitude, clock_func, srScale, chnls):
+    def __init__(self, order, env, trans_noise, dur_noise, num_grains, clock_func, srScale, chnls):
         self.order = order
         self.env = env
         self.trans_noise = trans_noise
         self.dur_noise = dur_noise
         self.num_grains = num_grains
-        self.amplitude = amplitude
         self.clock_func = clock_func
         self.srScale = srScale
         self.chnls = chnls
         self.granulator = None
+        self.panner = None
 
         self.metro = Metro(time=0.025)
-        self.duration = Noise(mul=0, add=.2)
+        #self.duration = Noise(mul=0, add=.2)
+        self.duration = Randh(min=-1, max=1, freq=200, mul=0, add=.2)
         self.base_pitch = SigTo(value=1, time=0.01)
-        self.pitch = SigTo(value=1, time=0.01)
         self.transpo = SigTo(value=1, time=0.001)
         self.traj_amp = SigTo(value=1, time=0.01, init=1)
-        self.amp = SigTo(value=1, time=0.01)
-        self.pan = SigTo(value=0.5, time=0.01)
-        self.y_dur = Noise(mul=0)
-        self.y_pos = Noise(mul=0)
+        self.y_pit = SigTo(value=1, time=0.01)
+        self.y_amp = SigTo(value=1, time=0.01)
+        self.y_pan = SigTo(value=0.5, time=0.01)
+        #self.y_dur = Noise(mul=0)
+        self.y_dur = Randh(min=-1, max=1, freq=201, mul=0)
+        #self.y_pos = Noise(mul=0)
+        self.y_pos = Randh(min=-1, max=1, freq=202, mul=0)
         self.fader = SigTo(value=0, mul=1./(math.log(self.num_grains)+1.))
-
-        self.trigger = TrigFunc(self.metro, self.click)
+        self.trigger = TrigFunc(self.metro, self.clock_func, self.order)
 
     def create_granulator(self, table, pos_rnd):
         self.table = table
         self.pos_rnd = pos_rnd
         self.position = SigTo(value=0, time=0.01, mul=self.table.getSize())
         self.y_pos_rnd = Sig(self.y_pos, mul=self.table.getSize())
-        self.granulator = Granulator(table=self.table, env=self.env, pitch=self.base_pitch*self.pitch*self.srScale*self.transpo,
+        self.granulator = Granulator(table=self.table, env=self.env, pitch=self.base_pitch*self.y_pit*self.srScale*self.transpo,
                                     pos=self.position+self.pos_rnd+self.y_pos_rnd,
                                     dur=self.duration*self.trans_noise+self.dur_noise+self.y_dur,
                                     grains=self.num_grains, basedur=self.duration.add, 
-                                    mul=self.fader*self.amplitude*self.amp*self.traj_amp
+                                    mul=self.fader*self.y_amp*self.traj_amp
                                     ).stop()
-        self.panner = SPan(input=self.granulator, outs=self.chnls, pan=self.pan).stop()                       
+        self.panner = SPan(input=self.granulator, outs=self.chnls, pan=self.y_pan).stop()                       
 
     def ajustLength(self):
         self.position.mul = self.table.getSize()
@@ -112,25 +137,24 @@ class Granulator_Stream:
             self.granulator.stop()
             self.fader.value = 0
 
-    def click(self):
-        self.clock_func(self.order)
-
 class SG_Audio:
-    def __init__(self, clock, refresh, controls, createTraj, deleteTraj):
+    def __init__(self, clock, refresh, controls, createTraj, deleteTraj, envFrame):
         self.clock = clock
         self.refresh = refresh
         self.controls = controls
         self.createTraj = createTraj
         self.deleteTraj = deleteTraj
+        self.envFrame = envFrame
         self.server_started = False
         self.num_grains = 8
         self.activeStreams = []
+        self.fxs = {}
         self.samplingRate = 44100
         self.globalAmplitude = 1.0
         self.midiTriggerMethod = 0
         self.midiPitches = []
         if PLATFORM == "darwin":
-            self.server = Server(sr=self.samplingRate, buffersize=512, duplex=0)
+            self.server = Server(sr=self.samplingRate, buffersize=1024, duplex=0, audio="coreaudio")
         else:
             self.server = Server(sr=self.samplingRate, buffersize=512, duplex=0)
         self.pitch_check = 1
@@ -138,9 +162,9 @@ class SG_Audio:
         self.amp_check = 0
         self.amp_map = Map(0, 1, "lin")
         self.dur_check = 0
-        self.dur_map = Map(0, 1, "lin")
+        self.dur_map = Map(0.001, 1, "log")
         self.pos_check = 0
-        self.pos_map = Map(0, 1, "lin")
+        self.pos_map = Map(0.001, 1, "log")
         self.pan_check = 0
         self.pan_map = Map(0, 1, "lin")
 
@@ -153,27 +177,30 @@ class SG_Audio:
             self.server.setMidiInputDevice(midiInterface)
         self.server._server.setAmpCallable(self.controls.meter)
         self.server.boot()
-        self.notein = Notein(poly=10)
-        self.noteinpitch = Sig(self.notein["pitch"])
-        self.noteinvelocity = Sig(self.notein["velocity"])
-        self.noteonThresh = Thresh(self.notein["velocity"])
-        self.noteonFunc = TrigFunc(self.noteonThresh, self.noteon, range(10))
-        self.noteoffThresh = Thresh(self.notein["velocity"], threshold=.001, dir=1)
-        self.noteoffFunc = TrigFunc(self.noteoffThresh, self.noteoff, range(10))
-        self.env = HannTable()
-        self.refresh_met = Metro(.05)
+        self.mixer = Mixer(outs=8, chnls=chnls)
+        if USE_MIDI:
+            self.notein = Notein(poly=10)
+            self.noteinpitch = Sig(self.notein["pitch"])
+            self.noteinvelocity = Sig(self.notein["velocity"])
+            self.noteonThresh = Thresh(self.notein["velocity"])
+            self.noteonFunc = TrigFunc(self.noteonThresh, self.noteon, range(10))
+            self.noteoffThresh = Thresh(self.notein["velocity"], threshold=.001, dir=1)
+            self.noteoffFunc = TrigFunc(self.noteoffThresh, self.noteoff, range(10))
+        self.env = CosTable([(0,0),(4095,1),(8191,0)])
+        self.envFrame.setEnv(self.env)
+        self.refresh_met = Metro(.06)
         self.refresh_func = TrigFunc(self.refresh_met, self.refresh_screen)
-        self.pos_noise = Noise(0)
-        self.dur_noise = Noise(0)
+        #self.pos_noise = Noise(0)
+        self.pos_noise = Randh(min=-1, max=1, freq=199, mul=0)
+        #self.dur_noise = Noise(0)
+        self.dur_noise = Randh(min=-1, max=1, freq=198, mul=0)
         self.srScale = Sig(1)
-        self.trans_noise = Choice([1], freq=1000)
-        self.amplitude = SigTo(0.7)
-        self.rec_inc = 0
+        self.trans_noise = Choice([1], freq=500)
         self.streams = {}
         for i in range(24):
             self.streams[i] = Granulator_Stream(i, self.env, self.trans_noise, self.dur_noise, 
-                                                self.num_grains, self.amplitude, self.clock, self.srScale, chnls)                                    
-
+                                                self.num_grains, self.clock, self.srScale, chnls)   
+        
     def shutdown(self):
         self.server.shutdown()
         self.streams = {}
@@ -182,8 +209,16 @@ class SG_Audio:
         del self.refresh_func
         del self.pos_noise
         del self.dur_noise
+        del self.srScale
         del self.trans_noise
-        del self.amplitude
+        if USE_MIDI:
+            del self.notein
+            del self.noteinpitch
+            del self.noteinvelocity
+            del self.noteonThresh
+            del self.noteonFunc
+            del self.noteoffThresh
+            del self.noteoffFunc
 
     def recStart(self, filename, fileformat=0, sampletype=0):
         self.server.recordOptions(fileformat=fileformat, sampletype=sampletype)
@@ -216,8 +251,8 @@ class SG_Audio:
 
     def getViewTable(self):
         self.env_extract = []
-        for i in range(len(self.table)):
-            self.env_extract.append([math.fabs(x) for i, x in enumerate(self.table[i].getTable()) if i % 64 == 0])
+        for j in range(len(self.table)):
+            self.env_extract.append([math.fabs(x) for i, x in enumerate(self.table[j].getTable()) if i % 64 == 0])
         return self.env_extract
 
     def setMidiMethod(self, value):
@@ -254,9 +289,9 @@ class SG_Audio:
     def setYposition(self, which, x):
         if self.pitch_check:
             pit = self.pitch_map.get(x)
-            self.streams[which].pitch.value = pit
+            self.streams[which].y_pit.value = pit
         else:
-            self.streams[which].pitch.value = 1
+            self.streams[which].y_pit.value = 1
         if self.dur_check:
             dur = self.dur_map.get(x)
             self.streams[which].y_dur.mul = dur
@@ -269,12 +304,12 @@ class SG_Audio:
             self.streams[which].y_pos.mul = 0
         if self.amp_check:
             amp = self.amp_map.get(x)
-            self.streams[which].amp.value = amp
+            self.streams[which].y_amp.value = amp
         else:
-            self.streams[which].amp.value = 1
+            self.streams[which].y_amp.value = 1
         if self.pan_check:
             pan = self.pan_map.get(x)
-            self.streams[which].pan.value = pan
+            self.streams[which].y_pan.value = pan
         else:
             pass
 
@@ -290,15 +325,70 @@ class SG_Audio:
         except: 
             pass 
         if val == 1:
-            self.activeStreams.append(which)
+            if which not in self.activeStreams:
+                self.activeStreams.append(which)
+            if self.pan_check:
+                if self.streams[which].granulator != None:
+                    self.mixer.addInput(which, self.streams[which].panner)
+            else:
+                if self.streams[which].granulator != None:
+                    self.mixer.addInput(which, self.streams[which].granulator)
         else:
             if which in self.activeStreams:
                 self.activeStreams.remove(which)
-        
+                self.mixer.delInput(which)
+    
+    def addFx(self, fx, key):
+        self.fxs[key] = Fx(self.mixer[key], fx)
+
+    def removeFx(self, key):
+        del self.fxs[key]
+
+    def setMixerChannelAmp(self, vin, vout, val):
+        self.mixer.setAmp(vin, vout, val)
+
+    def handleFxSlider1(self, fx, key, val):
+        if fx == 0:
+            self.fxs[key].process.feedback = val
+        elif fx == 1:
+            self.fxs[key].process.delay = val
+        elif fx == 2:
+            self.fxs[key].process.drive = val
+        elif fx == 3:
+            self.fxs[key].process.freq = val
+        elif fx == 4:
+            self.fxs[key].rsine.freq = val
+        elif fx == 5:
+            self.fxs[key].process.bitdepth = val
+        elif fx == 6:
+            self.fxs[key].process.transpo = val
+
+    def handleFxSlider2(self, fx, key, val):
+        if fx == 0:
+            self.fxs[key].process.cutoff = val
+        elif fx == 1:
+            self.fxs[key].process.feedback = val
+        elif fx == 2:
+            self.fxs[key].process.slope = val
+        elif fx == 3:
+            self.fxs[key].process.dur = val
+        elif fx == 4:
+            self.fxs[key].rsine.mul = 1. - val
+            self.fxs[key].rsine.add = val
+        elif fx == 5:
+            self.fxs[key].process.srscale = val
+        elif fx == 6:
+            self.fxs[key].process.feedback = val
+
+    def handleFxMul(self, key, val):
+        self.fxs[key].pan.mul = val
+
+    def handleFxPan(self, key, val):
+        self.fxs[key].pan.pan = val
+
     def start(self):
         for which in self.activeStreams:
-            self.streams[which].setActive(1)
-            self.streams[which].togglePan(self.pan_check)
+            self.setActive(which, 1)
         self.refresh_met.play()
         self.server.start() 
         self.server.amp = self.globalAmplitude

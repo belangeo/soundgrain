@@ -17,16 +17,18 @@ You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, sys, math, tempfile, xmlrpclib
+import os, sys, math, tempfile, xmlrpclib, time
 import wx
 from wx.lib.wordwrap import wordwrap
 import  wx.lib.scrolledpanel as scrolled
+import wx.html
 
 from Resources.constants import *
 from Resources.audio import *
 from Resources.Modules import *
-from pyolib._wxwidgets import ControlSlider, VuMeter
+from pyolib._wxwidgets import ControlSlider, VuMeter, Grapher
 from Resources.Trajectory import Trajectory
+from Resources.FxBall import FxBall
 from Resources.MidiSettings import MidiSettings
 
 trajTypes = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
@@ -52,6 +54,9 @@ class DrawingSurface(wx.Panel):
         self.midiTranspose = True
         self.midiXposition = 0
         self.midiOctaveSpread = 2
+        self.fxballs = {}
+        if len(self.fxballs) != 0:
+            self.fxball = self.fxballs[0]
         self.screenOffset = 2
         self.sndBitmap = None
         self.selected = self.trajectories[0]
@@ -67,7 +72,7 @@ class DrawingSurface(wx.Panel):
         self.Bind(wx.EVT_KEY_DOWN, self.KeyDown)
         self.Bind(wx.EVT_LEFT_DOWN, self.MouseDown)
         self.Bind(wx.EVT_LEFT_UP, self.MouseUp)
-        self.Bind(wx.EVT_RIGHT_DOWN, self.deleteTraj)
+        self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
         self.Bind(wx.EVT_MOTION, self.MouseMotion)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_SIZE, self.OnResize)
@@ -96,9 +101,54 @@ class DrawingSurface(wx.Panel):
                 t.setCenter((w * xscl, h * yscl))
                 t.setRadius(t.getCenter()[0] - t.getFirstPoint()[0])    
             t.setInitPoints()
+        for fxball in self.fxballs.values():
+            center = fxball.getCenter()
+            size = fxball.getSize()
+            scl = (w / (float(cX)) + (h / float(cY))) * 0.5
+            fxball.setSize(int(size * scl))    
+            xscl = center[0] / float(cX)
+            yscl = center[1] / float(cY)
+            fxball.setCenter((w * xscl, h * yscl))
+
         self.currentSize = (w,h)
         self.parent.controls.drawWaveform()
         wx.CallAfter(self.Refresh)
+
+    def restoreFxBall(self, dict):
+        self.fxballs[dict["id"]] = FxBall(dict["fx"], dict["id"], self.parent.sg_audio, dict["pos"], dict["size"], dict["gradient"], dict["fader"])
+        self.parent.sg_audio.addFx(dict["fx"], dict["id"])
+        self.fxballs[dict["id"]].load(dict["controls"])
+
+    def restoreFxBalls(self, dict):
+        if dict != {}:
+            for dic in dict.values():
+                self.fxballs[dic["id"]] = FxBall(dic["fx"], dic["id"], self.parent.sg_audio, dic["pos"], dic["size"], dic["gradient"], dic["fader"])
+                self.parent.sg_audio.addFx(dic["fx"], dic["id"])
+                self.fxballs[dic["id"]].load(dic["controls"])
+            self.Refresh()
+
+    def addFxBall(self, fx):
+        key = -1
+        fxkeys = self.fxballs.keys()
+        for i in range(8):
+            if i not in fxkeys:
+                key = i
+                break
+        if key != -1:
+            self.fxballs[key] = FxBall(fx, key, self.parent.sg_audio, (100,100))
+            self.parent.sg_audio.addFx(fx, key)
+            self.Refresh()
+
+    def removeAllFxBalls(self):
+        for key in self.fxballs.keys():
+            del self.fxballs[key]
+            self.parent.sg_audio.removeFx(key)
+        self.Refresh()
+
+    def removeFxBall(self, key):
+        del self.fxballs[key]
+        self.parent.sg_audio.removeFx(key)
+        self.Refresh()
 
     def clock(self, which):
         t = self.trajectories[which]
@@ -169,7 +219,7 @@ class DrawingSurface(wx.Panel):
     def getActiveTrajectories(self):
         return [t for t in self.trajectories if t.getActive()]
    
-    def deleteTraj(self, evt):
+    def OnRightDown(self, evt):
         for t in self.getActiveTrajectories():
             if t.getInsideRect(evt.GetPosition()):
                 t.clear()
@@ -178,6 +228,12 @@ class DrawingSurface(wx.Panel):
                 else:
                     self.setSelected(self.getTrajectory(0))    
                 self.Refresh()
+                return
+        mouseState = wx.GetMouseState()
+        mousePos = (mouseState.GetX(), mouseState.GetY())
+        for fxball in self.fxballs.values():
+            if fxball.getInside(evt.GetPosition(), small=True):
+                fxball.openControls(mousePos)
                 return
 
     def setSelectedById(self, id):
@@ -251,7 +307,7 @@ class DrawingSurface(wx.Panel):
             clipedOffset = self.clip(offset, extremeXs, extremeYs)
             new_t.move(clipedOffset)
         else:
-            offset = (downPos[0] - centerPosOffset - x, downPos[1] - y)
+            offset = (downPos[0] - x, downPos[1] - y)
             center, clipedOffset = self.clipCircleMove(new_t.getRadius(), curCenter, offset)
             new_t.setCenter(center)
             new_t.move(clipedOffset)
@@ -288,7 +344,7 @@ class DrawingSurface(wx.Panel):
                 traj.setCenter((center[0]-off[0], center[1]-off[1]))
             traj.move(off)
             traj.setInitPoints()
-        # Move all trajectories    
+        # Move all trajectories
         elif off != [0,0]:
             for traj in self.getActiveTrajectories():
                 if traj.getType() in ['circle', 'oscil']:
@@ -304,8 +360,8 @@ class DrawingSurface(wx.Panel):
                     self.trajectories[int(c)-1].setFreeze(False)
                 else:
                     self.trajectories[int(c)-1].setFreeze(True)
-            elif c == '0': 
-                for i in range(8): 
+            elif c == '0':
+                for i in range(8):
                     if self.trajectories[i].getFreeze():
                         self.trajectories[i].setFreeze(False)
                     else:
@@ -363,6 +419,26 @@ class DrawingSurface(wx.Panel):
                     self.action = 'edit'
                     self.CaptureMouse()
                     return
+            # Check if inside an FxBall
+            for key, fxball in self.fxballs.items():
+                if fxball.getInside(self.downPos, small=True):
+                    if evt.AltDown():
+                        self.removeFxBall(key)
+                    else:
+                        self.fxball = fxball
+                        self.action = 'drag_ball'
+                        self.CaptureMouse()
+                    return
+                elif fxball.getInside(self.downPos, small=False):
+                    if evt.AltDown():
+                        self.fxballs.remove(fxball)
+                        self.Refresh()
+                    else:
+                        self.fxball = fxball
+                        self.action = 'rescale_ball'
+                        self.CaptureMouse()
+                    return
+                    
         # Click in an empty space, draw a new trajectory
         self.action = 'draw'
         for t in self.trajectories:
@@ -420,10 +496,14 @@ class DrawingSurface(wx.Panel):
                     self.selected.fillPoints(False)
                 self.selected.setInitPoints()
                 self.selected.setType('free')
+            elif self.action in ['drag_ball', 'rescale_ball']:
+                self.fxball.restoreGradient()
+                self.fxball.restoreCenter()
 
             self.Refresh()  
             self.ReleaseMouse()
-            self.parent.createTempFile()
+            if self.action not in ['drag_ball', 'rescale_ball']:
+                self.parent.createTempFile()
         evt.Skip()
 
     def MouseMotion(self, evt):
@@ -516,11 +596,27 @@ class DrawingSurface(wx.Panel):
             elif self.action == 'edit':
                 x,y = evt.GetPositionTuple()
                 offset = (self.downPos[0] - x, self.downPos[1] - y)
-                self.selected.editTraj(self.pindex, offset)            
+                self.selected.editTraj(self.pindex, offset)
+            elif self.action == 'drag_ball':
+                pos = evt.GetPositionTuple()
+                if evt.ShiftDown():
+                    off = (self.downPos[1] - pos[1])
+                    self.fxball.setGradient(off)
+                else:
+                    self.fxball.move(pos)
+            elif self.action == 'rescale_ball':
+                pos = evt.GetPositionTuple()
+                x = self.fxball.center[0] - pos[0]
+                y = self.fxball.center[1] - pos[1]
+                hyp = math.sqrt(x*x+y*y)
+                if hyp < 5: hyp = 5
+                self.fxball.resize(hyp*2)
+
         self.Refresh()
         evt.Skip()
-    
+
     def OnPaint(self, evt):
+        #t1 = time.time()
         x,y = (0,0)
         w,h = self.GetSizeTuple()
         dc = wx.AutoBufferedPaintDC(self)
@@ -537,16 +633,21 @@ class DrawingSurface(wx.Panel):
         else:
             dc.DrawBitmap(self.sndBitmap,0,0)
 
-        dc.SetPen(wx.Pen(wx.Colour(25,25,25), width=1, style=wx.SOLID))
-        num = 10
-        xstep = w / float(num)
-        ystep = h / float(num)
-        for i in range(10):
-            xgrid = int(round(i*xstep))
-            dc.DrawLine(xgrid, 2, xgrid, h-2)
-            ygrid = int(round(i*ystep))
-            dc.DrawLine(2, ygrid, w-2, ygrid)
-             
+        # dc.SetPen(wx.Pen(wx.Colour(25,25,25), width=1, style=wx.SOLID))
+        # num = 10
+        # xstep = w / float(num)
+        # ystep = h / float(num)
+        # for i in range(10):
+        #     xgrid = int(round(i*xstep))
+        #     dc.DrawLine(xgrid, 2, xgrid, h-2)
+        #     ygrid = int(round(i*ystep))
+        #     dc.DrawLine(2, ygrid, w-2, ygrid)
+
+        tmp = [fx for fx in self.fxballs.values()]
+        tmp.reverse()
+        for fx in tmp:
+            dc.DrawBitmap(fx.bit, fx.pos[0], fx.pos[1], True)
+
         for i, t in enumerate(self.getActiveTrajectories()):
             col = t.getColour()
             dc.SetBrush(wx.Brush(col, wx.SOLID))
@@ -561,6 +662,8 @@ class DrawingSurface(wx.Panel):
                         else: marioff = 4
                         bitmario = self.marios[t.mario + marioff]
                         dc.DrawBitmap(bitmario, t.circlePos[0]-8, t.circlePos[1]-8, True)
+                    for fx in tmp:
+                        self.parent.sg_audio.setMixerChannelAmp(t.getId(), fx.getId(), fx.getAmpValue(t.circlePos))
                 if t.getId() == self.parent.controls.getSelected():
                     dc.SetPen(wx.Pen("#EEEEEE", width=2, style=wx.SOLID))
                 else:
@@ -579,6 +682,7 @@ class DrawingSurface(wx.Panel):
             xvalue = self.pointerPos[0] / float(w) * self.parent.controls.sndDur
             yvalue = (h - self.pointerPos[1]) / float(h)
             dc.DrawText("X: %.3f   Y: %.3f" % (xvalue, yvalue), w-90, h-13)
+        #print "drawing :", time.time()-t1
 
     def clip(self, off, exXs, exYs):
         Xs = [p[0] for p in self.selected.getPoints()]
@@ -759,9 +863,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.notebook.AddPage(self.playback, "Playback")
         box.Add(self.notebook, 0, wx.ALL, 5)
 
-        box.Add(wx.StaticText(self, -1, "Global amplitude"), 0, wx.LEFT | wx.TOP, 10)
+        box.Add(wx.StaticText(self, -1, "Global amplitude (dB)"), 0, wx.LEFT | wx.TOP, 10)
         ampBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_amp = ControlSlider(self, 0, 4, 1, size=(200, 16), outFunction=self.handleAmp)
+        self.sl_amp = ControlSlider(self, -60, 18, 0, size=(200, 16), outFunction=self.handleAmp)
         ampBox.Add(self.sl_amp, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(ampBox, 0, wx.LEFT | wx.RIGHT, 5)
         box.AddSpacer(10)
@@ -988,6 +1092,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.playback.sl_step.SetValue(step, self.selectedOkToChange)
 
     def handleTrajAmp(self, val):
+        val = pow(10.0, float(val) * 0.05)
         if self.selectedOkToChange:
             if self.selected == 24:
                 for t in self.surface.getActiveTrajectories():
@@ -1000,17 +1105,21 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.selectedOkToChange = True
 
     def setTrajAmp(self, val):
-        self.playback.sl_amp.SetValue(val, self.selectedOkToChange)
+        if val <= 0.0:
+            val = 0.0001
+        self.playback.sl_amp.SetValue(20.0 * math.log10(val), self.selectedOkToChange)
 
     def handleAmp(self, val):
-        self.amplitude = val
+        self.amplitude = pow(10.0, float(val) * 0.05)
         self.sendAmp()
 
     def getAmp(self):
         return self.amplitude
 
     def setAmp(self, amp):
-        self.sl_amp.SetValue(amp)
+        if amp <= 0.0:
+            amp = 0.0001
+        self.sl_amp.SetValue(20.0 * math.log10(amp))
         self.amplitude = amp
 
     def sendAmp(self):
@@ -1264,10 +1373,10 @@ class PlaybackParameters(wx.Panel):
         box.Add(stepBox, 0, wx.LEFT | wx.RIGHT, 5)
         box.AddSpacer(5)
 
-        ampText = wx.StaticText(self, -1, "Amplitude", size=(195,15))
+        ampText = wx.StaticText(self, -1, "Amplitude (dB)", size=(195,15))
         box.Add(ampText, 0, wx.LEFT, 5)
         ampBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.sl_amp = ControlSlider(self, 0, 2, 1, size=(195, 16), integer=False, outFunction=self.parent.GetParent().handleTrajAmp)
+        self.sl_amp = ControlSlider(self, -60, 18, 0, size=(195, 16), integer=False, outFunction=self.parent.GetParent().handleTrajAmp)
         ampBox.Add(self.sl_amp)
         box.Add(ampBox, 0, wx.LEFT | wx.RIGHT, 5)
 
@@ -1277,9 +1386,44 @@ class PlaybackParameters(wx.Panel):
         self.SetAutoLayout(True)
         self.SetSizer(box)
 
+class EnvelopeFrame(wx.Frame):
+    def __init__(self, parent, size=(600, 300)):
+        wx.Frame.__init__(self, parent, -1, "Envelope Shape", size=size)
+        self.parent = parent
+        self.env = None
+        menuBar = wx.MenuBar()
+        self.menu = wx.Menu()
+        self.menu.Append(200, 'Close\tCtrl+W', "")
+        menuBar.Append(self.menu, "&File")
+        self.SetMenuBar(menuBar)
+
+        self.Bind(wx.EVT_CLOSE, self.handleClose)
+        self.Bind(wx.EVT_MENU, self.handleClose, id=200)
+
+        self.graph = Grapher(self, init=[(0.0,0),(0.5,1),(1.0,0)], mode=1)
+
+        self.Show(False)
+
+    def setEnv(self, env):
+        self.env = env
+        self.env.replace(self.graph.getValues())
+        self.graph.outFunction = self.env.replace
+
+    def handleClose(self, event):
+        self.Show(False)
+
+    def save(self):
+        return {'envelope': self.graph.getPoints()}
+
+    def load(self, dict):
+        self.graph.setInitPoints(dict.get('envelope', [(0.0,0),(0.5,1),(1.0,0)]))
+        if self.env != None:
+            self.env.replace(self.graph.getValues())
+
 class MainFrame(wx.Frame):
     def __init__(self, parent, id, pos, size, file):
         wx.Frame.__init__(self, parent, id, "", pos, size)
+        self.SetMinSize((600,300))
 
         self.currentFile = None
         self.currentPath = None
@@ -1310,6 +1454,8 @@ class MainFrame(wx.Frame):
         self.menu.AppendSeparator()
         self.menu.Append(6, "Open FX Window\tCtrl+P")
         self.Bind(wx.EVT_MENU, self.openFxWindow, id=6)
+        self.menu.Append(5, "Open Envelope Window\tCtrl+E")
+        self.Bind(wx.EVT_MENU, self.openEnvelopeWindow, id=5)
         self.menu.AppendSeparator()
         self.menu.Append(7, "Run\tCtrl+R", "", wx.ITEM_CHECK)
         self.Bind(wx.EVT_MENU, self.onRun, id=7)
@@ -1353,17 +1499,31 @@ class MainFrame(wx.Frame):
         self.menuBar.Append(self.menu2, "&Audio Drivers")
 
         self.menu3 = wx.Menu()
-        self.menu3.Append(204, "Memorize shape\tShift+Ctrl+M", "")
+        self.menu3.Append(204, "Memorize Trajectory\tShift+Ctrl+M", "")
         self.Bind(wx.EVT_MENU, self.handleMemorize, id=204)
         self.menu3.Append(205, "Midi Settings...", "")
         self.Bind(wx.EVT_MENU, self.showMidiSettings, id=205)
         self.menuBar.Append(self.menu3, "&Midi")
 
-        menu4 = wx.Menu()
-        helpItem = menu4.Append(400, '&About %s %s' % (NAME, VERSION), 'wxPython RULES!!!')
+        self.menu4 = wx.Menu()
+        self.menu4.Append(400, "Add Reverb ball\tCtrl+1", "")
+        self.menu4.Append(401, "Add Delay ball\tCtrl+2", "")
+        self.menu4.Append(402, "Add Disto ball\tCtrl+3", "")
+        self.menu4.Append(403, "Add Waveguide ball\tCtrl+4", "")
+        self.menu4.Append(404, "Add RingMod ball\tCtrl+5", "")
+        self.menu4.Append(405, "Add Degrade ball\tCtrl+6", "")
+        self.menu4.Append(406, "Add Harmonizer ball\tCtrl+7", "")
+        for i in range(7):
+            self.Bind(wx.EVT_MENU, self.addFxBall, id=400+i)
+        self.menuBar.Append(self.menu4, "&FxBall")
+
+        menu5 = wx.Menu()
+        helpItem = menu5.Append(500, '&About %s %s' % (NAME, VERSION), 'wxPython RULES!!!')
         wx.App.SetMacAboutMenuItemId(helpItem.GetId())
         self.Bind(wx.EVT_MENU, self.showAbout, helpItem)
-        self.menuBar.Append(menu4, '&Help')
+        commands = menu5.Append(501, "Opens SoundGrain commands page")
+        self.Bind(wx.EVT_MENU, self.openCommandsPage, commands)
+        self.menuBar.Append(menu5, '&Help')
 
         self.SetMenuBar(self.menuBar)
        
@@ -1377,7 +1537,9 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
         self.SetTitle('Granulator')
-        self.sg_audio = SG_Audio(self.panel.clock, self.panel.Refresh, self.controls, self.panel.addTrajFromMemory, self.panel.deleteMemorizedTraj)        
+        self.envelopeFrame = EnvelopeFrame(self)
+        self.sg_audio = SG_Audio(self.panel.clock, self.panel.Refresh, self.controls, self.panel.addTrajFromMemory, 
+                                 self.panel.deleteMemorizedTraj, self.envelopeFrame)        
         self.granulatorControls = GranulatorFrame(self, self.panel, self.sg_audio)       
         self.midiSettings = MidiSettings(self, self.panel, self.sg_audio)       
         self.createInitTempFile()
@@ -1416,6 +1578,9 @@ class MainFrame(wx.Frame):
     def handleReinit(self, evt):
         for t in self.panel.getAllTrajectories():
             t.initCounter()
+
+    def addFxBall(self, evt):
+        self.panel.addFxBall(evt.GetId() - 400)
 
     def handleMemorize(self, evt):
         self.panel.Memorize()
@@ -1492,6 +1657,12 @@ class MainFrame(wx.Frame):
             self.granulatorControls.SetTitle('Granulator controls')
             self.granulatorControls.Show()
 
+    def openEnvelopeWindow(self, evt):
+        if self.envelopeFrame.IsShown():
+            self.envelopeFrame.Hide()
+        else:
+            self.envelopeFrame.Show()
+
     def handleUndo(self, evt):
         self.recallTempFile(evt.GetId())
 
@@ -1543,6 +1714,7 @@ class MainFrame(wx.Frame):
     def getState(self):
         saveDict = {}
         ### Main Frame ###
+        saveDict['version'] = VERSION
         saveDict['MainFrame'] = {}
         saveDict['MainFrame']['draw'] = self.draw
         saveDict['MainFrame']['lowpass'] = self.lowpass
@@ -1572,6 +1744,12 @@ class MainFrame(wx.Frame):
         for i, t in enumerate(self.panel.getAllTrajectories()):
             saveDict['Trajectories'][str(i)] = t.getAttributes()
         saveDict['MemorizedTrajectory'] = self.panel.memorizedTrajectory.getAttributes()
+        ### Grain Envelope ###
+        saveDict['Envelope'] = self.envelopeFrame.save()
+        ### Fx Balls ###
+        saveDict['fxballs'] = {}
+        for key, value in self.panel.fxballs.items():
+            saveDict['fxballs'][str(key)] = value.save()
         return saveDict
         
     def saveFile(self, path):
@@ -1585,6 +1763,7 @@ class MainFrame(wx.Frame):
         self.SetTitle(os.path.split(self.currentFile)[1])
 
     def setState(self, dict):
+        version = float(dict.get('version', '3.0'))
         ### Main Frame ###
         self.setDraw(dict['MainFrame']['draw'])
         self.setLowpass(dict['MainFrame']['lowpass'])
@@ -1613,10 +1792,16 @@ class MainFrame(wx.Frame):
             t.setAttributes(dict['Trajectories'][str(i)])
         if dict.has_key('MemorizedTrajectory'):
             self.panel.memorizedTrajectory.setAttributes(dict['MemorizedTrajectory'])
+        ### Grain Envelope ###
+        if dict.has_key("Envelope"):
+            self.envelopeFrame.load(dict["Envelope"])
+        if dict.has_key('fxballs'):
+            self.panel.restoreFxBalls(dict["fxballs"])
 
     def loadFile(self, path):
         if self.midiSettings.IsShown():
             self.midiSettings.Hide()
+        self.panel.removeAllFxBalls()
         f = open(path, 'r')
         msg = f.read()
         f.close()
@@ -1625,7 +1810,7 @@ class MainFrame(wx.Frame):
         self.currentFile = path
         self.currentPath = os.path.split(path)[0]
         self.setState(dict)
-        self.controls.setSelected(0)    
+        self.controls.setSelected(0)
         self.panel.Refresh()
         self.SetTitle(os.path.split(self.currentFile)[1])
 
@@ -1677,6 +1862,10 @@ class MainFrame(wx.Frame):
     def log(self, text):
         self.status.SetStatusText(text)
 
+    def openCommandsPage(self, event):
+        self.commands = CommandsPage(self)
+        self.commands.Show()
+
     def showAbout(self, evt):
         info = wx.AboutDialogInfo()
 
@@ -1711,6 +1900,23 @@ class MainFrame(wx.Frame):
         info.SetWebSite('http://code.google.com/p/soundgrain')
         info.SetLicence(licence)
         wx.AboutBox(info)
+
+class CommandsPage(wx.Frame):
+    def __init__(self, parent, size=(600, 600)):
+        wx.Frame.__init__(self, parent, size=size)
+        menuBar = wx.MenuBar()
+        menu = wx.Menu()
+        menu.Append(1, "Close\tCtrl-W", "Close this window")
+        self.Bind(wx.EVT_MENU, self.OnTimeToClose, id=1)
+        menuBar.Append(menu, "&File")
+        self.SetMenuBar(menuBar)
+
+        self.html1 = wx.html.HtmlWindow(self, -1, size=size)
+        self.html1.LoadPage(os.path.join(RESOURCES_PATH, "commands.html"))
+        self.SetFocus()
+
+    def OnTimeToClose(self, evt):
+        self.Destroy()
 
 class SoundGrainApp(wx.PySimpleApp):
     def __init__(self, *args, **kwargs):
