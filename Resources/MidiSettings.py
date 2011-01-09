@@ -46,8 +46,7 @@ class MidiSettings(wx.Frame):
         mainBox = wx.BoxSizer(wx.VERTICAL)
         box = wx.BoxSizer(wx.VERTICAL)
 
-        interfaceText = wx.StaticText(self.panel, id=-1, label="Midi interface")
-        box.Add(interfaceText, 0, wx.ALL, 5)
+        box.Add(wx.StaticText(self.panel, id=-1, label="Midi interface"), 0, wx.CENTER|wx.ALL, 2)
         self.interfaceList, self.interfaceIndexes = pm_get_input_devices()
         if self.interfaceList != []:
             self.selectedInterface = pm_get_default_input()
@@ -59,16 +58,14 @@ class MidiSettings(wx.Frame):
             self.popupInterface = wx.Choice(self.panel, id=-1, size=(200, -1), choices=["No interface"])
         box.Add(self.popupInterface, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
 
-        methodText = wx.StaticText(self.panel, id=-1, label="Add / Remove method")
-        box.Add(methodText, 0, wx.ALL, 5)
+        box.Add(wx.StaticText(self.panel, id=-1, label="Add / Remove method"), 0, wx.CENTER|wx.ALL, 2)
         self.popupMethod = wx.Choice(self.panel, id=-1, size=(200, 20), choices=["Noteon / Noteoff", "Noteon / Noteon"])
-        box.Add(self.popupMethod, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
         self.popupMethod.Bind(wx.EVT_CHOICE, self.handleMethod)
+        box.Add(self.popupMethod, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
         
         box.Add(wx.StaticLine(self.panel, size=(200, 1)), 0, wx.ALL, 5)
 
-        mappingText = wx.StaticText(self.panel, id=-1, label="Pitch mapping")
-        box.Add(mappingText, 0, wx.CENTER|wx.ALL, 5)
+        box.Add(wx.StaticText(self.panel, id=-1, label="Pitch mapping"), 0, wx.CENTER|wx.ALL, 5)
 
         self.xTranspo = wx.CheckBox(self.panel, label="Transposition")
         self.xTranspo.SetValue(True)
@@ -79,16 +76,12 @@ class MidiSettings(wx.Frame):
         self.xPosition.Bind(wx.EVT_CHECKBOX, self.handlePosition)
         box.Add(self.xPosition, 0, wx.ALL, 5)
 
-        octaveSpreadText = wx.StaticText(self.panel, id=-1, label="Octave Spread")
-        box.Add(octaveSpreadText, 0, wx.ALL, 5)
+        box.Add(wx.StaticText(self.panel, id=-1, label="X Position Octave Spread"), 0, wx.CENTER|wx.ALL, 2)
         self.octaveSpread = ControlSlider(self, 1, 4, 2, size=(200, 16), outFunction=self.handleSpread)
-        if not self.xPosition.GetValue():
-            self.octaveSpread.Disable()
+        self.enableOctaveSpread(self.xPosition.GetValue())
         box.Add(self.octaveSpread, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
 
-        box.AddSpacer(10)
-        mainBox.Add(box, 0, wx.ALL, 10)
-        
+        mainBox.Add(box, 0, wx.ALL, 10)        
         self.panel.SetSizerAndFit(mainBox)
         
         self.Fit()
@@ -128,21 +121,21 @@ class MidiSettings(wx.Frame):
     def handlePosition(self, evt):
         state = self.xPosition.GetValue()
         self.surface.setMidiXposition(state)        
-        if state:
-            self.octaveSpread.Enable()
-        else:
-            self.octaveSpread.Disable()
+        self.enableOctaveSpread(state)
 
     def setPosition(self, value):
         self.xPosition.SetValue(value)
         self.surface.setMidiXposition(value)
-        if value:
-            self.octaveSpread.Enable()
-        else:
-            self.octaveSpread.Disable()
+        self.enableOctaveSpread(value)
     
     def getPosition(self):
         return self.xPosition.GetValue()
+
+    def enableOctaveSpread(self, state):
+        if state:
+            self.octaveSpread.Enable()
+        else:
+            self.octaveSpread.Disable()
 
     def handleSpread(self, value):
         self.surface.setMidiOctaveSpread(value)
