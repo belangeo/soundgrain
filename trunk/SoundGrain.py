@@ -1352,7 +1352,10 @@ class PlaybackParameters(wx.Panel):
 
         seltrajText = wx.StaticText(self, -1, "Selected trajectory")
         font, psize = seltrajText.GetFont(), seltrajText.GetFont().GetPointSize()
-        font.SetPointSize(psize-2)
+        if sys.platform == "win32":
+            font.SetPointSize(psize-1)
+        else:
+            font.SetPointSize(psize-2)
         box.Add(seltrajText, 0, wx.CENTER | wx.TOP | wx.BOTTOM, 2)
 
         trajChoices = [str(i+1) for i in range(24)]
