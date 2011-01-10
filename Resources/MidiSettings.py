@@ -69,6 +69,7 @@ class MidiSettings(wx.Frame):
 
         box.Add(wx.StaticText(self.panel, id=-1, label="Add / Remove method"), 0, wx.CENTER|wx.ALL, 2)
         self.popupMethod = wx.Choice(self.panel, id=-1, size=(200, 20), choices=["Noteon / Noteoff", "Noteon / Noteon"])
+        self.popupMethod.SetSelection(0)
         self.popupMethod.Bind(wx.EVT_CHOICE, self.handleMethod)
         box.Add(self.popupMethod, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
         
