@@ -37,7 +37,10 @@ class FxBallControls(wx.Frame):
                     }[fxball.getFx()]
         text = wx.StaticText(self.panel, -1, sl1values[0])
         font, psize = text.GetFont(), text.GetFont().GetPointSize()
-        font.SetPointSize(psize-2)
+        if sys.platform == "win32":
+            font.SetPointSize(psize-1)
+        else:
+            font.SetPointSize(psize-2)
         text.SetFont(font)
         self.box.Add(text, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
         self.box.AddSpacer(2)
