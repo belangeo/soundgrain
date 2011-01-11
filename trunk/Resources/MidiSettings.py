@@ -87,7 +87,7 @@ class MidiSettings(wx.Frame):
         box.Add(self.xPosition, 0, wx.ALL, 5)
 
         box.Add(wx.StaticText(self.panel, id=-1, label="X Position Octave Spread"), 0, wx.CENTER|wx.ALL, 2)
-        self.octaveSpread = ControlSlider(self, 1, 4, 2, size=(200, 16), outFunction=self.handleSpread)
+        self.octaveSpread = ControlSlider(self.panel, 1, 4, 2, size=(200, 16), outFunction=self.handleSpread)
         self.enableOctaveSpread(self.xPosition.GetValue())
         box.Add(self.octaveSpread, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
 
