@@ -155,8 +155,10 @@ class SG_Audio:
         self.midiPitches = []
         if PLATFORM == "darwin":
             self.server = Server(sr=self.samplingRate, buffersize=1024, duplex=0, audio="coreaudio")
+        elif PLATFORM == "linux2":
+            self.server = Server(sr=self.samplingRate, buffersize=1024, duplex=0, audio="jack")
         else:
-            self.server = Server(sr=self.samplingRate, buffersize=512, duplex=0)
+            self.server = Server(sr=self.samplingRate, buffersize=1024, duplex=0)
         self.pitch_check = 1
         self.pitch_map = Map(0, 1, "lin")
         self.amp_check = 0
