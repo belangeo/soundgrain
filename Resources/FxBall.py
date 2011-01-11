@@ -158,8 +158,14 @@ def GetRoundBitmap(w, h, mask, col, gradient):
     dc.SetPen(wx.Pen(maskColor, 1))
     dc.SetBrush(wx.Brush(maskColor))
     dc.Clear()
-    rec = wx.Rect(0, 0, w, h)  
-    dc.GradientFillConcentric(rec, firstColor, secondColor, (w/2,h/2))
+    rec = wx.Rect(0, 0, w, h)
+    if sys.platform == "linux2":
+        rec1 = wx.Rect(0,0,w/2,h)
+        dc.GradientFillLinear(rec1, secondColor, firstColor)
+        rec2 = wx.Rect(w/2,0,w/2,h)
+        dc.GradientFillLinear(rec2, firstColor, secondColor)
+    else:
+        dc.GradientFillConcentric(rec, firstColor, secondColor, (w/2,h/2))
     dc.DrawBitmap(mask, rec[0], rec[1], True)
     dc.SelectObject(wx.NullBitmap)
     b.SetMaskColour(maskColor)
