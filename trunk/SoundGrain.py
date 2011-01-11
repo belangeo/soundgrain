@@ -683,7 +683,7 @@ class DrawingSurface(wx.Panel):
             dc.SetFont(self.font_pos)
             xvalue = self.pointerPos[0] / float(w) * self.parent.controls.sndDur
             yvalue = (h - self.pointerPos[1]) / float(h)
-            dc.DrawText("X: %.3f   Y: %.3f" % (xvalue, yvalue), w-90, h-13)
+            dc.DrawText("X: %.3f   Y: %.3f" % (xvalue, yvalue), w-100, h-13)
         #print "drawing :", time.time()-t1
 
     def clip(self, off, exXs, exYs):
