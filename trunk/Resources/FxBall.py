@@ -72,7 +72,7 @@ class FxBallControls(wx.Frame):
         self.box.Add(text, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
         self.box.AddSpacer(2)
         self.slider4 = ControlSlider(self.panel, 0, 1, 0.5, size=(250,16), outFunction=self.handlePan)
-        self.box.Add(self.slider4, 0, wx.LEFT|wx.RIGHT, 10)
+        self.box.Add(self.slider4, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 10)
 
         self.panel.SetSizerAndFit(self.box)
 
