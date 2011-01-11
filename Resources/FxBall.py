@@ -12,8 +12,6 @@ class FxBallControls(wx.Frame):
         self.parent = parent
         self.fxball = fxball
         self.sg_audio = sg_audio
-        self.SetMinSize(size)
-        self.SetMaxSize(size)
         menuBar = wx.MenuBar()
         self.menu = wx.Menu()
         self.menu.Append(200, 'Close\tCtrl+W', "")
@@ -78,6 +76,10 @@ class FxBallControls(wx.Frame):
 
         self.panel.SetSizerAndFit(self.box)
 
+        self.Fit()
+        self.SetMinSize(self.GetSize())
+        self.SetMaxSize(self.GetSize())
+        
     def handleClose(self, event):
         self.Show(False)
 
