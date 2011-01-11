@@ -468,6 +468,7 @@ class DrawingSurface(wx.Panel):
             if self.action == 'draw' and self.traj:
                 if len(self.traj.getPoints()) <= 1:
                     self.traj.clear()
+                    self.ReleaseMouse()
                     return
                 if self.traj.getType() == 'free':
                     self.traj.addFinalPoint(self.clipPos(evt.GetPositionTuple()), self.closed)
