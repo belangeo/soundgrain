@@ -32,9 +32,6 @@ from Resources.Trajectory import Trajectory
 from Resources.FxBall import FxBall
 from Resources.MidiSettings import MidiSettings
 
-trajTypes = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
-
-        
 class DrawingSurface(wx.Panel):
     def __init__(self, parent, pos=(0,0), size=wx.DefaultSize):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY, pos=pos, size=size, style = wx.EXPAND)
@@ -42,6 +39,10 @@ class DrawingSurface(wx.Panel):
         self.SetBackgroundColour(BACKGROUND_COLOUR)
         self.parent = parent
         self.useMario = False
+        self.backBitmap = None
+        self.needBitmap = True
+        self.onMotion = False
+        self.pdc = wx.PseudoDC()
         self.marios = [wx.Bitmap(os.path.join(IMAGES_PATH, 'Mario%d.png' % i), wx.BITMAP_TYPE_PNG) for i in [1,2,3,2,4,5,6,5]]
         if PLATFORM in ['win32', 'linux2']:
             self.font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)
@@ -49,7 +50,7 @@ class DrawingSurface(wx.Panel):
         else:
             self.font = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL)
             self.font_pos = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL)
-        self.trajectories = [Trajectory(self, i+1) for i in range(24)]
+        self.trajectories = [Trajectory(self, i+1) for i in range(MAX_STREAMS)]
         self.memorizedTrajectory = Trajectory(self, -1)
         self.memorizedId = {}
         self.midiTranspose = True
@@ -58,6 +59,7 @@ class DrawingSurface(wx.Panel):
         self.fxballs = {}
         if len(self.fxballs) != 0:
             self.fxball = self.fxballs[0]
+        self.fxballValues = [fx for fx in self.fxballs.values()]
         self.screenOffset = 2
         self.sndBitmap = None
         self.selected = self.trajectories[0]
@@ -65,12 +67,13 @@ class DrawingSurface(wx.Panel):
         self.closed = 0
         self.oscilPeriod = 2
         self.oscilScaling = 1
-        self.mode = trajTypes[0]
+        self.mode = TRAJTYPES[0]
         self.pointerPos = None
         self.SetColors(outline=(255,255,255), bg=(30,30,30), fill=(184,32,32), rect=(0,255,0), losa=(0,0,255), wave=(70,70,70))
         self.currentSize = self.GetSizeTuple()
     
         self.Bind(wx.EVT_KEY_DOWN, self.KeyDown)
+        self.Bind(wx.EVT_KEY_UP, self.KeyUp)
         self.Bind(wx.EVT_LEFT_DOWN, self.MouseDown)
         self.Bind(wx.EVT_LEFT_UP, self.MouseUp)
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
@@ -81,6 +84,7 @@ class DrawingSurface(wx.Panel):
 
     def setCurrentSize(self, size):
         self.currentSize = size
+        self.needBitmap = True
 
     def OnLeave(self, evt):
         self.pointerPos = None
@@ -119,6 +123,9 @@ class DrawingSurface(wx.Panel):
         self.fxballs[dict["id"]] = FxBall(dict["fx"], dict["id"], self.parent.sg_audio, dict["pos"], dict["size"], dict["gradient"], dict["fader"])
         self.parent.sg_audio.addFx(dict["fx"], dict["id"])
         self.fxballs[dict["id"]].load(dict["controls"])
+        self.fxballValues = [fx for fx in self.fxballs.values()]
+        self.needBitmap = True
+        self.Refresh()
 
     def restoreFxBalls(self, dict):
         if dict != {}:
@@ -126,6 +133,8 @@ class DrawingSurface(wx.Panel):
                 self.fxballs[dic["id"]] = FxBall(dic["fx"], dic["id"], self.parent.sg_audio, dic["pos"], dic["size"], dic["gradient"], dic["fader"])
                 self.parent.sg_audio.addFx(dic["fx"], dic["id"])
                 self.fxballs[dic["id"]].load(dic["controls"])
+            self.fxballValues = [fx for fx in self.fxballs.values()]
+            self.needBitmap = True
             self.Refresh()
 
     def addFxBall(self, fx):
@@ -138,17 +147,23 @@ class DrawingSurface(wx.Panel):
         if key != -1:
             self.fxballs[key] = FxBall(fx, key, self.parent.sg_audio, (100,100))
             self.parent.sg_audio.addFx(fx, key)
+            self.fxballValues = [fx for fx in self.fxballs.values()]
+            self.needBitmap = True
             self.Refresh()
 
     def removeAllFxBalls(self):
         for key in self.fxballs.keys():
             del self.fxballs[key]
             self.parent.sg_audio.removeFx(key)
+        self.fxballValues = [fx for fx in self.fxballs.values()]
+        self.needBitmap = True
         self.Refresh()
 
     def removeFxBall(self, key):
         del self.fxballs[key]
         self.parent.sg_audio.removeFx(key)
+        self.fxballValues = [fx for fx in self.fxballs.values()]
+        self.needBitmap = True
         self.Refresh()
 
     def clock(self, which):
@@ -191,6 +206,8 @@ class DrawingSurface(wx.Panel):
         self.rectcolor = wx.Color(*rect)
         self.losacolor = wx.Color(*losa)
         self.wavecolor = wx.Color(*wave)
+        self.losaBrush = wx.Brush(self.losacolor, wx.SOLID)
+        self.losaPen = wx.Pen(self.losacolor, width=1, style=wx.SOLID)
             
     def getValues(self):
         w,h = self.GetSizeTuple()
@@ -206,7 +223,7 @@ class DrawingSurface(wx.Panel):
         return vals
 
     def setMode(self, mode):
-        self.mode = trajTypes[mode]
+        self.mode = TRAJTYPES[mode]
 
     def setClosed(self, closed):
         self.closed = closed
@@ -227,7 +244,8 @@ class DrawingSurface(wx.Panel):
                 if len(self.getActiveTrajectories()) > 0:
                     self.setSelected(self.getActiveTrajectories()[0])
                 else:
-                    self.setSelected(self.getTrajectory(0))    
+                    self.setSelected(self.getTrajectory(0))
+                self.needBitmap = True
                 self.Refresh()
                 return
         mouseState = wx.GetMouseState()
@@ -312,6 +330,7 @@ class DrawingSurface(wx.Panel):
             center, clipedOffset = self.clipCircleMove(new_t.getRadius(), curCenter, offset)
             new_t.setCenter(center)
             new_t.move(clipedOffset)
+        self.needBitmap = True
         self.Refresh()
 
     def deleteMemorizedTraj(self, index):
@@ -322,8 +341,8 @@ class DrawingSurface(wx.Panel):
             self.setSelected(self.getActiveTrajectories()[0])
         else:
             self.setSelected(self.getTrajectory(0))    
+        self.needBitmap = True
         self.Refresh()
-        return
 
     def KeyDown(self, evt):
         if evt.GetKeyCode() in [wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE]:
@@ -332,8 +351,7 @@ class DrawingSurface(wx.Panel):
                 if len(self.getActiveTrajectories()) > 0:
                     self.setSelected(self.getActiveTrajectories()[0])
                 else:
-                    self.setSelected(self.getTrajectory(0))    
-            self.Refresh()
+                    self.setSelected(self.getTrajectory(0))
             return
 
         off = {wx.WXK_UP: [0,1], wx.WXK_DOWN: [0,-1], wx.WXK_LEFT: [1,0], wx.WXK_RIGHT: [-1,0]}.get(evt.GetKeyCode(), [0,0])
@@ -345,6 +363,7 @@ class DrawingSurface(wx.Panel):
                 traj.setCenter((center[0]-off[0], center[1]-off[1]))
             traj.move(off)
             traj.setInitPoints()
+            self.onMotion = True
         # Move all trajectories
         elif off != [0,0]:
             for traj in self.getActiveTrajectories():
@@ -353,6 +372,7 @@ class DrawingSurface(wx.Panel):
                     traj.setCenter((center[0]-off[0], center[1]-off[1]))
                 traj.move(off)
                 traj.setInitPoints()
+            self.onMotion = True
         # Set freeze mode
         if evt.GetKeyCode() < 256:
             c = chr(evt.GetKeyCode())
@@ -372,7 +392,12 @@ class DrawingSurface(wx.Panel):
                     self.useMario = True
                 else:
                     self.useMario = False
-        self.Refresh()
+        evt.Skip()
+
+    def KeyUp(self, evt):
+        self.onMotion = False
+        if evt.GetKeyCode() in [wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE, wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT]:
+            self.needBitmap = True
 
     def MouseDown(self, evt):
         self.downPos = evt.GetPositionTuple()
@@ -502,10 +527,12 @@ class DrawingSurface(wx.Panel):
                 self.fxball.restoreGradient()
                 self.fxball.restoreCenter()
 
-            self.Refresh()  
+            self.Refresh()
             self.ReleaseMouse()
             if self.action not in ['drag_ball', 'rescale_ball']:
                 self.parent.createTempFile()
+            self.onMotion = False
+            self.needBitmap = True
         evt.Skip()
 
     def MouseMotion(self, evt):
@@ -614,77 +641,91 @@ class DrawingSurface(wx.Panel):
                 if hyp < 5: hyp = 5
                 self.fxball.resize(hyp*2)
 
-        self.Refresh()
+            self.onMotion = True
+            self.Refresh()
         evt.Skip()
 
-    def OnPaint(self, evt):
-        #t1 = time.time()
-        x,y = (0,0)
-        w,h = self.GetSizeTuple()
-        dc = wx.AutoBufferedPaintDC(self)
-
+    def draw(self, dc):
+        dc.BeginDrawing()
+        dc.SetTextForeground("#000000")
+        dc.SetFont(self.font)
         if not self.sndBitmap:
+            w,h = self.GetSizeTuple()
             dc.SetBrush(wx.Brush(self.backgroundcolor, wx.SOLID))
             dc.Clear()
-
             dc.SetPen(wx.Pen(self.outlinecolor, width=1, style=wx.SOLID))
-            dc.DrawRectangle(x, y, w, h)
-
-            dc.SetBrush(wx.Brush(self.fillcolor, wx.SOLID))
-            dc.SetPen(wx.Pen(self.fillcolor, width=1, style=wx.SOLID))
+            dc.DrawRectangle(0, 0, w, h)
         else:
             dc.DrawBitmap(self.sndBitmap,0,0)
 
-        # dc.SetPen(wx.Pen(wx.Colour(25,25,25), width=1, style=wx.SOLID))
-        # num = 10
-        # xstep = w / float(num)
-        # ystep = h / float(num)
-        # for i in range(10):
-        #     xgrid = int(round(i*xstep))
-        #     dc.DrawLine(xgrid, 2, xgrid, h-2)
-        #     ygrid = int(round(i*ystep))
-        #     dc.DrawLine(2, ygrid, w-2, ygrid)
+        [dc.DrawBitmap(fx.bit, fx.pos[0], fx.pos[1], False) for fx in self.fxballValues]
 
-        tmp = [fx for fx in self.fxballs.values()]
-        tmp.reverse()
-        for fx in tmp:
-            dc.DrawBitmap(fx.bit, fx.pos[0], fx.pos[1], True)
+        selectedTraj = self.parent.controls.getSelected()
+        activeTrajs = [t for t in self.getActiveTrajectories() if len(t.getPoints()) > 1]
+        for t in activeTrajs:
+            dc.SetBrush(t.getBrush())
+            dc.SetPen(t.getPen())
+            dc.DrawLines(t.getPoints())
+            if t.getId() == selectedTraj:
+                dc.SetPen(wx.Pen("#EEEEEE", width=2, style=wx.SOLID))
+            dc.DrawRoundedRectanglePointSize(t.getFirstPoint(), (13,13), 2)
+            dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0],t.getFirstPoint()[1], 13, 13), wx.ALIGN_CENTER)
+            if t.getType() in ['circle', 'oscil']:
+                dc.SetBrush(self.losaBrush)
+                dc.SetPen(self.losaPen)
+                dc.DrawRoundedRectanglePointSize((t.getLosangePoint()[0]-5,t.getLosangePoint()[1]-5), (10,10), 1)
+        dc.EndDrawing()
 
-        for i, t in enumerate(self.getActiveTrajectories()):
-            col = t.getColour()
-            dc.SetBrush(wx.Brush(col, wx.SOLID))
-            dc.SetPen(wx.Pen(col, width=1, style=wx.SOLID))
-            if len(t.getPoints()) > 1:
-                dc.DrawLines(t.getPoints())
-                if t.circlePos:
-                    if not self.useMario:    
-                        dc.DrawCirclePoint(t.circlePos, 4)
-                    else:
-                        if t.lastCirclePos[0] < t.circlePos[0]: marioff = 0
-                        else: marioff = 4
-                        bitmario = self.marios[t.mario + marioff]
-                        dc.DrawBitmap(bitmario, t.circlePos[0]-8, t.circlePos[1]-8, True)
-                    for fx in tmp:
-                        self.parent.sg_audio.setMixerChannelAmp(t.getId(), fx.getId(), fx.getAmpValue(t.circlePos))
-                if t.getId() == self.parent.controls.getSelected():
-                    dc.SetPen(wx.Pen("#EEEEEE", width=2, style=wx.SOLID))
-                else:
-                    dc.SetPen(wx.Pen(col, width=1, style=wx.SOLID))
-                dc.DrawRoundedRectanglePointSize((t.getFirstPoint()[0],t.getFirstPoint()[1]), (13,13), 2)
-                dc.SetTextForeground("#000000")
-                dc.SetFont(self.font)
-                dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0],t.getFirstPoint()[1], 13, 13), wx.ALIGN_CENTER)
-                if t.getType() not in ['free', 'line']:
-                    dc.SetBrush(wx.Brush(self.losacolor, wx.SOLID))
-                    dc.SetPen(wx.Pen(self.losacolor, width=1, style=wx.SOLID))
-                    dc.DrawRoundedRectanglePointSize((t.getLosangePoint()[0]-5,t.getLosangePoint()[1]-5), (10,10), 1)
+    def drawBackBitmap(self):
+        w,h = self.GetSizeTuple()
+        if self.backBitmap == None or self.backBitmap.GetSize() != self.currentSize:
+            self.backBitmap = wx.EmptyBitmap(w,h)
+        dc = wx.MemoryDC(self.backBitmap)
+        self.draw(dc)
+        dc.SelectObject(wx.NullBitmap)
+        self.needBitmap = False
+
+    def drawOnMotion(self):
+        self.pdc.RemoveAll()
+        self.draw(self.pdc)
+        
+    def OnPaint(self, evt):
+        t1 = time.time()
+        dc = wx.AutoBufferedPaintDC(self)
+        dc.BeginDrawing()
+        if self.needBitmap:
+            self.drawBackBitmap()
+            
+        if self.onMotion:
+            self.drawOnMotion()
+            self.pdc.DrawToDC(dc)
+        else:
+            dc.DrawBitmap(self.backBitmap,0,0)
+
+        activeTrajs = [t for t in self.getActiveTrajectories() if len(t.getPoints()) > 1 and t.circlePos]
+        self.parent.sg_audio.setMixerChannelAmps(activeTrajs, self.fxballValues)
+
+        if not self.useMario:
+            for t in activeTrajs:
+                dc.SetPen(t.getCirclePen())
+                dc.DrawPointPoint(t.circlePos)
+        else:
+            for t in activeTrajs:
+                dc.SetPen(t.getCirclePen())
+                if t.lastCirclePos[0] < t.circlePos[0]: marioff = 0
+                else: marioff = 4
+                bitmario = self.marios[t.mario + marioff]
+                dc.DrawBitmap(bitmario, t.circlePos[0]-8, t.circlePos[1]-8, True)
+
         if self.pointerPos != None:
+            w,h = self.GetSizeTuple()
             dc.SetTextForeground("#FFFFFF")
             dc.SetFont(self.font_pos)
             xvalue = self.pointerPos[0] / float(w) * self.parent.controls.sndDur
             yvalue = (h - self.pointerPos[1]) / float(h)
             dc.DrawText("X: %.3f   Y: %.3f" % (xvalue, yvalue), w-100, h-13)
-        #print "drawing :", time.time()-t1
+        dc.EndDrawing()
+        print "drawing :", time.time()-t1
 
     def clip(self, off, exXs, exYs):
         Xs = [p[0] for p in self.selected.getPoints()]
@@ -817,6 +858,7 @@ class DrawingSurface(wx.Panel):
         if not gradient:                
             self.memory.DrawLineList(l)
         self.memory.SelectObject(wx.NullBitmap)
+        self.needBitmap = True
         self.Refresh()
 
 class ControlPanel(scrolled.ScrolledPanel):
@@ -844,7 +886,6 @@ class ControlPanel(scrolled.ScrolledPanel):
 
         typeBox = wx.BoxSizer(wx.HORIZONTAL)
         popupBox = wx.BoxSizer(wx.VERTICAL)
-        #popupBox.Add(wx.StaticText(self, -1, "Type"), 0, wx.CENTER|wx.ALL, 2)
         self.trajType = wx.Choice(self, -1, choices = ['Free', 'Circle', 'Oscil', 'Line'])
         self.trajType.SetSelection(0)
         popupBox.Add(self.trajType)
@@ -1033,24 +1074,24 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.surface.setOscilScaling(scaling)
 
     def resetPlaybackSliders(self):
-        selTo24 = False
-        if self.selected == 24:
+        selToMax = False
+        if self.selected == MAX_STREAMS:
             self.selected = 0
-            selTo24 = True
+            selToMax = True
         timeSpeed = self.surface.getTrajectory(self.selected).getTimeSpeed()
         self.setTimerSpeed(timeSpeed)
         step = self.surface.getTrajectory(self.selected).getStep()
         self.setStep(step)
         amp = self.surface.getTrajectory(self.selected).getAmplitude()
         self.setTrajAmp(amp)
-        if selTo24:
-            self.selected = 24
+        if selToMax:
+            self.selected = MAX_STREAMS
 
     def handleSelected(self, event):
         if event.GetInt() != self.selected:
             self.selected = event.GetInt()
             self.selectedOkToChange = False
-            if self.selected == 24:
+            if self.selected == MAX_STREAMS:
                 self.selectedOkToChange = False
             self.resetPlaybackSliders()
         
@@ -1069,7 +1110,7 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def handleTimerSpeed(self, val):
         if self.selectedOkToChange:
-            if self.selected == 24:
+            if self.selected == MAX_STREAMS:
                 for t in self.surface.getActiveTrajectories():
                     t.setTimeSpeed(val)
             else:
@@ -1085,7 +1126,7 @@ class ControlPanel(scrolled.ScrolledPanel):
               
     def handleStep(self, val):
         if self.selectedOkToChange:
-            if self.selected == 24:
+            if self.selected == MAX_STREAMS:
                 for t in self.surface.getActiveTrajectories():
                     t.setStep(val)
             else:
@@ -1099,7 +1140,7 @@ class ControlPanel(scrolled.ScrolledPanel):
     def handleTrajAmp(self, val):
         val = pow(10.0, float(val) * 0.05)
         if self.selectedOkToChange:
-            if self.selected == 24:
+            if self.selected == MAX_STREAMS:
                 for t in self.surface.getActiveTrajectories():
                     t.setAmplitude(val)
                     self.parent.sg_audio.setTrajAmplitude(t.label-1, val)
@@ -1359,7 +1400,7 @@ class PlaybackParameters(wx.Panel):
             font.SetPointSize(psize-2)
         box.Add(seltrajText, 0, wx.CENTER | wx.TOP | wx.BOTTOM, 2)
 
-        trajChoices = [str(i+1) for i in range(24)]
+        trajChoices = [str(i+1) for i in range(MAX_STREAMS)]
         trajChoices.append("all")
         self.tog_traj = wx.Choice(self, -1, choices=trajChoices)
         self.tog_traj.SetSelection(0)
@@ -1866,6 +1907,7 @@ class MainFrame(wx.Frame):
             d = self.temps[self.recall]
             for i, t in enumerate(self.panel.getAllTrajectories()):
                 t.setAttributes(eval(d[i]))
+            self.panel.needBitmap = True
             self.Refresh()    
         if self.recall >= len(self.temps) - 1:
             self.menu1.Enable(110, False)

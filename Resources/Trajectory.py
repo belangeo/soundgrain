@@ -59,13 +59,15 @@ def chooseColour(i, numlines=24):
 
     return objectColour, labelColour
 
-
 class Trajectory:
     def __init__(self, parent, label):
         self.parent = parent
         self.label = label
         self.id = int(self.label)-1
         self.colour, self.bordercolour = chooseColour(int(self.label)-1)
+        self.pen = wx.Pen(self.colour, width=1, style=wx.SOLID)
+        self.brush = wx.Brush(self.colour, style=wx.SOLID)
+        self.circlePen = wx.Pen(self.colour, width=8, style=wx.SOLID)
         self.activeLp = True
         self.editLevel = 2
         self.timeSpeed = 25
@@ -151,6 +153,15 @@ class Trajectory:
 
     def getColour(self):
         return self.colour
+
+    def getPen(self):
+        return self.pen
+
+    def getBrush(self):
+        return self.brush
+
+    def getCirclePen(self):
+        return self.circlePen
 
     def getBorderColour(self):
         return self.bordercolour
