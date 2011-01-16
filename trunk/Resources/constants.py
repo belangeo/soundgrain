@@ -21,8 +21,8 @@ import os, sys
 
 NAME = 'Sound Grain'
 VERSION = '4.0'
-
 PLATFORM = sys.platform
+MAX_STREAMS = 16
 
 if '/SoundGrain.app' in os.getcwd():
     RESOURCES_PATH = os.getcwd()
@@ -33,5 +33,7 @@ else:
     RESOURCES_PATH = os.path.join(os.getcwd(), 'Resources')
 
 IMAGES_PATH = os.path.join(RESOURCES_PATH, 'images')
+
+TRAJTYPES = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 
 BACKGROUND_COLOUR = "#ECE6EA"  

@@ -21,7 +21,7 @@ import math, time, random, wx
 from constants import *
 from pyo import *
 
-USE_MIDI = True
+USE_MIDI = False
 
 def soundInfo(sndfile):
     num_frames, dur, samprate, chans = sndinfo(sndfile)
@@ -171,16 +171,19 @@ class SG_Audio:
         self.pan_map = Map(0, 1, "lin")
 
     def boot(self, driver, chnls, samplingRate, midiInterface):
+        global USE_MIDI
         self.server.setOutputDevice(driver)
         self.server.setNchnls(chnls)
         self.samplingRate = samplingRate
         self.server.setSamplingRate(samplingRate)
+        print midiInterface
         if midiInterface != None:
             self.server.setMidiInputDevice(midiInterface)
         self.server._server.setAmpCallable(self.controls.meter)
         self.server.boot()
         self.mixer = Mixer(outs=8, chnls=chnls)
-        if USE_MIDI:
+        if midiInterface != None:
+            USE_MIDI = True
             self.notein = Notein(poly=10)
             self.noteinpitch = Sig(self.notein["pitch"])
             self.noteinvelocity = Sig(self.notein["velocity"])
@@ -190,7 +193,7 @@ class SG_Audio:
             self.noteoffFunc = TrigFunc(self.noteoffThresh, self.noteoff, range(10))
         self.env = CosTable([(0,0),(4095,1),(8191,0)])
         self.envFrame.setEnv(self.env)
-        self.refresh_met = Metro(.06)
+        self.refresh_met = Metro(0.066666666666666666)
         self.refresh_func = TrigFunc(self.refresh_met, self.refresh_screen)
         #self.pos_noise = Noise(0)
         self.pos_noise = Randh(min=-1, max=1, freq=199, mul=0)
@@ -199,7 +202,7 @@ class SG_Audio:
         self.srScale = Sig(1)
         self.trans_noise = Choice([1], freq=500)
         self.streams = {}
-        for i in range(24):
+        for i in range(MAX_STREAMS):
             self.streams[i] = Granulator_Stream(i, self.env, self.trans_noise, self.dur_noise, 
                                                 self.num_grains, self.clock, self.srScale, chnls)   
         
@@ -348,6 +351,9 @@ class SG_Audio:
 
     def setMixerChannelAmp(self, vin, vout, val):
         self.mixer.setAmp(vin, vout, val)
+
+    def setMixerChannelAmps(self, trajs, fxballs):
+        [self.mixer.setAmp(t.getId(), fx.getId(), fx.getAmpValue(t.circlePos)) for t in trajs for fx in fxballs]
 
     def handleFxSlider1(self, fx, key, val):
         if fx == 0:
