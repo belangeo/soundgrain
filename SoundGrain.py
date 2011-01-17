@@ -658,7 +658,7 @@ class DrawingSurface(wx.Panel):
         else:
             dc.DrawBitmap(self.sndBitmap,0,0)
 
-        [dc.DrawBitmap(fx.bit, fx.pos[0], fx.pos[1], False) for fx in self.fxballValues]
+        [dc.DrawBitmap(fx.bit, fx.pos[0], fx.pos[1], True) for fx in self.fxballValues]
 
         selectedTraj = self.parent.controls.getSelected()
         activeTrajs = [t for t in self.getActiveTrajectories() if len(t.getPoints()) > 1]
