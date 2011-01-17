@@ -67,7 +67,6 @@ class Granulator_Stream:
         self.panner = None
 
         self.metro = Metro(time=0.025)
-        #self.duration = Noise(mul=0, add=.2)
         self.duration = Randh(min=-1, max=1, freq=200, mul=0, add=.2)
         self.base_pitch = SigTo(value=1, time=0.01)
         self.transpo = SigTo(value=1, time=0.001)
@@ -75,9 +74,7 @@ class Granulator_Stream:
         self.y_pit = SigTo(value=1, time=0.01)
         self.y_amp = SigTo(value=1, time=0.01)
         self.y_pan = SigTo(value=0.5, time=0.01)
-        #self.y_dur = Noise(mul=0)
         self.y_dur = Randh(min=-1, max=1, freq=201, mul=0)
-        #self.y_pos = Noise(mul=0)
         self.y_pos = Randh(min=-1, max=1, freq=202, mul=0)
         self.fader = SigTo(value=0, mul=1./(math.log(self.num_grains)+1.))
         self.trigger = TrigFunc(self.metro, self.clock_func, self.order)
@@ -195,9 +192,7 @@ class SG_Audio:
         self.envFrame.setEnv(self.env)
         self.refresh_met = Metro(0.066666666666666666)
         self.refresh_func = TrigFunc(self.refresh_met, self.refresh_screen)
-        #self.pos_noise = Noise(0)
         self.pos_noise = Randh(min=-1, max=1, freq=199, mul=0)
-        #self.dur_noise = Noise(0)
         self.dur_noise = Randh(min=-1, max=1, freq=198, mul=0)
         self.srScale = Sig(1)
         self.trans_noise = Choice([1], freq=500)

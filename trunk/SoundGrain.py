@@ -690,7 +690,6 @@ class DrawingSurface(wx.Panel):
         self.draw(self.pdc)
         
     def OnPaint(self, evt):
-        t1 = time.time()
         dc = wx.AutoBufferedPaintDC(self)
         dc.BeginDrawing()
         if self.needBitmap:
@@ -725,7 +724,6 @@ class DrawingSurface(wx.Panel):
             yvalue = (h - self.pointerPos[1]) / float(h)
             dc.DrawText("X: %.3f   Y: %.3f" % (xvalue, yvalue), w-100, h-13)
         dc.EndDrawing()
-        print "drawing :", time.time()-t1
 
     def clip(self, off, exXs, exYs):
         Xs = [p[0] for p in self.selected.getPoints()]
