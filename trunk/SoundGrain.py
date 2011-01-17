@@ -706,11 +706,11 @@ class DrawingSurface(wx.Panel):
 
         if not self.useMario:
             for t in activeTrajs:
-                dc.SetPen(t.getCirclePen())
-                dc.DrawPointPoint(t.circlePos)
+                dc.SetPen(t.getPen())
+                dc.SetBrush(t.getBrush())
+                dc.DrawCirclePoint(t.circlePos, 4)
         else:
             for t in activeTrajs:
-                dc.SetPen(t.getCirclePen())
                 if t.lastCirclePos[0] < t.circlePos[0]: marioff = 0
                 else: marioff = 4
                 bitmario = self.marios[t.mario + marioff]
