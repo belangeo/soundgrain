@@ -1837,10 +1837,16 @@ class MainFrame(wx.Frame):
         self.setFillPoints(dict['MainFrame']['fillPoints'])
         self.setEditionLevel(dict['MainFrame']['editionLevel'])
         if platform == 'darwin':
-            self.SetSize(dict['MainFrame']['size'])
+            if sys.platform == 'darwin':
+                self.SetSize(dict['MainFrame']['size'])
+            else:
+                size = dict['MainFrame']['size']
+                self.SetSize((size[0], size[1]+37))
         else:
-            size = dict['MainFrame']['size']
-            self.SetSize((size[0], size[1]+37))
+            if sys.platform == 'darwin':
+                self.SetSize(dict['MainFrame']['size'])
+            else:
+                self.SetSize(dict['MainFrame']['size'])
         ### Control Frame ###
         self.granulatorControls.load(dict['ControlFrame'])
         ### Midi Frame ###
