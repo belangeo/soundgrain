@@ -188,7 +188,7 @@ class SG_Audio:
             self.noteonFunc = TrigFunc(self.noteonThresh, self.noteon, range(10))
             self.noteoffThresh = Thresh(self.notein["velocity"], threshold=.001, dir=1)
             self.noteoffFunc = TrigFunc(self.noteoffThresh, self.noteoff, range(10))
-        self.env = CosTable([(0,0),(4095,1),(8191,0)])
+        self.env = CosTable([(0,0),(2440,1),(5751,1),(8191,0)])
         self.envFrame.setEnv(self.env)
         self.refresh_met = Metro(0.066666666666666666)
         self.refresh_func = TrigFunc(self.refresh_met, self.refresh_screen)

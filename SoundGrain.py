@@ -1450,7 +1450,7 @@ class EnvelopeFrame(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.handleClose)
         self.Bind(wx.EVT_MENU, self.handleClose, id=200)
 
-        self.graph = Grapher(self, init=[(0.0,0),(0.5,1),(1.0,0)], mode=1)
+        self.graph = Grapher(self, init=[(0.0,0),(0.3,1),(0.7,1),(1.0,0)], mode=1)
 
         self.Show(False)
 
@@ -1466,7 +1466,7 @@ class EnvelopeFrame(wx.Frame):
         return {'envelope': self.graph.getPoints()}
 
     def load(self, dict):
-        self.graph.setInitPoints(dict.get('envelope', [(0.0,0),(0.5,1),(1.0,0)]))
+        self.graph.setInitPoints(dict.get('envelope', [(0.0,0),(0.3,1),(0.7,1),(1.0,0)]))
         if self.env != None:
             self.env.replace(self.graph.getValues())
 
@@ -1872,12 +1872,23 @@ class MainFrame(wx.Frame):
         f.close()
         result, method = xmlrpclib.loads(msg)
         dict = result[0]
-        self.currentFile = path
-        self.currentPath = os.path.split(path)[0]
-        self.setState(dict)
+        if 'new_soundgrain_file.sg' in path:
+            self.currentFile = None
+            self.currentPath = None
+            title = "Granulator"
+            self.status.SetStatusText("")
+        else:
+            self.currentFile = path
+            self.currentPath = os.path.split(path)[0]
+            title = os.path.split(self.currentFile)[1]
+        self.panel.trajectories = [Trajectory(self.panel, i+1) for i in range(MAX_STREAMS)]
+        self.panel.memorizedTrajectory = Trajectory(self.panel, -1)
+        self.panel.memorizedId = {}
         self.controls.setSelected(0)
+        self.setState(dict)
+        self.SetTitle(title)
+        self.panel.needBitmap = True
         self.panel.Refresh()
-        self.SetTitle(os.path.split(self.currentFile)[1])
 
     def createInitTempFile(self):
         d = {}

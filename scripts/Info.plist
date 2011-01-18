@@ -10,13 +10,13 @@
 	<array>
 		<dict>
 			<key>LSIsAppleDefaultForType</key>
-			<true/>
+			<false/>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>sg</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
-			<string>SoundGrain.icns</string>
+			<string>SoundGrainDocIcon.icns</string>
 			<key>CFBundleTypeOSTypes</key>
 			<array>
 				<string>TEXT</string>
