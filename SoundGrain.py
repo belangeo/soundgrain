@@ -1780,6 +1780,7 @@ class MainFrame(wx.Frame):
         saveDict = {}
         ### Main Frame ###
         saveDict['version'] = VERSION
+        saveDict['platform'] = PLATFORM
         saveDict['MainFrame'] = {}
         saveDict['MainFrame']['draw'] = self.draw
         saveDict['MainFrame']['lowpass'] = self.lowpass
@@ -1829,12 +1830,17 @@ class MainFrame(wx.Frame):
 
     def setState(self, dict):
         version = float(dict.get('version', '3.0'))
+        platform = dict.get('platform', 'darwin')
         ### Main Frame ###
         self.setDraw(dict['MainFrame']['draw'])
         self.setLowpass(dict['MainFrame']['lowpass'])
         self.setFillPoints(dict['MainFrame']['fillPoints'])
         self.setEditionLevel(dict['MainFrame']['editionLevel'])
-        self.SetSize(dict['MainFrame']['size'])
+        if platform == 'darwin':
+            self.SetSize(dict['MainFrame']['size'])
+        else:
+            size = dict['MainFrame']['size']
+            self.SetSize((size[0], size[1]+37))
         ### Control Frame ###
         self.granulatorControls.load(dict['ControlFrame'])
         ### Midi Frame ###
