@@ -1198,7 +1198,10 @@ class ControlPanel(scrolled.ScrolledPanel):
                         self.surface.create_bitmap()
                 self.logSndInfo()
             elif os.path.isfile(os.path.join(self.parent.currentPath, os.path.split(self.sndPath)[1])):
-                self.loadSound(os.path.join(self.parent.currentPath, os.path.split(self.sndPath)[1]), force)  
+                self.loadSound(os.path.join(self.parent.currentPath, os.path.split(self.sndPath)[1]), force)
+            elif ":\\" in self.sndPath:
+                # Handle windows path...
+                self.loadSound(os.path.join(self.parent.currentPath, self.sndPath.split("\\")[-1]), force)
             else:
                 self.parent.log('Sound file "%s" does not exist!' % self.sndPath)        
 
@@ -1844,7 +1847,8 @@ class MainFrame(wx.Frame):
                 self.SetSize((size[0]+10, size[1]+38))
         else:
             if sys.platform == 'darwin':
-                self.SetSize(dict['MainFrame']['size'])
+                size = dict['MainFrame']['size']
+                self.SetSize((size[0]-10, size[1]-38))
             else:
                 self.SetSize(dict['MainFrame']['size'])
         ### Control Frame ###
