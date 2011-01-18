@@ -1841,7 +1841,7 @@ class MainFrame(wx.Frame):
                 self.SetSize(dict['MainFrame']['size'])
             else:
                 size = dict['MainFrame']['size']
-                self.SetSize((size[0], size[1]+37))
+                self.SetSize((size[0]+10, size[1]+38))
         else:
             if sys.platform == 'darwin':
                 self.SetSize(dict['MainFrame']['size'])
