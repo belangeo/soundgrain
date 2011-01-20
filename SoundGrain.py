@@ -85,6 +85,7 @@ class DrawingSurface(wx.Panel):
     def setCurrentSize(self, size):
         self.currentSize = size
         self.needBitmap = True
+        self.Refresh()
 
     def OnLeave(self, evt):
         self.pointerPos = None
@@ -116,6 +117,7 @@ class DrawingSurface(wx.Panel):
             fxball.setCenter((w * xscl, h * yscl))
 
         self.currentSize = (w,h)
+        self.needBitmap = True
         self.parent.controls.drawWaveform()
         wx.CallAfter(self.Refresh)
 
@@ -398,6 +400,7 @@ class DrawingSurface(wx.Panel):
         self.onMotion = False
         if evt.GetKeyCode() in [wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE, wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT]:
             self.needBitmap = True
+            self.Refresh()
 
     def MouseDown(self, evt):
         self.downPos = evt.GetPositionTuple()
@@ -1840,33 +1843,28 @@ class MainFrame(wx.Frame):
         self.setFillPoints(dict['MainFrame']['fillPoints'])
         self.setEditionLevel(dict['MainFrame']['editionLevel'])
         print platform
+        size = dict['MainFrame']['size']
         if platform == 'darwin':
             if sys.platform == 'darwin':
-                self.SetSize(dict['MainFrame']['size'])
-            elif platform == "win32":
-                size = dict['MainFrame']['size']
+                self.SetSize(size)
+            elif sys.platform == "win32":
                 self.SetSize((size[0]+10, size[1]+38))
             else:
-                size = dict['MainFrame']['size']
-                self.SetSize((size[0]+10, size[1]+38))
+                self.SetSize(size)
         elif platform == "win32":
             if sys.platform == 'darwin':
-                size = dict['MainFrame']['size']
                 self.SetSize((size[0]-10, size[1]-38))
-            elif platform == "win32":
-                self.SetSize(dict['MainFrame']['size'])
+            elif sys.platform == "win32":
+                self.SetSize(size)
             else:
-                size = dict['MainFrame']['size']
                 self.SetSize((size[0]+10, size[1]+38))
         else:
             if sys.platform == 'darwin':
-                size = dict['MainFrame']['size']
-                self.SetSize((size[0]-10, size[1]-38))
-            elif platform == "win32":
-                self.SetSize(dict['MainFrame']['size'])
+                self.SetSize((size[0]-10, size[1]-50))
+            elif sys.platform == "win32":
+                self.SetSize(size)
             else:
-                size = dict['MainFrame']['size']
-                self.SetSize((size[0]-10, size[1]-38))
+                self.SetSize(size)
         ### Control Frame ###
         self.granulatorControls.load(dict['ControlFrame'])
         ### Midi Frame ###
@@ -1920,7 +1918,7 @@ class MainFrame(wx.Frame):
         self.setState(dict)
         self.SetTitle(title)
         self.panel.needBitmap = True
-        self.panel.Refresh()
+        wx.CallAfter(self.panel.Refresh)
 
     def createInitTempFile(self):
         d = {}
@@ -2045,7 +2043,7 @@ if __name__ == '__main__':
     X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
     if X < 900: sizex = X - 40
     else: sizex = 900
-    if PLATFORM in ['win32', 'linux2']: defaultY = 650
+    if PLATFORM in ['win32', 'linux2']: defaultY = 670
     else: defaultY = 650
     if Y < defaultY: sizey = Y - 40
     else: sizey = defaultY
