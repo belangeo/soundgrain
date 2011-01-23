@@ -680,7 +680,7 @@ class DrawingSurface(wx.Panel):
         dc.EndDrawing()
 
     def drawBackBitmap(self):
-        w,h = self.GetSizeTuple()
+        w,h = self.currentSize #self.GetSizeTuple()
         if self.backBitmap == None or self.backBitmap.GetSize() != self.currentSize:
             self.backBitmap = wx.EmptyBitmap(w,h)
         dc = wx.MemoryDC(self.backBitmap)
@@ -1793,6 +1793,8 @@ class MainFrame(wx.Frame):
         saveDict['MainFrame']['fillPoints'] = self.fillPoints
         saveDict['MainFrame']['editionLevel'] = self.editionLevel
         saveDict['MainFrame']['size'] = self.GetSizeTuple()
+        ### Surface Panel ###
+        saveDict["SurfaceSize"] = self.panel.GetSizeTuple()
         ### Controls Frame ###
         saveDict['ControlFrame'] = self.granulatorControls.save()
         ### Midi Frame ###
@@ -1837,6 +1839,11 @@ class MainFrame(wx.Frame):
     def setState(self, dict):
         version = float(dict.get('version', '3.0'))
         platform = dict.get('platform', 'darwin')
+        ### Surface panel ###
+        surfaceSize = dict.get('SurfaceSize', None)
+        print surfaceSize
+        if surfaceSize != None:
+            self.panel.SetSize(surfaceSize)
         ### Main Frame ###
         self.setDraw(dict['MainFrame']['draw'])
         self.setLowpass(dict['MainFrame']['lowpass'])
