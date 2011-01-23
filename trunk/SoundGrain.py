@@ -1864,12 +1864,12 @@ class MainFrame(wx.Frame):
             elif sys.platform == "win32":
                 self.SetSize(size)
             else:
-                self.SetSize((size[0]+10, size[1]+38))
+                self.SetSize((size[0]-7, size[1]-25))
         else:
             if sys.platform == 'darwin':
                 self.SetSize((size[0]-3, size[1]-13))
             elif sys.platform == "win32":
-                self.SetSize(size)
+                self.SetSize((size[0]+7, size[1]+25))
             else:
                 self.SetSize(size)
         ### Control Frame ###
