@@ -20,10 +20,23 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 import math, time, random, wx
 from constants import *
 from pyo import *
+from types import UnicodeType
+import unicodedata
 
 USE_MIDI = False
 
+def ensureNFD(unistr):
+    if PLATFORM == 'win32':
+        if type(unistr) != UnicodeType:
+            unistr = unistr.decode('cp1252')
+        return unicodedata.normalize('NFC', unistr)
+    else:    
+        if type(unistr) != UnicodeType:
+            unistr = unistr.decode('utf-8')
+        return unicodedata.normalize('NFD', unistr)
+
 def soundInfo(sndfile):
+    sndfile = ensureNFD(sndfile)
     num_frames, dur, samprate, chans = sndinfo(sndfile)
     return (chans, samprate, dur)
 
