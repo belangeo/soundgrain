@@ -1841,7 +1841,6 @@ class MainFrame(wx.Frame):
         platform = dict.get('platform', 'darwin')
         ### Surface panel ###
         surfaceSize = dict.get('SurfaceSize', None)
-        print surfaceSize
         if surfaceSize != None:
             self.panel.SetSize(surfaceSize)
         ### Main Frame ###
@@ -1849,7 +1848,6 @@ class MainFrame(wx.Frame):
         self.setLowpass(dict['MainFrame']['lowpass'])
         self.setFillPoints(dict['MainFrame']['fillPoints'])
         self.setEditionLevel(dict['MainFrame']['editionLevel'])
-        print platform
         size = dict['MainFrame']['size']
         if platform == 'darwin':
             if sys.platform == 'darwin':
