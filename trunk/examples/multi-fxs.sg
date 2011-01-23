@@ -325,10 +325,6 @@
 </struct></value>
 </member>
 <member>
-<name>version</name>
-<value><string>4.0</string></value>
-</member>
-<member>
 <name>Trajectories</name>
 <value><struct>
 <member>
@@ -385,7 +381,7 @@
 <value><nil/></value></member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -443,7 +439,7 @@
 <value><nil/></value></member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -501,7 +497,7 @@
 <value><nil/></value></member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -559,7 +555,7 @@
 <value><nil/></value></member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -617,7 +613,7 @@
 <value><nil/></value></member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -675,7 +671,7 @@
 <value><nil/></value></member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -1218,7 +1214,7 @@
 </member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -1705,7 +1701,7 @@
 </member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -2180,7 +2176,7 @@
 </member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -2703,7 +2699,7 @@
 </member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -2761,7 +2757,7 @@
 <value><nil/></value></member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -2819,7 +2815,7 @@
 <value><nil/></value></member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -2877,7 +2873,7 @@
 <value><nil/></value></member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -2935,7 +2931,7 @@
 <value><nil/></value></member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -2993,7 +2989,7 @@
 <value><nil/></value></member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -3051,7 +3047,7 @@
 <value><nil/></value></member>
 <member>
 <name>filterCut</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 </struct></value>
 </member>
@@ -3196,6 +3192,21 @@
 </struct></value>
 </member>
 <member>
+<name>platform</name>
+<value><string>darwin</string></value>
+</member>
+<member>
+<name>version</name>
+<value><string>4.0</string></value>
+</member>
+<member>
+<name>SurfaceSize</name>
+<value><array><data>
+<value><int>937</int></value>
+<value><int>597</int></value>
+</data></array></value>
+</member>
+<member>
 <name>MainFrame</name>
 <value><struct>
 <member>
@@ -3232,7 +3243,7 @@
 </member>
 <member>
 <name>cutoff</name>
-<value><int>4498</int></value>
+<value><int>4398</int></value>
 </member>
 <member>
 <name>globalamp</name>
