@@ -1186,7 +1186,6 @@ class ControlPanel(scrolled.ScrolledPanel):
     def loadSound(self, sndPath, force=False):
         self.sndPath = sndPath.encode(ENCODING)
         if self.sndPath:
-            print self.sndPath
             if os.path.isfile(self.sndPath):
                 self.parent.sg_audio.loadSnd(self.sndPath)
                 chnls, samprate, dur = soundInfo(self.sndPath)
