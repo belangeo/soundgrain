@@ -36,4 +36,9 @@ IMAGES_PATH = os.path.join(RESOURCES_PATH, 'images')
 
 TRAJTYPES = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 
-BACKGROUND_COLOUR = "#ECE6EA"  
+BACKGROUND_COLOUR = "#ECE6EA"
+
+if PLATFORM == "win32":
+    ENCODING = "cp1252"
+else:
+    ENCODING = "utf-8"
