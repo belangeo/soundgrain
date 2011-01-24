@@ -39,4 +39,3 @@ TRAJTYPES = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 BACKGROUND_COLOUR = "#ECE6EA"
 
 ENCODING = sys.getfilesystemencoding()
-print ENCODING
