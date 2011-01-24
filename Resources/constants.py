@@ -38,6 +38,7 @@ TRAJTYPES = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 
 BACKGROUND_COLOUR = "#ECE6EA"
 
+print sys.getfilesystemencoding()
 if PLATFORM == "win32":
     ENCODING = "cp1252"
 else:
