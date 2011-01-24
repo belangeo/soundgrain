@@ -1184,9 +1184,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         dlg.Destroy()
 
     def loadSound(self, sndPath, force=False):
-        self.sndPath = sndPath.encode(ENCODING)
-        if self.sndPath:
-            if os.path.isfile(self.sndPath):
+        if sndPath:
+            if os.path.isfile(sndPath):
+                self.sndPath = sndPath.encode(ENCODING)
                 self.parent.sg_audio.loadSnd(self.sndPath)
                 chnls, samprate, dur = soundInfo(self.sndPath)
                 self.sndDur = dur
@@ -1200,13 +1200,13 @@ class ControlPanel(scrolled.ScrolledPanel):
                         self.surface.list = self.surface.bitmapDict[self.sndPath]
                         self.surface.create_bitmap()
                 self.logSndInfo()
-            elif os.path.isfile(os.path.join(self.parent.currentPath, os.path.split(self.sndPath)[1])):
-                self.loadSound(os.path.join(self.parent.currentPath, os.path.split(self.sndPath)[1]), force)
-            elif ":\\" in self.sndPath:
+            elif os.path.isfile(os.path.join(self.parent.currentPath, os.path.split(sndPath)[1])):
+                self.loadSound(os.path.join(self.parent.currentPath, os.path.split(sndPath)[1]), force)
+            elif ":\\" in sndPath:
                 # Handle windows path...
-                self.loadSound(os.path.join(self.parent.currentPath, self.sndPath.split("\\")[-1]), force)
+                self.loadSound(os.path.join(self.parent.currentPath, sndPath.split("\\")[-1]), force)
             else:
-                self.parent.log('Sound file "%s" does not exist!' % self.sndPath)        
+                self.parent.log('Sound file "%s" does not exist!' % sndPath)        
 
     def drawWaveform(self):
         if self.surface.sndBitmap and self.parent.draw:
