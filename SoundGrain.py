@@ -1612,11 +1612,11 @@ class MainFrame(wx.Frame):
         self.midiSettings = MidiSettings(self, self.panel, self.sg_audio, miDriver)
         self.createInitTempFile()
 
-        if file:
-            self.loadFile(file)
-
         self.Show()
-        wx.CallAfter(self.check, auDriver)
+        self.check(auDriver)
+        
+        if file:
+            wx.CallAfter(self.loadFile, file)
 
     def onRun(self, event):
         self.controls.handleAudio(event)
