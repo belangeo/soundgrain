@@ -29,6 +29,8 @@ if '/SoundGrain.app' in os.getcwd():
     currentw = os.getcwd()
     spindex = currentw.index('/SoundGrain.app')
     os.chdir(currentw[:spindex])
+elif not os.path.isdir(RESOURCES_PATH) and sys.platform == "win32":
+    RESOURCES_PATH = os.path.join(os.getenv("ProgramFiles"), "SoundGrain", "Resources")
 else:
     RESOURCES_PATH = os.path.join(os.getcwd(), 'Resources')
 
