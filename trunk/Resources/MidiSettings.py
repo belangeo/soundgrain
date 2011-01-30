@@ -66,6 +66,7 @@ class MidiSettings(wx.Frame):
         else:
             self.selectedInterface = None
             self.popupInterface = wx.Choice(self.panel, id=-1, size=(200, -1), choices=["No interface"])
+            self.popupInterface.SetSelection(0)
         box.Add(self.popupInterface, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
 
         box.Add(wx.StaticText(self.panel, id=-1, label="Add / Remove method"), 0, wx.CENTER|wx.ALL, 2)

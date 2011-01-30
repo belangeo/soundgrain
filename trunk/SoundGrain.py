@@ -1634,7 +1634,7 @@ class MainFrame(wx.Frame):
         
         for i, driver in enumerate(self.driversList):
             menuId = 200 + i
-            self.menu2.Append(menuId, driver, "", wx.ITEM_RADIO)
+            self.menu2.Append(menuId, driver.decode(ENCODING), "", wx.ITEM_RADIO)
             self.Bind(wx.EVT_MENU, self.handleDriver, id=menuId)
             if driver == self.driversList[self.driverIndexes.index(self.audioDriver)]:
                 self.menu2.Check(menuId, True)
