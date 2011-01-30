@@ -49,11 +49,8 @@ class MidiSettings(wx.Frame):
 
         box.Add(wx.StaticText(self.panel, id=-1, label="Midi interface"), 0, wx.CENTER|wx.ALL, 2)
         self.interfaceList, self.interfaceIndexes = pm_get_input_devices()
-        print "Midi Interfaces : ", self.interfaceList
-        print "Midi Interface Indexes", self.interfaceIndexes
         if self.interfaceList != []:
             selected = pm_get_default_input()
-            print "Midi default interface", selected
             if miDriver == None:
                 self.selectedInterface = selected
             else:
@@ -61,12 +58,9 @@ class MidiSettings(wx.Frame):
                     self.selectedInterface = self.interfaceIndexes[self.interfaceList.index(miDriver)]
                 else:
                     self.selectedInterface = selected 
-            print "Midi selected interface : ", self.selectedInterface                   
             self.popupInterface = wx.Choice(self.panel, id=-1, size=(200, 20), choices=self.interfaceList)
-            print "Midi popup populated"
             if self.selectedInterface:
                 self.popupInterface.SetSelection(self.interfaceIndexes.index(self.selectedInterface))
-            print "Midi popup initialized"
             self.popupInterface.Bind(wx.EVT_CHOICE, self.changeInterface)
             self.parent.controls.midiInterface = self.selectedInterface
         else:

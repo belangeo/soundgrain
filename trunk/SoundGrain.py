@@ -1642,7 +1642,7 @@ class MainFrame(wx.Frame):
         self.controls.bootServer()
 
     def showMidiSettings(self, evt):
-        self.midiSettings.Show()
+        self.midiSettings.Show(True)
 
     def enableDrivers(self, state):
         for i in range(len(self.driversList)):
