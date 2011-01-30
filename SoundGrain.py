@@ -1642,7 +1642,6 @@ class MainFrame(wx.Frame):
         self.controls.bootServer()
 
     def showMidiSettings(self, evt):
-        print "handle Show Midi Settings menu command"
         self.midiSettings.show()
 
     def enableDrivers(self, state):
