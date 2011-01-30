@@ -1559,8 +1559,8 @@ class MainFrame(wx.Frame):
         self.menu3 = wx.Menu()
         self.menu3.Append(204, "Memorize Trajectory\tShift+Ctrl+M", "")
         self.Bind(wx.EVT_MENU, self.handleMemorize, id=204)
-        self.menu3.Append(205, "Midi Settings...", "")
-        self.Bind(wx.EVT_MENU, self.showMidiSettings, id=205)
+        self.menu3.Append(2005, "Midi Settings...\tShift+Alt+Ctrl+M", "")
+        self.Bind(wx.EVT_MENU, self.showMidiSettings, id=2005)
         self.menuBar.Append(self.menu3, "&Midi")
 
         self.menu4 = wx.Menu()
