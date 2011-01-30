@@ -102,6 +102,9 @@ class MidiSettings(wx.Frame):
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
         self.Show(False)
 
+    def show(self):
+        self.Show()
+
     def handleClose(self, event):
         self.Show(False)
 
