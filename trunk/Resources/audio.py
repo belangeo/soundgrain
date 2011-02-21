@@ -173,7 +173,6 @@ class SG_Audio:
         self.server.setNchnls(chnls)
         self.samplingRate = samplingRate
         self.server.setSamplingRate(samplingRate)
-        print midiInterface
         if midiInterface != None:
             self.server.setMidiInputDevice(midiInterface)
         self.server._server.setAmpCallable(self.controls.meter)
