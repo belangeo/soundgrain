@@ -1839,7 +1839,7 @@ class MainFrame(wx.Frame):
         self.SetTitle(os.path.split(self.currentFile)[1])
 
     def setState(self, dict):
-        version = float(dict.get('version', '3.0'))
+        version = dict.get('version', '3.0')
         platform = dict.get('platform', 'darwin')
         ### Surface panel ###
         surfaceSize = dict.get('SurfaceSize', None)
@@ -2035,12 +2035,6 @@ class SoundGrainApp(wx.PySimpleApp):
         self.loadFile(filename)
               
 if __name__ == '__main__': 
-    try:
-        import psyco
-        psyco.full()
-        print "SoundGrain Uses Psyco"
-    except ImportError:
-        print "Psyco not found"
 
     file = None
     if len(sys.argv) > 1:
