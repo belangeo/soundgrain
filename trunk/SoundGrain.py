@@ -1576,7 +1576,7 @@ class MainFrame(wx.Frame):
         self.menuBar.Append(self.menu4, "&FxBall")
 
         menu5 = wx.Menu()
-        helpItem = menu5.Append(500, '&About %s %s' % (NAME, VERSION), 'wxPython RULES!!!')
+        helpItem = menu5.Append(500, '&About %s %s' % (NAME, SG_VERSION), 'wxPython RULES!!!')
         wx.App.SetMacAboutMenuItemId(helpItem.GetId())
         self.Bind(wx.EVT_MENU, self.showAbout, helpItem)
         commands = menu5.Append(501, "Opens SoundGrain commands page")
@@ -1787,7 +1787,7 @@ class MainFrame(wx.Frame):
     def getState(self):
         saveDict = {}
         ### Main Frame ###
-        saveDict['version'] = VERSION
+        saveDict['version'] = SG_VERSION
         saveDict['platform'] = PLATFORM
         saveDict['MainFrame'] = {}
         saveDict['MainFrame']['draw'] = self.draw
@@ -2016,7 +2016,7 @@ class MainFrame(wx.Frame):
 
         info.SetIcon(wx.Icon(os.path.join(IMAGES_PATH, 'SoundGrain.png'), wx.BITMAP_TYPE_PNG))
         info.SetName('Sound Grain')
-        info.SetVersion('%s' % VERSION)
+        info.SetVersion('%s' % SG_VERSION)
         info.SetDescription(description)
         info.SetCopyright('(C) 2009 Olivier Belanger')
         info.SetWebSite('http://code.google.com/p/soundgrain')
