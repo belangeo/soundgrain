@@ -24,7 +24,7 @@ from pyo import *
 USE_MIDI = False
 
 def soundInfo(sndfile):
-    num_frames, dur, samprate, chans = sndinfo(sndfile)
+    num_frames, dur, samprate, chans, fformat, stype = sndinfo(sndfile)
     return (chans, samprate, dur)
 
 def checkForDrivers():
@@ -37,7 +37,7 @@ class Fx:
         self.input = input
         self.fx = fx
         if fx == 0:
-            self.process = WGVerb(self.input, feedback=.95, cutoff=5000, mix=1, mul=.7)
+            self.process = WGVerb(self.input, feedback=.95, cutoff=5000, bal=1, mul=.7)
         elif fx == 1:
             self.process = Delay(self.input, delay=.1, feedback=.75)
         elif fx == 2:
