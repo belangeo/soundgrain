@@ -235,7 +235,7 @@ class SG_Audio:
     def loadSnd(self, sndPath):
         ch, sndsr, dur = soundInfo(sndPath)
         self.srScale.value = float(sndsr) / self.samplingRate
-        self.table = SndTable(sndPath)
+        self.table = SndTable(sndPath).normalize()
         self.pos_rnd = Sig(self.pos_noise, self.table.getSize())
         for gr in self.streams.values():
             gr.create_granulator(self.table, self.pos_rnd)

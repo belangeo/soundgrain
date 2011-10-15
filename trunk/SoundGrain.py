@@ -844,9 +844,10 @@ class DrawingSurface(wx.Panel):
                     for i in range(X):
                         y = int(round(i / scalar))
                         val = int(((halfY * self.list[chan][y]) + last) / 2)
-                        rec = wx.Rect(i, halfY+off, 1, val)
+                        valToDraw = val * 1.5
+                        rec = wx.Rect(i, halfY+off, 1, valToDraw)
                         self.memory.GradientFillLinear(rec, "#999999", "#222222", wx.BOTTOM)
-                        rec = wx.Rect(i, halfY+off-val, 1, val)
+                        rec = wx.Rect(i, halfY+off-valToDraw, 1, valToDraw)
                         self.memory.GradientFillLinear(rec, "#999999", "#222222", wx.UP)
                         last = val                
             else:    
@@ -855,8 +856,9 @@ class DrawingSurface(wx.Panel):
                     for i in range(X):
                         y = int(round(i / scalar))
                         val = int(((halfY * self.list[chan][y]) + last) / 2)
-                        append((i,halfY+off,i,halfY+off+val))
-                        append((i,halfY+off,i,halfY+off-val))
+                        valToDraw = val * 1.5
+                        append((i,halfY+off,i,halfY+off+valToDraw))
+                        append((i,halfY+off,i,halfY+off-valToDraw))
                         last = val
         if not gradient:                
             self.memory.DrawLineList(l)
