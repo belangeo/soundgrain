@@ -19,7 +19,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, sys
 
-NAME = 'Sound Grain'
+NAME = 'Soundgrain'
 SG_VERSION = '4.0.1'
 PLATFORM = sys.platform
 MAX_STREAMS = 16

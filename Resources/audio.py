@@ -151,9 +151,9 @@ class SG_Audio:
         self.midiTriggerMethod = 0
         self.midiPitches = []
         if PLATFORM == "darwin":
-            self.server = Server(sr=self.samplingRate, buffersize=1024, duplex=0, audio="coreaudio")
+            self.server = Server(sr=self.samplingRate, buffersize=256, duplex=0)
         elif PLATFORM == "linux2":
-            self.server = Server(sr=self.samplingRate, buffersize=1024, duplex=0, audio="jack")
+            self.server = Server(sr=self.samplingRate, buffersize=1024, duplex=0)
         else:
             self.server = Server(sr=self.samplingRate, buffersize=1024, duplex=0)
         self.pitch_check = 1
