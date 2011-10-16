@@ -1993,36 +1993,15 @@ class MainFrame(wx.Frame):
     def showAbout(self, evt):
         info = wx.AboutDialogInfo()
 
-        description = wordwrap(
-"Sound Grain is a graphical interface where " 
-"users can draw and edit trajectories to " 
-"control granular sound synthesis.\n"
+        description = "Soundgrain is a graphical interface where " \
+        "users can draw and edit trajectories to control granular sound synthesis.\n\n" \
+        "Soundgrain is written with Python and " \
+        "WxPython and uses pyo as its audio engine.\n\n" \
 
-"Sound Grain is written with Python and " 
-"WxPython and uses pyo as its audio engine.",350, wx.ClientDC(self))
-
-        licence = wordwrap(
-"SoundGrain is free software: you can "
-"redistribute it and/or modify it under "
-"the terms of the GNU General Public "
-"License as published by the Free Software " 
-"Foundation, either version 3 of the License, " 
-"or (at your option) any later version.\n"
-
-"SoundGrain is distributed in the hope that "
-"it will be useful, but WITHOUT ANY WARRANTY; "
-"without even the implied warranty of "
-"MERCHANTABILITY or FITNESS FOR A PARTICULAR "
-"PURPOSE. See the GNU General Public License "
-"for more details.", 350, wx.ClientDC(self)) 
-
-        info.SetIcon(wx.Icon(os.path.join(IMAGES_PATH, 'SoundGrain.png'), wx.BITMAP_TYPE_PNG))
-        info.SetName('Sound Grain')
-        info.SetVersion('%s' % SG_VERSION)
-        info.SetDescription(description)
-        info.SetCopyright('(C) 2009 Olivier Belanger')
-        info.SetWebSite('http://code.google.com/p/soundgrain')
-        info.SetLicence(licence)
+        info.Name = 'Soundgrain'
+        info.Version = '%s' % SG_VERSION
+        info.Description = description
+        info.Copyright = u'(C) 2011 Olivier Bélanger'
         wx.AboutBox(info)
 
 class SoundGrainApp(wx.PySimpleApp):

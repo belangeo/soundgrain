@@ -27,7 +27,7 @@ class Biquad:
         self.q = q
         self.init = True
         self.computeVariables()
-        self.computeLpCoeffs()
+        self.computeCoeffs()
 
     def computeVariables(self):
         self.w0 = 2 * math.pi * self.freq / self.sr
@@ -37,12 +37,12 @@ class Biquad:
     def setFreq(self, freq):
         self.freq = freq
         self.computeVariables()
-        self.computeLpCoeffs()
+        self.computeCoeffs()
 
     def setQ(self, q):
         self.q = q
         self.computeVariables()
-        self.computeLpCoeffs()
+        self.computeCoeffs()
 
     def filter(self, xn):
         if self.init:
@@ -61,7 +61,7 @@ class Biquad:
         self.init = True
 
 class BiquadLP(Biquad):
-    def computeLpCoeffs(self):
+    def computeCoeffs(self):
         self.b0 = (1 - self.c) / 2
         self.b1 = 1 - self.c
         self.b2 = (1 - self.c) / 2
@@ -70,7 +70,7 @@ class BiquadLP(Biquad):
         self.a2 = 1 - self.alpha
 
 class BiquadHP(Biquad):
-    def computeLpCoeffs(self):
+    def computeCoeffs(self):
         self.b0 = (1 + self.c) / 2
         self.b1 = -(1 + self.c)
         self.b2 = (1 + self.c) / 2
@@ -79,7 +79,7 @@ class BiquadHP(Biquad):
         self.a2 = 1 - self.alpha
 
 class BiquadBP(Biquad):
-    def computeLpCoeffs(self):
+    def computeCoeffs(self):
         self.b0 = self.alpha
         self.b1 = 0
         self.b2 = -self.alpha
@@ -88,7 +88,7 @@ class BiquadBP(Biquad):
         self.a2 = 1 - self.alpha
 
 class BiquadBR(Biquad):
-    def computeLpCoeffs(self):
+    def computeCoeffs(self):
         self.b0 = 1
         self.b1 = -2 * self.c
         self.b2 = 1
