@@ -153,9 +153,9 @@ class SG_Audio:
         if PLATFORM == "darwin":
             self.server = Server(sr=self.samplingRate, buffersize=256, duplex=0)
         elif PLATFORM == "linux2":
-            self.server = Server(sr=self.samplingRate, buffersize=1024, duplex=0)
+            self.server = Server(sr=self.samplingRate, buffersize=256, duplex=0)
         else:
-            self.server = Server(sr=self.samplingRate, buffersize=1024, duplex=0)
+            self.server = Server(sr=self.samplingRate, buffersize=256, duplex=0)
         self.pitch_check = 1
         self.pitch_map = Map(0, 1, "lin")
         self.amp_check = 0
@@ -397,9 +397,9 @@ class SG_Audio:
         self.server_started = True
             
     def stop(self):
-        self.refresh_met.stop()
-        self.server.stop()       
         self.server_started = False    
+        self.refresh_met.stop()
+        wx.CallAfter(self.server.stop)       
 
     def refresh_screen(self): 
         wx.CallAfter(self.refresh)        
