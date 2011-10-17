@@ -25,6 +25,7 @@ from wx.lib.wordwrap import wordwrap
 import  wx.lib.scrolledpanel as scrolled
 import wx.html
 import wx.richtext as rt
+from types import ListType
 
 from Resources.constants import *
 from Resources.audio import *
@@ -47,6 +48,9 @@ class CommandFrame(wx.Frame):
         self.rtc = rt.RichTextCtrl(self, style=wx.VSCROLL|wx.HSCROLL|wx.NO_BORDER)
         self.rtc.SetEditable(False)
         wx.CallAfter(self.rtc.SetFocus)
+        self.rtc.SetBackgroundColour("#EDEDED")
+        caret = self.rtc.GetCaret()
+        caret.Hide()
     
         self.rtc.Freeze()
         self.rtc.BeginSuppressUndo()
@@ -58,37 +62,51 @@ class CommandFrame(wx.Frame):
         self.rtc.Thaw()
 
     def writeBigTitle(self, text):
+        self.rtc.BeginAlignment(rt.TEXT_ALIGNMENT_CENTRE)
         self.rtc.BeginBold()
         if PLATFORM in ["win32", "linux2"]:
             self.rtc.BeginFontSize(12)
         else:
             self.rtc.BeginFontSize(16)
+        self.rtc.Newline()
+        self.rtc.Newline()
         self.rtc.WriteText(text)
         self.rtc.Newline()
         self.rtc.EndFontSize()
         self.rtc.EndBold()
+        self.rtc.EndAlignment()
 
     def writeTitle(self, text):
         self.rtc.BeginBold()
+        self.rtc.BeginUnderline()
         if PLATFORM in ["win32", "linux2"]:
             self.rtc.BeginFontSize(10)
         else:
             self.rtc.BeginFontSize(14)
+        self.rtc.Newline()
         self.rtc.WriteText(text)
         self.rtc.Newline()
         self.rtc.EndFontSize()
+        self.rtc.EndUnderline()
         self.rtc.EndBold()
 
     def writeCommand(self, command, text, shortcut=""):
-        self.rtc.BeginBold()
         if PLATFORM in ["win32", "linux2"]:
             self.rtc.BeginFontSize(8)
         else:
             self.rtc.BeginFontSize(12)
+            shortcut = shortcut.replace("Ctrl", "Cmd")
+        self.rtc.BeginBold()
         self.rtc.WriteText(command + " ")
         self.rtc.EndBold()
+        self.rtc.BeginItalic()
         self.rtc.WriteText(shortcut + " :\n")
-        self.rtc.WriteText("\t%s\n" % text)
+        self.rtc.EndItalic()
+        if type(text) == ListType:
+            for line in text:
+                self.rtc.WriteText("\t%s\n" % line)
+        else:
+            self.rtc.WriteText("\t%s\n" % text)
         self.rtc.EndFontSize()
 
     def onClose(self, evt):
@@ -2041,14 +2059,64 @@ class MainFrame(wx.Frame):
         self.status.SetStatusText(text)
 
     def openCommandsPage(self, evt):
-        win = CommandFrame(self, wx.ID_ANY, "Soundgrain commands", size=(700, 500), style=wx.DEFAULT_FRAME_STYLE)
+        win = CommandFrame(self, wx.ID_ANY, "Soundgrain commands", size=(800, 650), style=wx.DEFAULT_FRAME_STYLE)
         win.writeBigTitle("Soundgrain - List of commands")
         win.writeBigTitle("Menus")
         win.writeTitle("File Menu")
         win.writeCommand("New...", "Start a new project.", "(Ctrl+N)")
-        win.writeCommand("Open...", "Open a previously created .sg file", "(Ctrl+O)")
- 
-	
+        win.writeCommand("Open...", "Open a previously created .sg file.", "(Ctrl+O)")
+        win.writeCommand("Open Soundfile...", "Import a new sound into the drawing area", "(Shift+Ctrl+O)")
+        win.writeCommand("Save", "Save the current state of the project.", "(Ctrl+S)")
+        win.writeCommand("Save As...", "Save the current state of the project in a new .sg file.", "(Shift+Ctrl+S)")
+        win.writeCommand("Open FX Window", "Open the granulator's parameters window.", "(Ctrl+P)")
+        win.writeCommand("Open Envelope Window", "Open a grapher window to modify the shape of the grain's envelope.", "(Ctrl+E)")
+        win.writeCommand("Run", "Start/stop audio processing.", "(Ctrl+R)")
+        win.writeTitle("Drawing Menu")
+        win.writeCommand("Undo, Redo", "Unlimited undo and redo stages for the drawing surface (only trajectories).", "(Ctrl+Z, Shift+Ctrl+Z)")
+        win.writeCommand("Draw Waveform", "If checked, the loaded soundfile's waveform will be drawn behind the trajectories.", "")
+        win.writeCommand("Activate Lowpass filter", ["If checked, all points of a trajectory will be filtered using a lowpass filter.",
+                                        "This can be used to smooth out the trajectory or to insert resonance in the curve when the Q is very high."], "")
+        win.writeCommand("Fill points", ["If checked, spaces between points in a trajectory (especially when stretching the curve) will be filled by additional points.",
+                                    "If unchecked, the number of points in the trajectory won't change, allowing synchronization between similar trajectories."], "")
+        win.writeCommand("Edition levels", "Set the modification spread of a trajectory when edited with the mouse (higher values equal narrower transformations).", "")
+        win.writeCommand("Reinit counters", "Re-sync the trajectories's counters (automatically done when audio is started).", "(Ctrl+T)")
+        win.writeTitle("Audio Drivers Menu")
+        win.rtc.WriteText("\nChoose the desired driver.\nThe drivers list is updated only on startup.\n")
+        win.writeTitle("Midi Menu")
+        win.writeCommand("Memorize Trajectory", ["Memorize the state of the selected trajectory.",
+                                            "The ensuing snapshot will be the initial state for trajectories triggered by MIDI notes"], "(Shift+Ctrl+M)")
+        win.writeCommand("Midi Settings...", "Open the MIDI configuration window.", "")
+        win.writeTitle("FxBall Menu")
+        win.writeCommand("Add Reverb ball", "Create a reverb region on the drawing surface.", "(Ctrl+1)")
+        win.writeCommand("Add Delay ball", "Create a recursive delay region on the drawing surface.", "(Ctrl+2)")
+        win.writeCommand("Add Disto ball", "Create a distortion region on the drawing surface.", "(Ctrl+3)")
+        win.writeCommand("Add Waveguide ball", "Create a resonator region on the drawing surface.", "(Ctrl+4)")
+        win.writeCommand("Add RingMod ball", "Create a ring modulation region on the drawing surface.", "(Ctrl+5)")
+        win.writeCommand("Add Degrade ball", "Create a degradation region on the drawing surface.", "(Ctrl+6)")
+        win.writeCommand("Add Harmonizer ball", "Create a harmonization region on the drawing surface.", "(Ctrl+7)")
+
+        win.writeBigTitle("Drawing Surface")
+        win.writeTitle("Mouse Bindings")
+        win.writeCommand("Left-click in empty space", "Add a new trajectory.", "")
+        win.writeCommand("Left-click on red rectangle", "Move the trajectory.", "")
+        win.writeCommand("Right-click on red rectangle", "Delete the trajectory.", "")
+        win.writeCommand("Alt+click on red rectangle", "Duplicate the trajectory.", "")
+        win.writeCommand("Left-click on blue diamond", "Scale the size of a circle or oscil trajectory.", "")
+        win.writeCommand("Left-click on a trajectory line", 'Drag and modify the shape of the trajectory (see "Edition levels").', "")
+        win.writeCommand("Left-click on the middle of an FxBall", "Move the ball.", "")
+        win.writeCommand("Left-click on the border of an FxBall", "Resize the ball.", "")
+        win.writeCommand("Right-click on an FxBall", "Open the effect's parameters window.", "")
+        win.writeCommand("Alt+click on an FxBall", "Delete the ball.", "")
+        win.writeCommand("Shift+click, up and down motion on an FxBall", "Change the effects's fadein/fadeout ramp time.", "")
+
+        win.writeTitle("Keyboard Bindings")
+        win.rtc.WriteText("\nWhen the focus is on the drawing surface:\n")
+        win.writeCommand("Delete key", "Delete the selected trajectory.", "")
+        win.writeCommand("Arrow keys", "Move all trajectories.", "")
+        win.writeCommand("Shift + arrow keys", "Move the selected trajectory.", "")
+        win.writeCommand("1 to 8 (not on numeric keypad)", "Freeze/unfreeze the selected trajectory.", "")
+        win.writeCommand("0 (not on numeric keypad)", "Freeze/unfreeze all trajectories.", "")
+
         win.closeRTC()
         win.CenterOnParent()
         win.Show(True)
