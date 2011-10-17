@@ -1614,7 +1614,7 @@ class MainFrame(wx.Frame):
         self.midiSettings = MidiSettings(self, self.panel, self.sg_audio, miDriver)
         self.createInitTempFile()
 
-        self.Show()
+        wx.CallAfter(self.Show)
         self.check(auDriver)
         
         if file:
