@@ -1184,18 +1184,18 @@ class ControlPanel(scrolled.ScrolledPanel):
                             style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             sndPath = dlg.GetPath()
-            self.loadSound(sndPath)
+            self.loadSound(ensureNFD(sndPath))
         dlg.Destroy()
 
     def loadSound(self, sndPath, force=False):
         if sndPath:
             if os.path.isfile(sndPath):
-                self.sndPath = sndPath.encode(ENCODING)
-                self.parent.sg_audio.loadSnd(self.sndPath)
-                chnls, samprate, dur = soundInfo(self.sndPath)
+                self.sndPath = sndPath
+                self.parent.sg_audio.loadSnd(toSysEncoding(self.sndPath))
+                chnls, samprate, dur = soundInfo(toSysEncoding(self.sndPath))
                 self.sndDur = dur
                 self.chnls = chnls
-                self.sndInfoStr = u'Loaded sound: %s,    Sr: %s Hz,    Channels: %s,    Duration: %s sec' % (self.sndPath.decode(ENCODING), samprate, chnls, dur)
+                self.sndInfoStr = u'Loaded sound: %s,    Sr: %s Hz,    Channels: %s,    Duration: %s sec' % (self.sndPath, samprate, chnls, dur)
                 if self.parent.draw:
                     if not self.sndPath in self.surface.bitmapDict.keys() or force:
                         self.parent.log("Drawing waveform...")
@@ -1591,8 +1591,8 @@ class MainFrame(wx.Frame):
         if os.path.isfile(preffile):
             with open(preffile, "r") as f:
                 lines = f.readlines()
-                auDriver = lines[0].split("=")[1].replace("\n", "")
-                miDriver = lines[1].split("=")[1].replace("\n", "")
+                auDriver = ensureNFD(lines[0].split("=")[1].replace("\n", ""))
+                miDriver = ensureNFD(lines[1].split("=")[1].replace("\n", ""))
         else:
             auDriver = None
             miDriver = None
@@ -1618,7 +1618,7 @@ class MainFrame(wx.Frame):
         self.check(auDriver)
         
         if file:
-            wx.CallAfter(self.loadFile, file)
+            wx.CallAfter(self.loadFile, ensureNFD(file))
 
     def onRun(self, event):
         self.controls.handleAudio(event)
@@ -1626,6 +1626,7 @@ class MainFrame(wx.Frame):
     def check(self, pref=None):
         self.status.SetStatusText('Scanning audio drivers...')
         self.driversList, self.driverIndexes, selected = checkForDrivers()
+        self.driversList = [ensureNFD(driver) for driver in self.driversList]
         if pref == None:
             self.audioDriver = selected
         else:
@@ -1633,10 +1634,9 @@ class MainFrame(wx.Frame):
                 self.audioDriver = self.driverIndexes[self.driversList.index(pref)]
             else:
                 self.audioDriver = selected
-        
         for i, driver in enumerate(self.driversList):
             menuId = 200 + i
-            self.menu2.Append(menuId, driver.decode(ENCODING), "", wx.ITEM_RADIO)
+            self.menu2.Append(menuId, driver, "", wx.ITEM_RADIO)
             self.Bind(wx.EVT_MENU, self.handleDriver, id=menuId)
             if driver == self.driversList[self.driverIndexes.index(self.audioDriver)]:
                 self.menu2.Check(menuId, True)
@@ -1752,7 +1752,7 @@ class MainFrame(wx.Frame):
                             style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
-            self.loadFile(path)
+            self.loadFile(ensureNFD(path))
         dlg.Destroy()
 
     def handleLoad(self, evt):
@@ -1890,7 +1890,7 @@ class MainFrame(wx.Frame):
         self.controls.setSamplingRate(dict['ControlPanel'].get('sr', 44100))
         self.controls.setFileFormat(dict['ControlPanel'].get('fileformat', 0))
         self.controls.setSampleType(dict['ControlPanel'].get('sampletype', 0))
-        self.controls.loadSound(dict['ControlPanel']['sound'])
+        self.controls.loadSound(ensureNFD(dict['ControlPanel']['sound']))
         ### Trajectories ###
         for i, t in enumerate(self.panel.getAllTrajectories()):
             t.setAttributes(dict['Trajectories'][str(i)])
@@ -1970,8 +1970,8 @@ class MainFrame(wx.Frame):
         auDriver = self.driversList[self.driverIndexes.index(self.audioDriver)]
         miDriver = self.midiSettings.getInterface()
         with open(os.path.join(os.path.expanduser("~"), ".soundgrain-init"), "w") as f:
-            f.write("audioDriver=%s\n" % auDriver)
-            f.write("midiDriver=%s\n" % miDriver)
+            f.write("audioDriver=%s\n" % toSysEncoding(auDriver))
+            f.write("midiDriver=%s\n" % toSysEncoding(miDriver))
         if self.granulatorControls.IsShown():
             self.granulatorControls.Hide()
         self.controls.meter.OnClose(evt)
@@ -2013,7 +2013,7 @@ class SoundGrainApp(wx.PySimpleApp):
         self.loadFile = func
             
     def MacOpenFile(self, filename):
-        self.loadFile(filename)
+        self.loadFile(ensureNFD(filename))
               
 if __name__ == '__main__': 
 
