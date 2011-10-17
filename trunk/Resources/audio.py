@@ -227,7 +227,8 @@ class SG_Audio:
         if fileformat == 0: ext = ".wav"
         else: ext = ".aif"
         date = time.strftime('_%d_%b_%Y_%Hh%M')
-        self.server.recstart(os.path.join(os.path.expanduser('~'), "Desktop", filename+date+ext))        
+        complete_filename = toSysEncoding(os.path.join(os.path.expanduser('~'), "Desktop", filename+date+ext))
+        self.server.recstart(complete_filename)
 
     def recStop(self):
         self.server.recstop()
