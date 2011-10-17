@@ -1520,12 +1520,9 @@ class MainFrame(wx.Frame):
         self.menu.Append(7, "Run\tCtrl+R", "", wx.ITEM_CHECK)
         self.Bind(wx.EVT_MENU, self.onRun, id=7)
         self.menu.AppendSeparator()
-        quit_item = self.menu.Append(8, "Quit\tCtrl+Q")  
-        self.Bind(wx.EVT_MENU, self.OnClose, id=8)
+        quit_item = self.menu.Append(wx.ID_EXIT, "Quit\tCtrl+Q")  
+        self.Bind(wx.EVT_MENU, self.OnClose, id=wx.ID_EXIT)
         self.menuBar.Append(self.menu, "&File")
-
-        if wx.Platform=="__WXMAC__":
-            wx.App.SetMacExitMenuItemId(quit_item.GetId())
 
         self.menu1 = wx.Menu()
         self.menu1.Append(110, "Undo\tCtrl+Z", "")
@@ -1578,8 +1575,7 @@ class MainFrame(wx.Frame):
         self.menuBar.Append(self.menu4, "&FxBall")
 
         menu5 = wx.Menu()
-        helpItem = menu5.Append(500, '&About %s %s' % (NAME, SG_VERSION), 'wxPython RULES!!!')
-        wx.App.SetMacAboutMenuItemId(helpItem.GetId())
+        helpItem = menu5.Append(wx.ID_ABOUT, '&About %s %s' % (NAME, SG_VERSION), 'wxPython RULES!!!')
         self.Bind(wx.EVT_MENU, self.showAbout, helpItem)
         commands = menu5.Append(501, "Opens SoundGrain commands page")
         self.Bind(wx.EVT_MENU, self.openCommandsPage, commands)
