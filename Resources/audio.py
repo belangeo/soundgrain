@@ -142,6 +142,7 @@ class SG_Audio:
         self.createTraj = createTraj
         self.deleteTraj = deleteTraj
         self.envFrame = envFrame
+        self.chnls = 2
         self.server_started = False
         self.num_grains = 8
         self.activeStreams = []
@@ -170,6 +171,7 @@ class SG_Audio:
     def boot(self, driver, chnls, samplingRate, midiInterface):
         global USE_MIDI
         self.server.setOutputDevice(driver)
+        self.chnls = chnls
         self.server.setNchnls(chnls)
         self.samplingRate = samplingRate
         self.server.setSamplingRate(samplingRate)
@@ -307,7 +309,7 @@ class SG_Audio:
             self.streams[which].y_amp.value = amp
         else:
             self.streams[which].y_amp.value = 1
-        if self.pan_check:
+        if self.pan_check and self.chnls != 1:
             pan = self.pan_map.get(x)
             self.streams[which].y_pan.value = pan
         else:
@@ -387,6 +389,8 @@ class SG_Audio:
         self.fxs[key].pan.mul = val
 
     def handleFxPan(self, key, val):
+        if self.chnls == 1:
+            return
         self.fxs[key].pan.pan = val
 
     def start(self):
