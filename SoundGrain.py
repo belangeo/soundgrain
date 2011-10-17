@@ -24,7 +24,7 @@ import wx
 from wx.lib.wordwrap import wordwrap
 import  wx.lib.scrolledpanel as scrolled
 import wx.html
-import wx.richtext
+import wx.richtext as rt
 
 from Resources.constants import *
 from Resources.audio import *
@@ -33,6 +33,66 @@ from pyolib._wxwidgets import ControlSlider, VuMeter, Grapher
 from Resources.Trajectory import Trajectory
 from Resources.FxBall import FxBall
 from Resources.MidiSettings import MidiSettings
+
+class CommandFrame(wx.Frame):
+    def __init__(self, *args, **kw):
+        wx.Frame.__init__(self, *args, **kw)
+        self.menubar = wx.MenuBar()
+        self.fileMenu = wx.Menu()
+        closeItem = self.fileMenu.Append(wx.ID_ANY, 'Close...\tCtrl+W', kind=wx.ITEM_NORMAL)
+        self.Bind(wx.EVT_MENU, self.onClose, id=closeItem.GetId())
+        self.menubar.Append(self.fileMenu, "&File")
+        self.SetMenuBar(self.menubar)
+    
+        self.rtc = rt.RichTextCtrl(self, style=wx.VSCROLL|wx.HSCROLL|wx.NO_BORDER)
+        self.rtc.SetEditable(False)
+        wx.CallAfter(self.rtc.SetFocus)
+    
+        self.rtc.Freeze()
+        self.rtc.BeginSuppressUndo()
+        self.rtc.BeginParagraphSpacing(0, 20)
+
+    def closeRTC(self):
+        self.rtc.EndParagraphSpacing()
+        self.rtc.EndSuppressUndo()
+        self.rtc.Thaw()
+
+    def writeBigTitle(self, text):
+        self.rtc.BeginBold()
+        if PLATFORM in ["win32", "linux2"]:
+            self.rtc.BeginFontSize(12)
+        else:
+            self.rtc.BeginFontSize(16)
+        self.rtc.WriteText(text)
+        self.rtc.Newline()
+        self.rtc.EndFontSize()
+        self.rtc.EndBold()
+
+    def writeTitle(self, text):
+        self.rtc.BeginBold()
+        if PLATFORM in ["win32", "linux2"]:
+            self.rtc.BeginFontSize(10)
+        else:
+            self.rtc.BeginFontSize(14)
+        self.rtc.WriteText(text)
+        self.rtc.Newline()
+        self.rtc.EndFontSize()
+        self.rtc.EndBold()
+
+    def writeCommand(self, command, text, shortcut=""):
+        self.rtc.BeginBold()
+        if PLATFORM in ["win32", "linux2"]:
+            self.rtc.BeginFontSize(8)
+        else:
+            self.rtc.BeginFontSize(12)
+        self.rtc.WriteText(command + " ")
+        self.rtc.EndBold()
+        self.rtc.WriteText(shortcut + " :\n")
+        self.rtc.WriteText("\t%s\n" % text)
+        self.rtc.EndFontSize()
+
+    def onClose(self, evt):
+        self.Destroy()
 
 class DrawingSurface(wx.Panel):
     def __init__(self, parent, pos=(0,0), size=wx.DefaultSize):
@@ -1577,7 +1637,7 @@ class MainFrame(wx.Frame):
         menu5 = wx.Menu()
         helpItem = menu5.Append(wx.ID_ABOUT, '&About %s %s' % (NAME, SG_VERSION), 'wxPython RULES!!!')
         self.Bind(wx.EVT_MENU, self.showAbout, helpItem)
-        commands = menu5.Append(501, "Opens SoundGrain commands page")
+        commands = menu5.Append(501, "Open SoundGrain commands page")
         self.Bind(wx.EVT_MENU, self.openCommandsPage, commands)
         self.menuBar.Append(menu5, '&Help')
 
@@ -1979,12 +2039,18 @@ class MainFrame(wx.Frame):
     def log(self, text):
         self.status.SetStatusText(text)
 
-    def openCommandsPage(self, event):
-        f = os.path.join(RESOURCES_PATH, "commands.pdf")
-        if sys.platform == 'win32':
-            os.startfile(f)
-        else:
-            os.system('open %s' % f)
+    def openCommandsPage(self, evt):
+        win = CommandFrame(self, wx.ID_ANY, "Soundgrain commands", size=(700, 500), style=wx.DEFAULT_FRAME_STYLE)
+        win.writeBigTitle("Soundgrain - List of commands")
+        win.writeBigTitle("Menus")
+        win.writeTitle("File Menu")
+        win.writeCommand("New...", "Start a new project.", "(Ctrl+N)")
+        win.writeCommand("Open...", "Open a previously created .sg file", "(Ctrl+O)")
+ 
+	
+        win.closeRTC()
+        win.CenterOnParent()
+        win.Show(True)
 
     def showAbout(self, evt):
         info = wx.AboutDialogInfo()
