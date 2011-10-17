@@ -17,10 +17,17 @@ You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, sys
+import os, sys, unicodedata
+from types import UnicodeType
+
+reload(sys)
+sys.setdefaultencoding("utf-8")
+
+DEFAULT_ENCODING = sys.getdefaultencoding()
+SYSTEM_ENCODING = sys.getfilesystemencoding()
 
 NAME = 'Soundgrain'
-SG_VERSION = '4.0.1'
+SG_VERSION = '4.1.0'
 PLATFORM = sys.platform
 MAX_STREAMS = 16
 
@@ -41,4 +48,34 @@ TRAJTYPES = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 
 BACKGROUND_COLOUR = "#ECE6EA"
 
-ENCODING = sys.getfilesystemencoding()
+def ensureNFD(unistr):
+    if PLATFORM in ['linux2', 'win32']:
+        encodings = [DEFAULT_ENCODING, SYSTEM_ENCODING,
+                     'cp1252', 'iso-8859-1', 'utf-16']
+        format = 'NFC'
+    else:
+        encodings = [DEFAULT_ENCODING, SYSTEM_ENCODING,
+                     'macroman', 'iso-8859-1', 'utf-16']
+        format = 'NFD'
+    if type(unistr) != UnicodeType:
+        for encoding in encodings:
+            try:
+                unistr = unistr.decode(encoding)
+                break
+            except UnicodeDecodeError:
+                continue
+            except:
+                unistr = "UnableToDecodeString"
+                print "Unicode encoding not in a recognized format..."
+                break
+    return unicodedata.normalize(format, unistr)
+
+def toSysEncoding(unistr):
+    try:
+        if PLATFORM == "win32":
+            unistr = unistr.encode(SYSTEM_ENCODING)
+        else:
+            unistr = unicode(unistr)
+    except:
+        pass
+    return unistr

@@ -20,7 +20,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx, sys
 from pyolib._wxwidgets import ControlSlider
-from constants import BACKGROUND_COLOUR
+from constants import BACKGROUND_COLOUR, ensureNFD, toSysEncoding
 from pyo import *
 
 class MidiSettings(wx.Frame):
@@ -49,6 +49,7 @@ class MidiSettings(wx.Frame):
 
         box.Add(wx.StaticText(self.panel, id=-1, label="Midi interface"), 0, wx.CENTER|wx.ALL, 2)
         self.interfaceList, self.interfaceIndexes = pm_get_input_devices()
+        self.interfaceList = [ensureNFD(driver) for driver in self.interfaceList]
         if self.interfaceList != []:
             selected = pm_get_default_input()
             if miDriver == None:
