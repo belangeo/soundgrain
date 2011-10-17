@@ -2031,7 +2031,8 @@ class MainFrame(wx.Frame):
         if self.granulatorControls.IsShown():
             self.granulatorControls.Hide()
         self.controls.meter.OnClose(evt)
-        self.sg_audio.server.stop()
+        if self.sg_audio.server.getIsStarted():
+            self.sg_audio.server.stop()
         self.controls.shutdownServer()
         self.Destroy()
         sys.exit()
