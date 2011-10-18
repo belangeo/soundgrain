@@ -21,9 +21,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, sys, math, tempfile, xmlrpclib, time
 import wx
-from wx.lib.wordwrap import wordwrap
 import  wx.lib.scrolledpanel as scrolled
-import wx.html
 import wx.richtext as rt
 from types import ListType
 
@@ -155,6 +153,7 @@ class DrawingSurface(wx.Panel):
         self.Bind(wx.EVT_KEY_DOWN, self.KeyDown)
         self.Bind(wx.EVT_KEY_UP, self.KeyUp)
         self.Bind(wx.EVT_LEFT_DOWN, self.MouseDown)
+        self.Bind(wx.EVT_LEFT_DCLICK, self.MouseDoubleClick)
         self.Bind(wx.EVT_LEFT_UP, self.MouseUp)
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
         self.Bind(wx.EVT_MOTION, self.MouseMotion)
@@ -482,6 +481,43 @@ class DrawingSurface(wx.Panel):
             self.needBitmap = True
             self.Refresh()
 
+    def MouseDoubleClick(self, evt):
+        self.downPos = evt.GetPositionTuple()
+        for t in self.getActiveTrajectories():
+            # Select or duplicate trajectory
+            if t.getInsideRect(self.downPos):
+                for new_t in self.trajectories:
+                    if not new_t.getActive():
+                        self.setSelected(new_t)
+                        self.selected.setActive(True)
+                        self.selected.setType(t.getType())
+                        self.selected.lpx.reinit()
+                        self.selected.lpy.reinit()
+                        self.selected.activateLp(self.parent.lowpass)
+                        self.selected.setEditionLevel(self.parent.editionLevel)
+                        self.selected.setPoints(t.getPoints())
+                        self.selected.setInitPoints()
+                        if self.selected.getType() not in  ['free', 'line']:
+                            self.selected.setRadius(t.getRadius())
+                            self.selected.setCenter(t.getCenter())
+                        break
+                else:    
+                    self.setSelected(t)
+                Xs = [p[0] for p in self.selected.getPoints()]
+                self.extremeXs = (min(Xs), max(Xs))
+                Ys = [p[1] for p in self.selected.getPoints()]
+                self.extremeYs = (min(Ys), max(Ys))                
+                self.action = 'drag'
+                if self.selected.getType() not in  ['free', 'line']:
+                    self.curCenter = self.selected.getCenter()
+                self.CaptureMouse()
+                return
+
+        for key, fxball in self.fxballs.items():
+            if fxball.getInside(self.downPos, small=True):
+                self.removeFxBall(key)
+                break
+
     def MouseDown(self, evt):
         self.downPos = evt.GetPositionTuple()
         for t in self.getActiveTrajectories():
@@ -528,25 +564,25 @@ class DrawingSurface(wx.Panel):
                     self.action = 'edit'
                     self.CaptureMouse()
                     return
-            # Check if inside an FxBall
-            for key, fxball in self.fxballs.items():
-                if fxball.getInside(self.downPos, small=True):
-                    if evt.AltDown():
-                        self.removeFxBall(key)
-                    else:
-                        self.fxball = fxball
-                        self.action = 'drag_ball'
-                        self.CaptureMouse()
-                    return
-                elif fxball.getInside(self.downPos, small=False):
-                    if evt.AltDown():
-                        self.fxballs.remove(fxball)
-                        self.Refresh()
-                    else:
-                        self.fxball = fxball
-                        self.action = 'rescale_ball'
-                        self.CaptureMouse()
-                    return
+        # Check if inside an FxBall
+        for key, fxball in self.fxballs.items():
+            if fxball.getInside(self.downPos, small=True):
+                if evt.AltDown():
+                    self.removeFxBall(key)
+                else:
+                    self.fxball = fxball
+                    self.action = 'drag_ball'
+                    self.CaptureMouse()
+                return
+            elif fxball.getInside(self.downPos, small=False):
+                if evt.AltDown():
+                    self.fxballs.remove(fxball)
+                    self.Refresh()
+                else:
+                    self.fxball = fxball
+                    self.action = 'rescale_ball'
+                    self.CaptureMouse()
+                return
                     
         # Click in an empty space, draw a new trajectory
         self.action = 'draw'
@@ -2100,13 +2136,13 @@ class MainFrame(wx.Frame):
         win.writeCommand("Left-click in empty space", "Add a new trajectory.", "")
         win.writeCommand("Left-click on red rectangle", "Move the trajectory.", "")
         win.writeCommand("Right-click on red rectangle", "Delete the trajectory.", "")
-        win.writeCommand("Alt+click on red rectangle", "Duplicate the trajectory.", "")
+        win.writeCommand("Alt+click (or double-click) on red rectangle", "Duplicate the trajectory.", "")
         win.writeCommand("Left-click on blue diamond", "Scale the size of a circle or oscil trajectory.", "")
         win.writeCommand("Left-click on a trajectory line", 'Drag and modify the shape of the trajectory (see "Edition levels").', "")
         win.writeCommand("Left-click on the middle of an FxBall", "Move the ball.", "")
         win.writeCommand("Left-click on the border of an FxBall", "Resize the ball.", "")
         win.writeCommand("Right-click on an FxBall", "Open the effect's parameters window.", "")
-        win.writeCommand("Alt+click on an FxBall", "Delete the ball.", "")
+        win.writeCommand("Alt+click (or double-click) on an FxBall", "Delete the ball.", "")
         win.writeCommand("Shift+click, up and down motion on an FxBall", "Change the effects's fadein/fadeout ramp time.", "")
 
         win.writeTitle("Keyboard Bindings")
