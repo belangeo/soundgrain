@@ -216,7 +216,7 @@ class FxBall():
         return self.center
 
     def setCenter(self, c):
-        self.center = c
+        self._center = self.center = c
         self.pos = (self.center[0]-self.halfSize, self.center[1]-self.halfSize)
         self.setBitmaps(self.size, self.halfSize)
 
