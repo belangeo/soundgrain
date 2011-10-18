@@ -19,7 +19,10 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 import math, time, random, wx
 from constants import *
-from pyo import *
+try:
+    from pyo64 import *
+except:
+    from pyo import *
 
 USE_MIDI = False
 
@@ -30,6 +33,11 @@ def soundInfo(sndfile):
 def checkForDrivers():
     driverList, driverIndexes = pa_get_output_devices()
     selectedDriver = pa_get_default_output()
+    return driverList, driverIndexes, selectedDriver
+
+def checkForMidiDrivers():
+    driverList, driverIndexes = pm_get_input_devices()
+    selectedDriver = pm_get_default_input()
     return driverList, driverIndexes, selectedDriver
 
 class Fx:

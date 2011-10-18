@@ -21,7 +21,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 import wx, sys
 from pyolib._wxwidgets import ControlSlider
 from constants import BACKGROUND_COLOUR, ensureNFD, toSysEncoding
-from pyo import *
+from Resources.audio import checkForMidiDrivers
 
 class MidiSettings(wx.Frame):
     def __init__(self, parent, surface, sg_audio, miDriver):
@@ -48,10 +48,9 @@ class MidiSettings(wx.Frame):
         box = wx.BoxSizer(wx.VERTICAL)
 
         box.Add(wx.StaticText(self.panel, id=-1, label="Midi interface"), 0, wx.CENTER|wx.ALL, 2)
-        self.interfaceList, self.interfaceIndexes = pm_get_input_devices()
+        self.interfaceList, self.interfaceIndexes, selected = checkForMidiDrivers()
         self.interfaceList = [ensureNFD(driver) for driver in self.interfaceList]
         if self.interfaceList != []:
-            selected = pm_get_default_input()
             if miDriver == None:
                 self.selectedInterface = selected
             else:
