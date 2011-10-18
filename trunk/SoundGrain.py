@@ -319,6 +319,7 @@ class DrawingSurface(wx.Panel):
         return [t for t in self.trajectories if t.getActive()]
    
     def OnRightDown(self, evt):
+        self.SetFocus()
         for t in self.getActiveTrajectories():
             if t.getInsideRect(evt.GetPosition()):
                 t.clear()
@@ -482,6 +483,7 @@ class DrawingSurface(wx.Panel):
             self.Refresh()
 
     def MouseDoubleClick(self, evt):
+        self.SetFocus()
         self.downPos = evt.GetPositionTuple()
         for t in self.getActiveTrajectories():
             # Select or duplicate trajectory
@@ -517,8 +519,11 @@ class DrawingSurface(wx.Panel):
             if fxball.getInside(self.downPos, small=True):
                 self.removeFxBall(key)
                 break
+        
+        evt.Skip()
 
     def MouseDown(self, evt):
+        self.SetFocus()
         self.downPos = evt.GetPositionTuple()
         for t in self.getActiveTrajectories():
             # Select or duplicate trajectory
