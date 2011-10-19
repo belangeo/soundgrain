@@ -51,7 +51,7 @@ class Fx:
         elif fx == 2:
             self.process = Disto(self.input, drive=.9, slope=.75, mul=.2)
         elif fx == 3:
-            self.process = Waveguide(self.input, freq=100, dur=30, mul=.5)
+            self.process = Waveguide(self.input, freq=100, dur=30, mul=.3)
         elif fx == 4:
             self.rsine = Sine(freq=100)
             self.process = self.input * self.rsine
@@ -59,6 +59,14 @@ class Fx:
             self.process = Degrade(self.input, bitdepth=8, srscale=0.25)
         elif fx == 6:
             self.process = Harmonizer(self.input, transpo=-7, feedback=0.25)
+        elif fx == 7:
+            self.process = Chorus(self.input, depth=1, feedback=0.5)
+        elif fx == 8:
+            self.shift1 = FreqShift(self.input, shift=-100, mul=.707)
+            self.shift2 = FreqShift(self.input, shift=100, mul=.707)
+            self.process = self.shift1 + self.shift2
+        elif fx == 9:
+            self.process = AllpassWG(self.input, freq=100, feed=0.999, detune=0.5, mul=.3)
         self.pan = SPan(self.process, outs=chnls, pan=0.5).out()
 
 class Granulator_Stream:
@@ -187,7 +195,7 @@ class SG_Audio:
             self.server.setMidiInputDevice(midiInterface)
         self.server._server.setAmpCallable(self.controls.meter)
         self.server.boot()
-        self.mixer = Mixer(outs=8, chnls=chnls)
+        self.mixer = Mixer(outs=10, chnls=chnls)
         if midiInterface != None:
             USE_MIDI = True
             self.notein = Notein(poly=10)
@@ -375,6 +383,12 @@ class SG_Audio:
             self.fxs[key].process.bitdepth = val
         elif fx == 6:
             self.fxs[key].process.transpo = val
+        elif fx == 7:
+            self.fxs[key].process.depth = val
+        elif fx == 8:
+            self.fxs[key].shift1.shift = val
+        elif fx == 9:
+            self.fxs[key].process.freq = val
 
     def handleFxSlider2(self, fx, key, val):
         if fx == 0:
@@ -392,6 +406,12 @@ class SG_Audio:
             self.fxs[key].process.srscale = val
         elif fx == 6:
             self.fxs[key].process.feedback = val
+        elif fx == 7:
+            self.fxs[key].process.feedback = val
+        elif fx == 8:
+            self.fxs[key].shift2.shift = val
+        elif fx == 9:
+            self.fxs[key].process.detune = val
 
     def handleFxMul(self, key, val):
         self.fxs[key].pan.mul = val

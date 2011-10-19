@@ -7,7 +7,8 @@ from pyolib._wxwidgets import ControlSlider
 
 class FxBallControls(wx.Frame):
     def __init__(self, parent, fxball, sg_audio, size=(270, 200)):
-        title = "%s Controls" % {0: "Reverb", 1: "Delay", 2: "Disto", 3: "Waveguide", 4: "Ring Mod", 5: "Degrade", 6: "Harmonizer"}[fxball.getFx()]
+        title = "%s Controls" % {0: "Reverb", 1: "Delay", 2: "Disto", 3: "Waveguide", 4: "Ring Mod", 
+                                5: "Degrade", 6: "Harmonizer", 7: "Chorus", 8: "FreqShift", 9: "AllpassWG"}[fxball.getFx()]
         wx.Frame.__init__(self, parent, -1, title, size=size)
         self.parent = parent
         self.fxball = fxball
@@ -31,7 +32,10 @@ class FxBallControls(wx.Frame):
                         3: ["Frequency", 20, 500, 100, True], 
                         4: ["Frequency", 1, 1000, 100, True],
                         5: ["Bit Depth", 2, 32, 8, True],
-                        6: ["Transposition", -12, 12, -7, False]
+                        6: ["Transposition", -12, 12, -7, False],
+                        7: ["Depth", 0, 5, 1, False],
+                        8: ["Shift 1", -2000, 2000, -100, False],
+                        9: ["Frequency", 20, 500, 100, True], 
                     }[fxball.getFx()]
         text = wx.StaticText(self.panel, -1, sl1values[0])
         font, psize = text.GetFont(), text.GetFont().GetPointSize()
@@ -52,6 +56,9 @@ class FxBallControls(wx.Frame):
                         4: ["Ring vs Amp mod", 0, .5, 0, False],
                         5: ["SR Scale", 0.01, 1, 0.25, True],
                         6: ["Feedback", 0, 1, 0.25, False], 
+                        7: ["Feedback", 0, 1, 0.5, False], 
+                        8: ["Shift 2", -2000, 2000, 100, False],
+                        9: ["Detune", 0, 1, 0.5, False], 
                     }[fxball.getFx()]
         text = wx.StaticText(self.panel, -1, sl2values[0])
         text.SetFont(font)
@@ -133,6 +140,15 @@ def getColors(col, gradient):
     elif col == 6:
         firstColor = wx.Colour(255,255,255)
         secondColor = wx.Colour(gradient,gradient,gradient)
+    elif col == 7:
+        firstColor = wx.Colour(255,127,30)
+        secondColor = wx.Colour(gradient,gradient/2,30)
+    elif col == 8:
+        firstColor = wx.Colour(255,30,127)
+        secondColor = wx.Colour(gradient,30,gradient/2)
+    elif col == 9:
+        firstColor = wx.Colour(127,30,255)
+        secondColor = wx.Colour(gradient/2,30,gradient)
     return firstColor, secondColor    
     
 def GetRoundMaskBitmap(w, h, radius):
