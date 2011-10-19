@@ -221,7 +221,7 @@ class DrawingSurface(wx.Panel):
     def addFxBall(self, fx):
         key = -1
         fxkeys = self.fxballs.keys()
-        for i in range(8):
+        for i in range(10):
             if i not in fxkeys:
                 key = i
                 break
@@ -1686,10 +1686,13 @@ class MainFrame(wx.Frame):
         self.menu4.Append(401, "Add Delay ball\tCtrl+2", "")
         self.menu4.Append(402, "Add Disto ball\tCtrl+3", "")
         self.menu4.Append(403, "Add Waveguide ball\tCtrl+4", "")
-        self.menu4.Append(404, "Add RingMod ball\tCtrl+5", "")
+        self.menu4.Append(404, "Add Ring Modulator ball\tCtrl+5", "")
         self.menu4.Append(405, "Add Degrade ball\tCtrl+6", "")
         self.menu4.Append(406, "Add Harmonizer ball\tCtrl+7", "")
-        for i in range(7):
+        self.menu4.Append(407, "Add Chorus ball\tCtrl+8", "")
+        self.menu4.Append(408, "Add Frequency Shift ball\tCtrl+9", "")
+        self.menu4.Append(409, "Add Detuned Resonator ball\tCtrl+0", "")
+        for i in range(10):
             self.Bind(wx.EVT_MENU, self.addFxBall, id=400+i)
         self.menuBar.Append(self.menu4, "&FxBall")
 
