@@ -1351,7 +1351,12 @@ class ControlPanel(scrolled.ScrolledPanel):
                 self.sndPath = "Mixed sound " + str(random.randint(0, 10000)) 
                 chnls, samprate, dur = soundInfo(toSysEncoding(sndPath))
                 dlg = InsertDialog(self, -1, 'Insert sound settings', actual_dur=self.sndDur, snd_dur=dur)
-                dlg.CenterOnParent()
+                refpos = self.surface.GetPosition()
+                refsize = self.surface.GetSize()
+                dlgsize = dlg.GetSize()
+                X = refpos[0] + (refsize[0] / 2 - dlgsize[0] / 2)
+                Y = refpos[1] + (refsize[1] / 2 - dlgsize[1] / 2)
+                dlg.SetPosition((X,Y))
                 if dlg.ShowModal() == wx.ID_OK:
                     start, end, point, cross = dlg.getValues()
                     ok = True
@@ -2203,6 +2208,10 @@ class MainFrame(wx.Frame):
             self.menu1.Enable(111, True) 
 
     def OnClose(self, evt):
+        if "Mixed sound" in self.controls.sndPath:
+            print "Need to save the sound..."
+        if self.temps: # and all other settings
+            print "Ask for saving..."
         auDriver = self.driversList[self.driverIndexes.index(self.audioDriver)]
         miDriver = self.midiSettings.getInterface()
         with open(os.path.join(os.path.expanduser("~"), ".soundgrain-init"), "w") as f:

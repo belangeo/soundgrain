@@ -252,7 +252,7 @@ class SG_Audio:
         self.server.recstop()
 
     def getTableDuration(self):
-        return self.table.getDur()
+        return self.table.getDur(False)
 
     def loadSnd(self, sndPath):
         ch, sndsr, dur = soundInfo(sndPath)
