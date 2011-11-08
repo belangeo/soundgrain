@@ -98,8 +98,8 @@ class Granulator_Stream:
     def create_granulator(self, table, pos_rnd):
         self.table = table
         self.pos_rnd = pos_rnd
-        self.position = SigTo(value=0, time=0.01, mul=self.table.getSize())
-        self.y_pos_rnd = Sig(self.y_pos, mul=self.table.getSize())
+        self.position = SigTo(value=0, time=0.01, mul=self.table.getSize(False))
+        self.y_pos_rnd = Sig(self.y_pos, mul=self.table.getSize(False))
         self.granulator = Granulator(table=self.table, env=self.env, pitch=self.base_pitch*self.y_pit*self.srScale*self.transpo,
                                     pos=self.position+self.pos_rnd+self.y_pos_rnd,
                                     dur=self.duration*self.trans_noise+self.dur_noise+self.y_dur,
@@ -109,8 +109,8 @@ class Granulator_Stream:
         self.panner = SPan(input=self.granulator, outs=self.chnls, pan=self.y_pan).stop()                       
 
     def ajustLength(self):
-        self.position.mul = self.table.getSize()
-        self.y_pos_rnd.mul = self.table.getSize()
+        self.position.mul = self.table.getSize(False)
+        self.y_pos_rnd.mul = self.table.getSize(False)
         
     def setNumGrains(self, x):
         self.num_grains = x
@@ -251,13 +251,26 @@ class SG_Audio:
     def recStop(self):
         self.server.recstop()
 
+    def getTableDuration(self):
+        return self.table.getDur()
+
     def loadSnd(self, sndPath):
         ch, sndsr, dur = soundInfo(sndPath)
         self.srScale.value = float(sndsr) / self.samplingRate
-        self.table = SndTable(sndPath).normalize()
-        self.pos_rnd = Sig(self.pos_noise, self.table.getSize())
+        self.table = SndTable(sndPath)
+        self.table.normalize()
+        self.pos_rnd = Sig(self.pos_noise, self.table.getSize(False))
         for gr in self.streams.values():
             gr.create_granulator(self.table, self.pos_rnd)
+            gr.ajustLength()
+        if self.server_started:
+            for which in self.activeStreams:
+                self.streams[which].setActive(1)
+
+    def insertSnd(self, sndPath, start, end, point, cross):
+        self.table.insert(sndPath, point, cross, start, end)
+        self.pos_rnd.mul = self.table.getSize(False)
+        for gr in self.streams.values():
             gr.ajustLength()
         if self.server_started:
             for which in self.activeStreams:
