@@ -1351,6 +1351,7 @@ class ControlPanel(scrolled.ScrolledPanel):
                 self.sndPath = "Mixed sound " + str(random.randint(0, 10000)) 
                 chnls, samprate, dur = soundInfo(toSysEncoding(sndPath))
                 dlg = InsertDialog(self, -1, 'Insert sound settings', actual_dur=self.sndDur, snd_dur=dur)
+                dlg.CenterOnParent()
                 if dlg.ShowModal() == wx.ID_OK:
                     start, end, point, cross = dlg.getValues()
                     ok = True
@@ -1986,6 +1987,9 @@ class MainFrame(wx.Frame):
 
     def handleLoad(self, evt):
         self.controls.handleLoad()
+
+    def handleInsert(self, evt):
+        self.controls.handleInsert()
         
     def handleInsert(self, evt):
         self.controls.handleInsert()
