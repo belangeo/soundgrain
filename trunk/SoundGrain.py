@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, sys, math, tempfile, xmlrpclib, time
+import os, sys, math, tempfile, xmlrpclib, time, random
 import wx
 import  wx.lib.scrolledpanel as scrolled
 import wx.richtext as rt
@@ -28,7 +28,7 @@ from types import ListType
 from Resources.constants import *
 from Resources.audio import *
 from Resources.Modules import *
-from pyolib._wxwidgets import ControlSlider, VuMeter, Grapher
+from pyolib._wxwidgets import ControlSlider, VuMeter, Grapher, BACKGROUND_COLOUR
 from Resources.Trajectory import Trajectory
 from Resources.FxBall import FxBall
 from Resources.MidiSettings import MidiSettings
@@ -1306,6 +1306,20 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.loadSound(ensureNFD(sndPath))
         dlg.Destroy()
 
+    def handleInsert(self):
+        ok = False
+        dlg = wx.FileDialog(self, message="Choose a sound file to insert",
+                            defaultFile="",
+                            wildcard="AIFF file |*.aif;*.aiff;*.aifc;*.AIF;*.AIFF;*.Aif;*.Aiff|" \
+                                     "Wave file |*.wav;*.wave;*.WAV;*.WAVE;*.Wav;*.Wave",
+                            style=wx.OPEN)
+        if dlg.ShowModal() == wx.ID_OK:
+            ok = True
+            sndPath = dlg.GetPath()
+        dlg.Destroy()
+        if ok:
+            self.insertSound(ensureNFD(sndPath), True)
+
     def loadSound(self, sndPath, force=False):
         if sndPath:
             if os.path.isfile(sndPath):
@@ -1328,6 +1342,39 @@ class ControlPanel(scrolled.ScrolledPanel):
             elif ":\\" in sndPath:
                 # Handle windows path...
                 self.loadSound(os.path.join(self.parent.currentPath, sndPath.split("\\")[-1]), force)
+            else:
+                self.parent.log('Sound file "%s" does not exist!' % sndPath)        
+
+    def insertSound(self, sndPath, force=False):
+        if sndPath:
+            if os.path.isfile(sndPath):
+                self.sndPath = "Mixed sound " + str(random.randint(0, 10000)) 
+                chnls, samprate, dur = soundInfo(toSysEncoding(sndPath))
+                dlg = InsertDialog(self, -1, 'Insert sound settings', actual_dur=self.sndDur, snd_dur=dur)
+                if dlg.ShowModal() == wx.ID_OK:
+                    start, end, point, cross = dlg.getValues()
+                    ok = True
+                else:
+                    ok = False
+                dlg.Destroy()
+                if not ok:
+                    return
+                self.parent.sg_audio.insertSnd(toSysEncoding(sndPath), start, end, point, cross)
+                self.sndDur = self.parent.sg_audio.getTableDuration()
+                self.sndInfoStr = u'Loaded sound: %s,    Sr: %s Hz,    Channels: %s,    Duration: %s sec' % (self.sndPath, samprate, self.chnls, self.sndDur)
+                if self.parent.draw:
+                    if not self.sndPath in self.surface.bitmapDict.keys() or force:
+                        self.parent.log("Drawing waveform...")
+                        self.surface.analyse(self.sndPath)
+                    else:
+                        self.surface.list = self.surface.bitmapDict[self.sndPath]
+                        self.surface.create_bitmap()
+                self.logSndInfo()
+            elif os.path.isfile(os.path.join(self.parent.currentPath, os.path.split(sndPath)[1])):
+                self.insertSound(os.path.join(self.parent.currentPath, os.path.split(sndPath)[1]), force)
+            elif ":\\" in sndPath:
+                # Handle windows path...
+                self.insertSound(os.path.join(self.parent.currentPath, sndPath.split("\\")[-1]), force)
             else:
                 self.parent.log('Sound file "%s" does not exist!' % sndPath)        
 
@@ -1599,6 +1646,68 @@ class EnvelopeFrame(wx.Frame):
         if self.env != None:
             self.env.replace(self.graph.getValues())
 
+class InsertDialog(wx.Dialog):
+    def __init__(self, parent, id, title, actual_dur, snd_dur):
+        wx.Dialog.__init__(self, parent, id, title)
+        self.SetBackgroundColour(BACKGROUND_COLOUR)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        stline = wx.StaticText(self, -1, 'Starting point in seconds:')
+        vbox.Add(stline, 1, wx.ALIGN_CENTER_HORIZONTAL|wx.TOP, 10)
+        self.startSlider = ControlSlider(self, 0, snd_dur, 0, outFunction=self.handleStart)
+        vbox.Add(self.startSlider, 0, wx.ALL, 5)
+        
+        stline = wx.StaticText(self, -1, 'Ending point in seconds:')
+        vbox.Add(stline, 1, wx.ALIGN_CENTER_HORIZONTAL|wx.TOP, 10)
+        self.endSlider = ControlSlider(self, 0, snd_dur, snd_dur, outFunction=self.handleEnd)
+        vbox.Add(self.endSlider, 0, wx.ALL, 5)
+        
+        stline = wx.StaticText(self, -1, 'Insertion point in seconds:')
+        vbox.Add(stline, 1, wx.ALIGN_CENTER_HORIZONTAL|wx.TOP, 10)
+        self.insertSlider = ControlSlider(self, 0, actual_dur, 0)
+        vbox.Add(self.insertSlider, 0, wx.ALL, 5)
+        
+        stline = wx.StaticText(self, -1, 'Crossfade time in seconds:')
+        vbox.Add(stline, 1, wx.ALIGN_CENTER_HORIZONTAL|wx.TOP, 10)
+        self.crossfadeSlider = ControlSlider(self, 0, snd_dur*0.5, 0, outFunction=self.handleCross)
+        vbox.Add(self.crossfadeSlider, 0, wx.ALL, 5)
+
+        sizer =  self.CreateButtonSizer(wx.CANCEL|wx.OK)
+        vbox.Add(sizer, 0, wx.ALL, 5)
+        self.SetSizerAndFit(vbox)
+
+    def handleStart(self, val):
+        start = self.startSlider.GetValue()
+        end = self.endSlider.GetValue()
+        cross = self.crossfadeSlider.GetValue()
+        if start >= (end - .1):
+            self.endSlider.SetValue(start + .1, False)
+        rng = (end - start) * 0.5
+        if cross > rng:
+            self.crossfadeSlider.SetValue(rng, False)
+
+    def handleEnd(self, val):
+        start = self.startSlider.GetValue()
+        end = self.endSlider.GetValue()
+        cross = self.crossfadeSlider.GetValue()        
+        if end <= (start + .1):
+            self.startSlider.SetValue(end - .1, False)
+        rng = (end - start) * 0.5
+        if cross > rng:
+            self.crossfadeSlider.SetValue(rng, False)
+        
+    def handleCross(self, val):
+        start = self.startSlider.GetValue()
+        end = self.endSlider.GetValue()
+        cross = self.crossfadeSlider.GetValue()        
+        rng = (end - start) * 0.5
+        if cross > rng:
+            self.crossfadeSlider.SetValue(rng, False)
+
+    def getValues(self):
+        return (self.startSlider.GetValue(), self.endSlider.GetValue(), 
+                self.insertSlider.GetValue(), self.crossfadeSlider.GetValue())
+
 class MainFrame(wx.Frame):
     def __init__(self, parent, id, pos, size, file):
         wx.Frame.__init__(self, parent, id, "", pos, size)
@@ -1626,6 +1735,8 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.handleOpen, id=1)
         self.menu.Append(2, "Open Soundfile...\tShift+Ctrl+O")
         self.Bind(wx.EVT_MENU, self.handleLoad, id=2)
+        self.menu.Append(12, "Insert Soundfile...\tShift+Ctrl+I")
+        self.Bind(wx.EVT_MENU, self.handleInsert, id=12)
         self.menu.Append(3, "Save\tCtrl+S")
         self.Bind(wx.EVT_MENU, self.handleSave, id=3)
         self.menu.Append(4, "Save as...\tShift+Ctrl+S")
@@ -1875,6 +1986,9 @@ class MainFrame(wx.Frame):
 
     def handleLoad(self, evt):
         self.controls.handleLoad()
+        
+    def handleInsert(self, evt):
+        self.controls.handleInsert()
         
     def handleSave(self, evt):
         if self.currentFile:
