@@ -32,6 +32,7 @@ from pyolib._wxwidgets import ControlSlider, VuMeter, Grapher, BACKGROUND_COLOUR
 from Resources.Trajectory import Trajectory
 from Resources.FxBall import FxBall
 from Resources.MidiSettings import MidiSettings
+from Resources.splash import SoundGrainSplashScreen
 
 class CommandFrame(wx.Frame):
     def __init__(self, *args, **kw):
@@ -1715,7 +1716,7 @@ class InsertDialog(wx.Dialog):
                 self.insertSlider.GetValue(), self.crossfadeSlider.GetValue())
 
 class MainFrame(wx.Frame):
-    def __init__(self, parent, id, pos, size, file):
+    def __init__(self, parent, id, pos, size):
         wx.Frame.__init__(self, parent, id, "", pos, size)
         self.SetMinSize((600,300))
 
@@ -1849,11 +1850,7 @@ class MainFrame(wx.Frame):
         self.midiSettings = MidiSettings(self, self.panel, self.sg_audio, miDriver)
         self.createInitTempFile()
 
-        wx.CallAfter(self.Show)
         self.check(auDriver)
-        
-        if file:
-            wx.CallAfter(self.loadFile, ensureNFD(file))
 
     def onRun(self, event):
         self.controls.handleAudio(event)
@@ -2208,9 +2205,10 @@ class MainFrame(wx.Frame):
             self.menu1.Enable(111, True) 
 
     def OnClose(self, evt):
-        if "Mixed sound" in self.controls.sndPath:
-            print "Need to save the sound..."
-        if self.temps: # and all other settings
+        if self.controls.sndPath:
+            if "Mixed sound" in self.controls.sndPath:
+                print "Need to save the sound..."
+        if len(self.temps) > 1: # and all other settings
             print "Ask for saving..."
         auDriver = self.driversList[self.driverIndexes.index(self.audioDriver)]
         miDriver = self.midiSettings.getInterface()
@@ -2309,28 +2307,26 @@ class MainFrame(wx.Frame):
 class SoundGrainApp(wx.PySimpleApp):
     def __init__(self, *args, **kwargs):
         wx.PySimpleApp.__init__(self, *args, **kwargs)
-        self.loadFile = None
-    
-    def setLoadFileFunc(self, func):
-        self.loadFile = func
+        X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
+        if X < 900: sizex = X - 40
+        else: sizex = 900
+        if PLATFORM in ['win32', 'linux2']: defaultY = 670
+        else: defaultY = 650
+        if Y < defaultY: sizey = Y - 40
+        else: sizey = defaultY
+        self.frame = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey))
+        self.loadFile = self.frame.loadFile
             
     def MacOpenFile(self, filename):
         self.loadFile(ensureNFD(filename))
               
-if __name__ == '__main__': 
-
+if __name__ == '__main__':
     file = None
     if len(sys.argv) > 1:
         file = sys.argv[1]
 
     app = SoundGrainApp()
-    X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
-    if X < 900: sizex = X - 40
-    else: sizex = 900
-    if PLATFORM in ['win32', 'linux2']: defaultY = 670
-    else: defaultY = 650
-    if Y < defaultY: sizey = Y - 40
-    else: sizey = defaultY
-    f = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), file=file)
-    app.setLoadFileFunc(f.loadFile)
+    splash = SoundGrainSplashScreen(None, os.path.join(RESOURCES_PATH, "SoundGrainSplash.png"), app.frame)
+    if file:
+        wx.CallAfter(app.frame.loadFile, ensureNFD(file))
     app.MainLoop()
