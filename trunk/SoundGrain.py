@@ -1344,7 +1344,7 @@ class ControlPanel(scrolled.ScrolledPanel):
                 # Handle windows path...
                 self.loadSound(os.path.join(self.parent.currentPath, sndPath.split("\\")[-1]), force)
             else:
-                self.parent.log('Sound file "%s" does not exist!' % sndPath)        
+                self.parent.log('Sound file "%s" does not exist!' % sndPath)
 
     def insertSound(self, sndPath, force=False):
         if sndPath:
@@ -1449,7 +1449,7 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def bootServer(self):
         self.parent.sg_audio.boot(self.parent.audioDriver, self.nchnls, self.samplingRate, self.midiInterface)
-        self.tog_audio.Enable()    
+        self.tog_audio.Enable()
         if self.sndPath != None:
             self.loadSound(self.sndPath)
         if self.tempState != None:
@@ -1457,10 +1457,18 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.tempState = None
 
     def shutdownServer(self):
+        # status, path = self.parent.checkForMixedSound()
+        # if not status:
+        #     return
+        # if "Mixed sound" in self.sndPath:
+        #     if path != "":
+        #         self.sndPath = path
+        #     else:
+        #         self.sndPath = None
         self.tempState = self.parent.getState()
         self.parent.sg_audio.shutdown()
-        self.tog_audio.Disable()  
-        self.surface.Refresh()  
+        self.tog_audio.Disable()
+        self.surface.Refresh()
             
     def handleAudio(self, event):
         if event.GetInt() == 1:
@@ -1468,7 +1476,7 @@ class ControlPanel(scrolled.ScrolledPanel):
                 self.parent.log('*** No sound loaded! ***')
                 self.tog_audio.SetValue(0)
                 self.parent.menu.Check(7, False)
-            else:  
+            else:
                 self.tx_chnls.Disable()
                 self.tx_chnls.SetBackgroundColour("#EEEEEE")
                 self.pop_sr.Disable()
@@ -1482,7 +1490,7 @@ class ControlPanel(scrolled.ScrolledPanel):
                 for t in self.surface.getAllTrajectories():
                     t.initCounter()
                 self.parent.sg_audio.start()
-        else:    
+        else:
             self.tx_chnls.Enable()
             self.tx_chnls.SetBackgroundColour("#FFFFFF")
             self.pop_sr.Enable()
@@ -1501,7 +1509,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         if key == wx.WXK_TAB or key == wx.WXK_RETURN:
             self.surface.SetFocus()
         event.Skip()
-                
+
     def handleRecord(self, event):
         if event.GetInt() == 1:
             filename = self.tx_output.GetValue()
@@ -1541,7 +1549,7 @@ class DrawingParameters(wx.Panel):
         qBox.Add(self.sl_q)
         box.Add(qBox, 0, wx.LEFT | wx.RIGHT, 5)
         box.AddSpacer(5)
-        
+
         oscpText = wx.StaticText(self, -1, "Oscil period", size=(195,15))
         box.Add(oscpText, 0, wx.LEFT, 5)
         periodBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -2204,10 +2212,47 @@ class MainFrame(wx.Frame):
         else:
             self.menu1.Enable(111, True) 
 
+    def checkForMixedSound(self):
+        return_status = True
+        saved_path = ""
+        if "Mixed sound" in self.controls.sndPath:
+            dlg = wx.MessageDialog(self, 'There is a mixed sound loaded in the drawing table, do you want to save it on disk?',
+                                   'Mixed sound no saved...', wx.YES_NO | wx.YES_DEFAULT | wx.CANCEL | wx.ICON_INFORMATION)
+            ret = dlg.ShowModal()
+            if ret == wx.ID_YES:
+                save_dialog = True
+                return_status = True
+            elif ret == wx.ID_NO:
+                save_dialog = False
+                return_status = True
+            else:
+                save_dialog = False
+                return_status = False
+            dlg.Destroy()
+            if save_dialog:
+                wildcard = "AIFF file|*.aiff;*.aif|" \
+                           "Wave file|*.wave;*.wav"
+                dlg2 = wx.FileDialog(self, message="Choose a filename...", defaultDir=os.getcwd(), 
+                    defaultFile="mixedtable.wav", wildcard=wildcard, style=wx.SAVE | wx.CHANGE_DIR)
+                if dlg2.ShowModal() == wx.ID_OK:
+                    path = dlg2.GetPath()
+                    if path != "":
+                        p, ext = os.path.splitext(path)
+                        if ext.lower() in [".wav", ".wave"]:
+                            fileformat = 0
+                        else:
+                            fileformat = 1
+                        sampletype = self.controls.sampletype
+                        self.sg_audio.table.save(path, fileformat, sampletype)
+                        saved_path = path
+                dlg2.Destroy()
+        return return_status, saved_path
+
     def OnClose(self, evt):
         if self.controls.sndPath:
-            if "Mixed sound" in self.controls.sndPath:
-                print "Need to save the sound..."
+            status, path = self.checkForMixedSound()
+            if not status:
+                return
         if len(self.temps) > 1: # and all other settings
             print "Ask for saving..."
         auDriver = self.driversList[self.driverIndexes.index(self.audioDriver)]
