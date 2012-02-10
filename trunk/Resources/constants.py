@@ -68,7 +68,11 @@ def ensureNFD(unistr):
                 unistr = "UnableToDecodeString"
                 print "Unicode encoding not in a recognized format..."
                 break
-    return unicodedata.normalize(format, unistr)
+
+    if type(unistr) != UnicodeType:
+        return ""
+    else:
+        return unicodedata.normalize(format, unistr)
 
 def toSysEncoding(unistr):
     try:
