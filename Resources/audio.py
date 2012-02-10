@@ -280,10 +280,8 @@ class SG_Audio:
         self.globalAmplitude = val
         self.server.amp = self.globalAmplitude
 
-    def getViewTable(self):
-        self.env_extract = []
-        for j in range(len(self.table)):
-            self.env_extract.append([math.fabs(x) for i, x in enumerate(self.table[j].getTable()) if i % 64 == 0])
+    def getViewTable(self, points):
+        self.env_extract = self.table.getEnvelope(points)
         return self.env_extract
 
     def setMidiMethod(self, value):

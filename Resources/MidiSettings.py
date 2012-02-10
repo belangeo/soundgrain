@@ -83,7 +83,7 @@ class MidiSettings(wx.Frame):
         self.xTranspo.SetValue(True)
         self.xTranspo.Bind(wx.EVT_CHECKBOX, self.handleTranspo)
         box.Add(self.xTranspo, 0, wx.ALL, 5)
-        
+
         self.xPosition = wx.CheckBox(self.panel, label="X axis position")
         self.xPosition.Bind(wx.EVT_CHECKBOX, self.handlePosition)
         box.Add(self.xPosition, 0, wx.ALL, 5)
@@ -93,9 +93,9 @@ class MidiSettings(wx.Frame):
         self.enableOctaveSpread(self.xPosition.GetValue())
         box.Add(self.octaveSpread, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
 
-        mainBox.Add(box, 0, wx.ALL, 10)        
+        mainBox.Add(box, 0, wx.ALL, 10)
         self.panel.SetSizerAndFit(mainBox)
-        
+
         self.Fit()
         self.SetMinSize(self.GetSize())
         self.SetMaxSize(self.GetSize())
@@ -115,6 +115,18 @@ class MidiSettings(wx.Frame):
             return self.interfaceList[self.interfaceIndexes.index(self.selectedInterface)]
 
     def changeInterface(self, evt):
+        status, path = self.parent.checkForMixedSound()
+        if not status:
+            for i, driver in enumerate(self.interfaceList):
+                if driver == self.interfaceList[self.interfaceIndexes.index(self.selectedInterface)]:
+                    self.popupInterface.SetSelection(i)
+            return
+        if "Mixed sound" in self.parent.controls.sndPath:
+            self.parent.controls.sndPath = path
+            if path == "":
+                self.parent.panel.sndBitmap = None
+                self.parent.panel.needBitmap = True
+                wx.CallAfter(self.parent.panel.Refresh)
         self.selectedInterface = self.popupInterface.GetSelection()
         self.parent.controls.midiInterface = self.selectedInterface
         self.parent.controls.shutdownServer()
@@ -142,7 +154,7 @@ class MidiSettings(wx.Frame):
 
     def handlePosition(self, evt):
         state = self.xPosition.GetValue()
-        self.surface.setMidiXposition(state)        
+        self.surface.setMidiXposition(state)
         self.enableOctaveSpread(state)
 
     def setPosition(self, value):

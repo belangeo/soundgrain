@@ -930,8 +930,10 @@ class DrawingSurface(wx.Panel):
         return [cx, cy], [offx, offy]
 
     def analyse(self, file):
+        size = self.GetSizeTuple()
+        X = size[0]
         self.file = file
-        self.list = self.parent.sg_audio.getViewTable()
+        self.list = self.parent.sg_audio.getViewTable(X)
         self.bitmapDict[self.file] = self.list
         self.create_bitmap()
         
@@ -963,12 +965,12 @@ class DrawingSurface(wx.Panel):
                     last = 0
                     for i in range(X):
                         y = int(round(i / scalar))
-                        val = int(((halfY * self.list[chan][y]) + last) / 2)
+                        val = int(halfY * self.list[chan][y])
                         valToDraw = val * 1.5
                         rec = wx.Rect(i, halfY+off, 1, valToDraw)
-                        self.memory.GradientFillLinear(rec, "#999999", "#222222", wx.BOTTOM)
+                        self.memory.GradientFillLinear(rec, "#88889A", "#222234", wx.BOTTOM)
                         rec = wx.Rect(i, halfY+off-valToDraw, 1, valToDraw)
-                        self.memory.GradientFillLinear(rec, "#999999", "#222222", wx.UP)
+                        self.memory.GradientFillLinear(rec, "#88889A", "#222234", wx.UP)
                         last = val                
             else:    
                 if self.list[chan]:
@@ -1383,7 +1385,7 @@ class ControlPanel(scrolled.ScrolledPanel):
                 # Handle windows path...
                 self.insertSound(os.path.join(self.parent.currentPath, sndPath.split("\\")[-1]), force)
             else:
-                self.parent.log('Sound file "%s" does not exist!' % sndPath)        
+                self.parent.log('Sound file "%s" does not exist!' % sndPath)
 
     def drawWaveform(self):
         if self.surface.sndBitmap and self.parent.draw:
@@ -1391,7 +1393,7 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def getNchnls(self):
         return self.nchnls
-        
+
     def setNchnls(self, x):
         if x != self.nchnls:
             self.nchnls = x
@@ -1403,6 +1405,12 @@ class ControlPanel(scrolled.ScrolledPanel):
     def handleNchnls(self, event):
         x = int(self.tx_chnls.GetValue())
         if x != self.nchnls:
+            status, path = self.parent.checkForMixedSound()
+            if not status:
+                self.tx_chnls.SetValue(str(self.nchnls))
+                return
+            if "Mixed sound" in self.sndPath:
+                self.sndPath = path
             self.nchnls = x
             self.meter.setNumSliders(self.nchnls)
             self.shutdownServer()
@@ -1415,7 +1423,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         SR = {44100: 0, 48000: 1, 96000: 2}
         if x != self.samplingRate:
             self.samplingRate = x
-            self.pop_sr.SetValue(SR[self.samplingRate])
+            self.pop_sr.SetSelection(SR[self.samplingRate])
             self.shutdownServer()
             self.bootServer()
 
@@ -1423,6 +1431,13 @@ class ControlPanel(scrolled.ScrolledPanel):
         SR = {0: 44100, 1: 48000, 2: 96000}
         x = SR[event.GetInt()]
         if x != self.samplingRate:
+            status, path = self.parent.checkForMixedSound()
+            if not status:
+                SR = {44100: 0, 48000: 1, 96000: 2}
+                self.pop_sr.SetSelection(SR[self.samplingRate])
+                return
+            if "Mixed sound" in self.sndPath:
+                self.sndPath = path
             self.samplingRate = x
             self.shutdownServer()
             self.bootServer()
@@ -1457,19 +1472,11 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.tempState = None
 
     def shutdownServer(self):
-        # status, path = self.parent.checkForMixedSound()
-        # if not status:
-        #     return
-        # if "Mixed sound" in self.sndPath:
-        #     if path != "":
-        #         self.sndPath = path
-        #     else:
-        #         self.sndPath = None
         self.tempState = self.parent.getState()
         self.parent.sg_audio.shutdown()
         self.tog_audio.Disable()
         self.surface.Refresh()
-            
+
     def handleAudio(self, event):
         if event.GetInt() == 1:
             if not self.sndPath:
@@ -1671,24 +1678,24 @@ class InsertDialog(wx.Dialog):
         vbox.Add(stline, 1, wx.ALIGN_CENTER_HORIZONTAL|wx.TOP, 10)
         self.startSlider = ControlSlider(self, 0, snd_dur, 0, outFunction=self.handleStart)
         vbox.Add(self.startSlider, 0, wx.ALL, 5)
-        
+
         stline = wx.StaticText(self, -1, 'Ending point in seconds:')
         vbox.Add(stline, 1, wx.ALIGN_CENTER_HORIZONTAL|wx.TOP, 10)
         self.endSlider = ControlSlider(self, 0, snd_dur, snd_dur, outFunction=self.handleEnd)
         vbox.Add(self.endSlider, 0, wx.ALL, 5)
-        
+
         stline = wx.StaticText(self, -1, 'Insertion point in seconds:')
         vbox.Add(stline, 1, wx.ALIGN_CENTER_HORIZONTAL|wx.TOP, 10)
         self.insertSlider = ControlSlider(self, 0, actual_dur, 0)
         vbox.Add(self.insertSlider, 0, wx.ALL, 5)
-        
+
         stline = wx.StaticText(self, -1, 'Crossfade time in seconds:')
         vbox.Add(stline, 1, wx.ALIGN_CENTER_HORIZONTAL|wx.TOP, 10)
         self.crossfadeSlider = ControlSlider(self, 0, snd_dur*0.5, 0, outFunction=self.handleCross)
         vbox.Add(self.crossfadeSlider, 0, wx.ALL, 5)
 
         sizer =  self.CreateButtonSizer(wx.CANCEL|wx.OK)
-        vbox.Add(sizer, 0, wx.ALL, 5)
+        vbox.Add(sizer, 0, wx.ALL, 10)
         self.SetSizerAndFit(vbox)
 
     def handleStart(self, val):
@@ -1704,17 +1711,17 @@ class InsertDialog(wx.Dialog):
     def handleEnd(self, val):
         start = self.startSlider.GetValue()
         end = self.endSlider.GetValue()
-        cross = self.crossfadeSlider.GetValue()        
+        cross = self.crossfadeSlider.GetValue()
         if end <= (start + .1):
             self.startSlider.SetValue(end - .1, False)
         rng = (end - start) * 0.5
         if cross > rng:
             self.crossfadeSlider.SetValue(rng, False)
-        
+
     def handleCross(self, val):
         start = self.startSlider.GetValue()
         end = self.endSlider.GetValue()
-        cross = self.crossfadeSlider.GetValue()        
+        cross = self.crossfadeSlider.GetValue()
         rng = (end - start) * 0.5
         if cross > rng:
             self.crossfadeSlider.SetValue(rng, False)
@@ -1960,11 +1967,24 @@ class MainFrame(wx.Frame):
             t.setEditionLevel(self.editionLevel)
 
     def handleDriver(self, evt):
+        status, path = self.checkForMixedSound()
+        if not status:
+            for i, driver in enumerate(self.driversList):
+                menuId = 200 + i
+                if driver == self.driversList[self.driverIndexes.index(self.audioDriver)]:
+                    self.menu2.Check(menuId, True)
+            return
+        if "Mixed sound" in self.controls.sndPath:
+            self.controls.sndPath = path
+            if path == "":
+                self.panel.sndBitmap = None
+                self.panel.needBitmap = True
+                wx.CallAfter(self.panel.Refresh)
         menuId = evt.GetId()
         self.audioDriver = self.driverIndexes[menuId - 200]
         self.controls.shutdownServer()
         self.controls.bootServer()
-        
+
     def openFxWindow(self, evt):
         if self.granulatorControls.IsShown():
             self.granulatorControls.Hide()
@@ -2075,11 +2095,17 @@ class MainFrame(wx.Frame):
         for key, value in self.panel.fxballs.items():
             saveDict['fxballs'][str(key)] = value.save()
         return saveDict
-        
+
     def saveFile(self, path):
+        if self.controls.sndPath:
+            status, sndpath = self.checkForMixedSound()
+            if not status:
+                return
+            if sndpath != "":
+                self.controls.sndPath = sndpath
         self.currentFile = path
         self.currentPath = os.path.split(path)[0]
-        saveDict = self.getState()   
+        saveDict = self.getState()
         msg = xmlrpclib.dumps((saveDict, ), allow_none=True)
         f = open(path, 'w')
         f.write(msg)
@@ -2216,7 +2242,7 @@ class MainFrame(wx.Frame):
         return_status = True
         saved_path = ""
         if "Mixed sound" in self.controls.sndPath:
-            dlg = wx.MessageDialog(self, 'There is a mixed sound loaded in the drawing table, do you want to save it on disk?',
+            dlg = wx.MessageDialog(self, "There is a mixed sound loaded in the drawing table, if you don't save it, it will be lost. Do you want to save it on disk ?",
                                    'Mixed sound no saved...', wx.YES_NO | wx.YES_DEFAULT | wx.CANCEL | wx.ICON_INFORMATION)
             ret = dlg.ShowModal()
             if ret == wx.ID_YES:
@@ -2251,10 +2277,24 @@ class MainFrame(wx.Frame):
     def OnClose(self, evt):
         if self.controls.sndPath:
             status, path = self.checkForMixedSound()
-            if not status:
+            newpath = False
+            if "Mixed sound" in self.controls.sndPath:
+                self.controls.sndPath = path
+                if path != "":
+                    newpath = True
+        if len(self.temps) > 1 or newpath:
+            if self.currentFile == None:
+                curfile = "Granulator.sg"
+            else:
+                curfile = self.currentFile
+            dlg = wx.MessageDialog(self, "Do you want to save the changes you made in the document %s ?" % curfile,
+                                   'File Unsaved...', wx.YES_NO | wx.YES_DEFAULT | wx.CANCEL | wx.ICON_INFORMATION)
+            ret = dlg.ShowModal()
+            if ret == wx.ID_YES:
+                self.handleSave(None)
+            elif ret == wx.ID_CANCEL:
                 return
-        if len(self.temps) > 1: # and all other settings
-            print "Ask for saving..."
+            dlg.Destroy()
         auDriver = self.driversList[self.driverIndexes.index(self.audioDriver)]
         miDriver = self.midiSettings.getInterface()
         with open(os.path.join(os.path.expanduser("~"), ".soundgrain-init"), "w") as f:
