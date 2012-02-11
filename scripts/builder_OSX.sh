@@ -3,15 +3,15 @@ py2applet --make-setup SoundGrain.py Resources/*
 python setup.py py2app --plist=scripts/Info.plist
 rm -f setup.py
 rm -rf build
-mv dist SoundGrain_v4.1.0
+mv dist SoundGrain_4.1.0
 
-if cd SoundGrain_v4.1.0;
+if cd SoundGrain_4.1.0;
 then
     find . -name .svn -depth -exec rm -rf {} \
     find . -name *.pyc -depth -exec rm -f {} \
     find . -name .* -depth -exec rm -f {} \;
 else
-    echo "Something wrong. SoundGrain_v4.1.0 not created"
+    echo "Something wrong. SoundGrain_4.1.0 not created"
     exit;
 fi
 
@@ -23,7 +23,7 @@ rm -rf SoundGrain.app
 mv SoundGrain-i386.app SoundGrain.app
 
 cd ..
-cp -R SoundGrain_v4.1.0/SoundGrain.app .
-tar -cjvf SoundGrain_v4.1.0.tar.bz2 SoundGrain.app
-rm -rf SoundGrain_v4.1.0
+cp -R SoundGrain_4.1.0/SoundGrain.app .
+tar -cjvf SoundGrain_4.1.0.tar.bz2 SoundGrain.app
+rm -rf SoundGrain_4.1.0
 rm -rf SoundGrain.app
