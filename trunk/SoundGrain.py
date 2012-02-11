@@ -1735,6 +1735,7 @@ class MainFrame(wx.Frame):
         wx.Frame.__init__(self, parent, id, "", pos, size)
         self.SetMinSize((600,300))
 
+        self.is_unsaved = False
         self.currentFile = None
         self.currentPath = None
         self.temps = []
@@ -2111,6 +2112,7 @@ class MainFrame(wx.Frame):
         f.write(msg)
         f.close()
         self.SetTitle(os.path.split(self.currentFile)[1])
+        self.is_unsaved = False
 
     def setState(self, dict):
         version = dict.get('version', '3.0')
@@ -2215,6 +2217,7 @@ class MainFrame(wx.Frame):
         self.recall = self.undos = 0
         self.menu1.Enable(110, True)
         self.menu1.Enable(111, False)
+        self.is_unsaved = True
 
     def recallTempFile(self, id):
         if self.temps and self.recall < len(self.temps):
@@ -2237,6 +2240,7 @@ class MainFrame(wx.Frame):
             self.menu1.Enable(111, False)
         else:
             self.menu1.Enable(111, True)
+        self.is_unsaved = True
 
     def checkForMixedSound(self):
         return_status = True
@@ -2282,7 +2286,7 @@ class MainFrame(wx.Frame):
                 self.controls.sndPath = path
                 if path != "":
                     newpath = True
-        if len(self.temps) > 1 or newpath:
+        if self.is_unsaved or newpath:
             if self.currentFile == None:
                 curfile = "Granulator.sg"
             else:
