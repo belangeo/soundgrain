@@ -8,7 +8,6 @@ if build:
     os.system('python ..\pyinstaller\Build.py "SoundGrain.spec"')
     os.system("svn export . SoundGrain_Win")
     os.system("copy dist\SoundGrain.exe SoundGrain_Win /Y")
-    #os.system("copy scripts\README.txt SoiundGrain_Win /Y")
     os.system("rmdir /Q /S SoundGrain_Win\scripts")
     os.remove("SoundGrain_Win/SoundGrain.py")
     os.remove("SoundGrain_Win/Resources/SoundGrain.icns")
