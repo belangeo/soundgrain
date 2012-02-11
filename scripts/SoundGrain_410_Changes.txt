@@ -1,0 +1,36 @@
+Soundgrain 4.1.0:
+
+-- Bug Fixes --
+
+- Alt+Click to delete a FxBall *** done (mac) *** 
+    (Added double-click to duplicate trajectory or delete FxBall)
+
+- Playing with number of channels crashes the application with "Bus error" *** done (mac) *** 
+    (need to be tested with more than 2 channels) *** done (mac) ***
+
+- Better unicode support *** done (mac) ***
+
+- Resize doesn't reset correctly FxBall position (double-click doesn't work) *** done (mac) ***
+
+
+-- NEW FEATURES --
+
+- new effects: Chorus, Freqshift, Detuned resonator *** done (mac) ***
+
+- Multiple sounds in the buffer *** done (mac) ***
+    - Ask to save the mixed sound on Close *** done (mac) ***
+    - Ask to save a modified project *** done (mac) ***
+
+
+-- MISC --
+
+- More standard About window *** done ***
+
+- commands window in embeded window *** done ***
+
+- Use double precision by default *** done ***
+
+
+-- Windows --
+
+- Support for ASIO driver on Windows *** done ***
