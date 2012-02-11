@@ -366,7 +366,7 @@ class SG_Audio:
                 self.mixer.delInput(which)
 
     def addFx(self, fx, key):
-        self.fxs[key] = Fx(self.mixer[key], fx)
+        self.fxs[key] = Fx(self.mixer[key], fx, self.chnls)
 
     def removeFx(self, key):
         del self.fxs[key]
