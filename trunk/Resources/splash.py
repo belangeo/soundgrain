@@ -28,7 +28,7 @@ class SoundGrainSplashScreen(wx.Frame):
                          style = wx.FRAME_SHAPED | wx.SIMPLE_BORDER | wx.FRAME_NO_TASKBAR | wx.STAY_ON_TOP)
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
-        
+
         self.mainframe = mainframe
         self.bmp = wx.Bitmap(os.path.join(img), wx.BITMAP_TYPE_PNG)
         self.w, self.h = self.bmp.GetWidth(), self.bmp.GetHeight()
@@ -47,9 +47,9 @@ class SoundGrainSplashScreen(wx.Frame):
         self.Center(wx.HORIZONTAL)
         if sys.platform == 'win32':
             self.Center(wx.VERTICAL)
-            
+
         wx.CallAfter(self.Show)
-        
+
     def SetWindowShape(self, *evt):
         r = GetRoundShape(self.w, self.h)
         self.hasShape = self.SetShape(r)
@@ -61,7 +61,7 @@ class SoundGrainSplashScreen(wx.Frame):
         dc.SetBrush(wx.Brush("#000000"))
         dc.DrawRectangle(0,0,w,h)
         dc.DrawBitmap(self.bmp, 0,0,True)
-     
+
     def OnClose(self):
         if self.mainframe:
             self.mainframe.Show()

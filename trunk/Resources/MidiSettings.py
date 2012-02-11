@@ -57,7 +57,7 @@ class MidiSettings(wx.Frame):
                 if miDriver in self.interfaceList:
                     self.selectedInterface = self.interfaceIndexes[self.interfaceList.index(miDriver)]
                 else:
-                    self.selectedInterface = selected 
+                    self.selectedInterface = selected
             self.popupInterface = wx.Choice(self.panel, id=-1, size=(200, 20), choices=self.interfaceList)
             if self.selectedInterface:
                 self.popupInterface.SetSelection(self.interfaceIndexes.index(self.selectedInterface))
@@ -74,7 +74,7 @@ class MidiSettings(wx.Frame):
         self.popupMethod.SetSelection(0)
         self.popupMethod.Bind(wx.EVT_CHOICE, self.handleMethod)
         box.Add(self.popupMethod, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
-        
+
         box.Add(wx.StaticLine(self.panel, size=(200, 1)), 0, wx.ALL, 5)
 
         box.Add(wx.StaticText(self.panel, id=-1, label="Pitch mapping"), 0, wx.CENTER|wx.ALL, 5)
@@ -161,7 +161,7 @@ class MidiSettings(wx.Frame):
         self.xPosition.SetValue(value)
         self.surface.setMidiXposition(value)
         self.enableOctaveSpread(value)
-    
+
     def getPosition(self):
         return self.xPosition.GetValue()
 
@@ -173,10 +173,10 @@ class MidiSettings(wx.Frame):
 
     def handleSpread(self, value):
         self.surface.setMidiOctaveSpread(value)
-        
+
     def setSpread(self, value):
         self.octaveSpread.SetValue(value)
-        
+
     def getSpread(self):
         return self.octaveSpread.GetValue()
 

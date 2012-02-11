@@ -7305,7 +7305,7 @@
 <value><struct>
 <member>
 <name>sound</name>
-<value><string>/Users/olivier/Documents/Stuff_SoundGrain/examples/transparent.aif</string></value>
+<value><string>transparent.aif</string></value>
 </member>
 <member>
 <name>cutoff</name>
