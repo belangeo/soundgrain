@@ -997,7 +997,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.type = 0
         self.selected = 0
         self.selectedOkToChange = True
-        self.sndPath = None
+        self.sndPath = ""
         self.sndDur = 0.0
         self.amplitude = 1
         self.nchnls = 2
@@ -1324,7 +1324,7 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.insertSound(ensureNFD(sndPath), True)
 
     def loadSound(self, sndPath, force=False):
-        if sndPath:
+        if sndPath != "":
             if os.path.isfile(sndPath):
                 self.sndPath = sndPath
                 self.parent.sg_audio.loadSnd(toSysEncoding(self.sndPath))
@@ -1347,6 +1347,8 @@ class ControlPanel(scrolled.ScrolledPanel):
                 self.loadSound(os.path.join(self.parent.currentPath, sndPath.split("\\")[-1]), force)
             else:
                 self.parent.log('Sound file "%s" does not exist!' % sndPath)
+        else:
+            self.parent.log("")
 
     def insertSound(self, sndPath, force=False):
         if sndPath:
@@ -1465,7 +1467,7 @@ class ControlPanel(scrolled.ScrolledPanel):
     def bootServer(self):
         self.parent.sg_audio.boot(self.parent.audioDriver, self.nchnls, self.samplingRate, self.midiInterface)
         self.tog_audio.Enable()
-        if self.sndPath != None:
+        if self.sndPath != "":
             self.loadSound(self.sndPath)
         if self.tempState != None:
             self.parent.setState(self.tempState)
@@ -1479,7 +1481,7 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def handleAudio(self, event):
         if event.GetInt() == 1:
-            if not self.sndPath:
+            if self.sndPath == "":
                 self.parent.log('*** No sound loaded! ***')
                 self.tog_audio.SetValue(0)
                 self.parent.menu.Check(7, False)
@@ -1920,7 +1922,7 @@ class MainFrame(wx.Frame):
         if not self.draw:
             self.panel.sndBitmap = None
         else:
-            if self.controls.sndPath:
+            if self.controls.sndPath != "":
                 if self.controls.sndPath in self.panel.bitmapDict:
                     self.panel.list = self.panel.bitmapDict[self.controls.sndPath]
                     self.panel.create_bitmap()
@@ -2098,12 +2100,11 @@ class MainFrame(wx.Frame):
         return saveDict
 
     def saveFile(self, path):
-        if self.controls.sndPath:
+        if self.controls.sndPath != "":
             status, sndpath = self.checkForMixedSound()
             if not status:
                 return
-            if sndpath != "":
-                self.controls.sndPath = sndpath
+            self.controls.sndPath = sndpath
         self.currentFile = path
         self.currentPath = os.path.split(path)[0]
         saveDict = self.getState()
@@ -2280,7 +2281,7 @@ class MainFrame(wx.Frame):
 
     def OnClose(self, evt):
         newpath = False
-        if self.controls.sndPath:
+        if self.controls.sndPath != "":
             status, path = self.checkForMixedSound()
             if "Mixed sound" in self.controls.sndPath:
                 self.controls.sndPath = path
