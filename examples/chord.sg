@@ -1149,7 +1149,7 @@
 </member>
 <member>
 <name>grainoverlaps</name>
-<value><int>8</int></value>
+<value><int>4</int></value>
 </member>
 <member>
 <name>rnddur</name>
