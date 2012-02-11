@@ -3239,7 +3239,7 @@
 <value><struct>
 <member>
 <name>sound</name>
-<value><string>/Users/olivier/Desktop/snds/flute.aif</string></value>
+<value><string>flute.aif</string></value>
 </member>
 <member>
 <name>cutoff</name>

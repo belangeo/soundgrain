@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import math, time, random, wx
+import math, time, random, wx, os
 from constants import *
 try:
     from pyo64 import *
@@ -103,26 +103,26 @@ class Granulator_Stream:
         self.granulator = Granulator(table=self.table, env=self.env, pitch=self.base_pitch*self.y_pit*self.srScale*self.transpo,
                                     pos=self.position+self.pos_rnd+self.y_pos_rnd,
                                     dur=self.duration*self.trans_noise+self.dur_noise+self.y_dur,
-                                    grains=self.num_grains, basedur=self.duration.add, 
+                                    grains=self.num_grains, basedur=self.duration.add,
                                     mul=self.fader*self.y_amp*self.traj_amp
                                     ).stop()
-        self.panner = SPan(input=self.granulator, outs=self.chnls, pan=self.y_pan).stop()                       
+        self.panner = SPan(input=self.granulator, outs=self.chnls, pan=self.y_pan).stop()
 
     def ajustLength(self):
         self.position.mul = self.table.getSize(False)
         self.y_pos_rnd.mul = self.table.getSize(False)
-        
+
     def setNumGrains(self, x):
         self.num_grains = x
         try:
             self.granulator.grains = x
-        except: 
-            pass    
-        self.fader.mul = 1./(math.log(self.num_grains)+1.) 
+        except:
+            pass
+        self.fader.mul = 1./(math.log(self.num_grains)+1.)
 
     def setBasePitch(self, x):
         self.base_pitch.value = x
-        
+
     def setGrainSize(self, x):
         self.duration.add = x
         try:
@@ -138,14 +138,14 @@ class Granulator_Stream:
             self.panner.out()
         else:
             self.granulator.out(self.order)
-            self.panner.stop()    
+            self.panner.stop()
 
     def setActive(self, val):
         if val == 1:
             self.metro.play()
             self.granulator.out(self.order)
             self.fader.value = 1
-        else:    
+        else:
             self.metro.stop()
             self.granulator.stop()
             self.fader.value = 0
@@ -215,9 +215,9 @@ class SG_Audio:
         self.trans_noise = Choice([1], freq=500)
         self.streams = {}
         for i in range(MAX_STREAMS):
-            self.streams[i] = Granulator_Stream(i, self.env, self.trans_noise, self.dur_noise, 
-                                                self.num_grains, self.clock, self.srScale, chnls)   
-        
+            self.streams[i] = Granulator_Stream(i, self.env, self.trans_noise, self.dur_noise,
+                                                self.num_grains, self.clock, self.srScale, chnls)
+
     def shutdown(self):
         self.server.shutdown()
         self.streams = {}
@@ -239,9 +239,7 @@ class SG_Audio:
 
     def recStart(self, filename, fileformat=0, sampletype=0):
         self.server.recordOptions(fileformat=fileformat, sampletype=sampletype)
-        if len(filename.split('.')) > 1:
-            if filename.split('.')[1].lower() in ['aif', 'aiff', 'wav', 'wave']:
-                filename = filename.split('.')[0]
+        filename, ext = os.path.splitext(filename)
         if fileformat == 0: ext = ".wav"
         else: ext = ".aif"
         date = time.strftime('_%d_%b_%Y_%Hh%M')
@@ -348,11 +346,11 @@ class SG_Audio:
             self.streams[which].togglePan(state)
 
     def setActive(self, which, val):
-        try: 
+        try:
             self.streams[which].setActive(val)
             self.streams[which].togglePan(self.pan_check)
-        except: 
-            pass 
+        except:
+            pass
         if val == 1:
             if which not in self.activeStreams:
                 self.activeStreams.append(which)
@@ -366,7 +364,7 @@ class SG_Audio:
             if which in self.activeStreams:
                 self.activeStreams.remove(which)
                 self.mixer.delInput(which)
-    
+
     def addFx(self, fx, key):
         self.fxs[key] = Fx(self.mixer[key], fx)
 
@@ -436,17 +434,17 @@ class SG_Audio:
         for which in self.activeStreams:
             self.setActive(which, 1)
         self.refresh_met.play()
-        self.server.start() 
+        self.server.start()
         self.server.amp = self.globalAmplitude
         self.server_started = True
-            
-    def stop(self):
-        self.server_started = False    
-        self.refresh_met.stop()
-        wx.CallAfter(self.server.stop)       
 
-    def refresh_screen(self): 
-        wx.CallAfter(self.refresh)        
+    def stop(self):
+        self.server_started = False
+        self.refresh_met.stop()
+        wx.CallAfter(self.server.stop)
+
+    def refresh_screen(self):
+        wx.CallAfter(self.refresh)
 
     def noteon(self, voice):
         if self.midiTriggerMethod == 0:

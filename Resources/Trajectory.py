@@ -30,7 +30,7 @@ def chooseColour(i, numlines=24):
         else: val = val
         return val
 
-    def colour(i, numlines, sat, bright):        
+    def colour(i, numlines, sat, bright):
         hue = (i / float(numlines)) * 180 + 15
         if sat == 0:
             r = g = b = val
@@ -100,17 +100,17 @@ class Trajectory:
         self.setTranspo(1.)
 
     def getAttributes(self):
-        return {'activeLp': self.activeLp, 
-                'editLevel': self.editLevel, 
+        return {'activeLp': self.activeLp,
+                'editLevel': self.editLevel,
                 'timeSpeed': self.timeSpeed,
                 'amplitude': self.amplitude,
                 'step': self.step,
-                'type': self.type, 
-                'center': self.center, 
-                'radius': self.radius, 
-                'active': self.active, 
+                'type': self.type,
+                'center': self.center,
+                'radius': self.radius,
+                'active': self.active,
                 'freeze': self.freeze,
-                'circlePos': self.circlePos, 
+                'circlePos': self.circlePos,
                 'counter': self.counter,
                 'filterCut': self.filterCut,
                 'points': self.getPoints()}
@@ -135,7 +135,7 @@ class Trajectory:
         self.transpo = x
         if self.id >= 0:
             self.parent.parent.sg_audio.setTranspo(self.id, self.transpo)
-        
+
     def getTranspo(self):
         return self.transpo
 
@@ -176,10 +176,10 @@ class Trajectory:
 
     def setAmplitude(self, val):
         self.amplitude = val
-        
+
     def getAmplitude(self):
         return self.amplitude
-    
+
     def setEditionLevel(self, level):
         self.editLevel = level
 
@@ -208,10 +208,10 @@ class Trajectory:
             self.parent.parent.sg_audio.setActive(self.id, 1)
         else:
             self.parent.parent.sg_audio.setActive(self.id, 0)
-            
+
     def getActive(self):
         return self.active
-        
+
     def addPoint(self, point):
         if len(self.points) > 1:
             if point == self.points[-1]:
@@ -225,31 +225,31 @@ class Trajectory:
     def addFinalPoint(self, point, closed):
         if closed:
             self.points.append(point)
-        
+
             maxstep = max(abs(point[0]-self.points[0][0]), abs(point[1]-self.points[0][1]))
             xscale = abs(point[0]-self.points[0][0])
             yscale = abs(point[1]-self.points[0][1])
-        
+
             if point[0] < self.points[0][0]: xdir = 1
             else: xdir = -1
             if point[1] < self.points[0][1]: ydir = 1
             else: ydir = -1
-        
+
             for i in range(0, maxstep, 2):
                 xpt = point[0] + xdir * int( xscale * ((i+1) / float(maxstep)))
                 ypt = point[1] + ydir * int( yscale * ((i+1) / float(maxstep)))
                 self.points.append((int(round(xpt)),int(round(ypt))))
-                 
+
         self.setInitPoints()
 
-    def fillPoints(self, closed): 
+    def fillPoints(self, closed):
         filllpx = BiquadLP(freq=self.filterCut)
         filllpy = BiquadLP(freq=self.filterCut)
-        templist = []  
+        templist = []
         if closed: length = len(self.points)
         else: length = len(self.points) - 1
         for i in range(length):
-            if closed: 
+            if closed:
                 first = i-1
                 second = i
             else:
@@ -260,17 +260,17 @@ class Trajectory:
             step = sqrt(a*a+b*b)
             xscale = abs(self.points[first][0]-self.points[second][0]) * 0.5
             yscale = abs(self.points[first][1]-self.points[second][1]) * 0.5
- 
-            if self.points[first][0] == self.points[second][0]: xdir = 0            
+
+            if self.points[first][0] == self.points[second][0]: xdir = 0
             elif self.points[first][0] < self.points[second][0]: xdir = 1
             else: xdir = -1
             if self.points[first][1] == self.points[second][1]: ydir = 0
             elif self.points[first][1] < self.points[second][1]: ydir = 1
             else: ydir = -1
-            
+
             if self.activeLp:
                 p = (int(round(filllpx.filter(self.points[first][0]))), int(round(filllpy.filter(self.points[first][1]))))
-            else: 
+            else:
                 p = (self.points[first][0], self.points[first][1])
             if not templist:
                 templist.append(p)
@@ -278,13 +278,13 @@ class Trajectory:
                 gate = self.removeMatch(templist, p)
                 if gate:
                     templist.append(p)
-            if step > 3:       
+            if step > 3:
                 xpt = self.points[first][0] + xdir * xscale
                 ypt = self.points[first][1] + ydir * yscale
                 if self.activeLp:
                     p = (int(round(filllpx.filter(xpt))),int(round(filllpy.filter(ypt))))
                 else:
-                    p = (xpt, ypt)    
+                    p = (xpt, ypt)
                 gate = self.removeMatch(templist, p)
                 if gate:
                     templist.append(p)
@@ -307,8 +307,8 @@ class Trajectory:
         # clicked point
         self.points[index] = [self.initPoints[index][0] - offset[0], self.initPoints[index][1] - offset[1]]
         #for i in range(1,p_off2):
-        for i in range(1, p_off):    
-            # sigmoid scaling function 
+        for i in range(1, p_off):
+            # sigmoid scaling function
             off = (p_off-i) / float(p_off) * 0.5
             mult = .5 + (sin((off + .75) * 2 * pi) * .5)
             # scales i points each side of clicked point
@@ -324,10 +324,10 @@ class Trajectory:
 
     def getInsideRect(self, point):
         return wx.Rect(self.getFirstPoint()[0], self.getFirstPoint()[1], 10, 10).Contains(point)
-        
+
     def getFirstPoint(self):
         return self.points[0]
-        
+
     def getPoints(self):
         return self.points
 
@@ -337,10 +337,10 @@ class Trajectory:
         else:
             self.points = [p for p in plist]
             self.setInitPoints()
-        
+
     def getPointPos(self):
         return self.circlePos
-        
+
     def setStep(self, step):
         self.step = step
 

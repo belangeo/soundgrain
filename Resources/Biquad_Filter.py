@@ -49,8 +49,8 @@ class Biquad:
             self.xn1 = self.xn2 = self.yn1 = self.yn2 = xn
             self.init = False
 
-        yn = ( ((self.b0/self.a0) * xn) + ((self.b1/self.a0) * self.xn1) + ((self.b2/self.a0) * self.xn2) -
-               ((self.a1/self.a0) * self.yn1) - ((self.a2/self.a0) * self.yn2) )
+        yn = ( (self.b0 * xn) + (self.b1 * self.xn1) + (self.b2 * self.xn2) -
+               (self.a1 * self.yn1) - (self.a2 * self.yn2) ) / self.a0
         self.yn2 = self.yn1
         self.yn1 = yn
         self.xn2 = self.xn1

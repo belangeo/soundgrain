@@ -8199,7 +8199,7 @@
 <value><struct>
 <member>
 <name>sound</name>
-<value><string>/Users/olivier/Documents/snds/Banque de sons/Beethoven.aiff</string></value>
+<value><string>Beethoven.aiff</string></value>
 </member>
 <member>
 <name>cutoff</name>

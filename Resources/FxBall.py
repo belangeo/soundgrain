@@ -7,7 +7,7 @@ from pyolib._wxwidgets import ControlSlider
 
 class FxBallControls(wx.Frame):
     def __init__(self, parent, fxball, sg_audio, size=(270, 200)):
-        title = "%s Controls" % {0: "Reverb", 1: "Delay", 2: "Disto", 3: "Waveguide", 4: "Ring Mod", 
+        title = "%s Controls" % {0: "Reverb", 1: "Delay", 2: "Disto", 3: "Waveguide", 4: "Ring Mod",
                                 5: "Degrade", 6: "Harmonizer", 7: "Chorus", 8: "FreqShift", 9: "AllpassWG"}[fxball.getFx()]
         wx.Frame.__init__(self, parent, -1, title, size=size)
         self.parent = parent
@@ -26,16 +26,16 @@ class FxBallControls(wx.Frame):
         self.panel.SetBackgroundColour(BACKGROUND_COLOUR)
         self.box = wx.BoxSizer(wx.VERTICAL)
 
-        sl1values = {   0: ["Feedback", 0, 1, .75, False], 
-                        1: ["Delay", 0.01, 1, 0.25, False], 
-                        2: ["Drive", 0, 1, .75, False], 
-                        3: ["Frequency", 20, 500, 100, True], 
+        sl1values = {   0: ["Feedback", 0, 1, .75, False],
+                        1: ["Delay", 0.01, 1, 0.25, False],
+                        2: ["Drive", 0, 1, .75, False],
+                        3: ["Frequency", 20, 500, 100, True],
                         4: ["Frequency", 1, 1000, 100, True],
                         5: ["Bit Depth", 2, 32, 8, True],
                         6: ["Transposition", -12, 12, -7, False],
                         7: ["Depth", 0, 5, 1, False],
                         8: ["Shift 1", -2000, 2000, -100, False],
-                        9: ["Frequency", 20, 500, 100, True], 
+                        9: ["Frequency", 20, 500, 100, True],
                     }[fxball.getFx()]
         text = wx.StaticText(self.panel, -1, sl1values[0])
         font, psize = text.GetFont(), text.GetFont().GetPointSize()
@@ -49,16 +49,16 @@ class FxBallControls(wx.Frame):
         self.slider1 = ControlSlider(self.panel, sl1values[1], sl1values[2], sl1values[3], log=sl1values[4], size=(250,16), outFunction=self.handleSlider1)
         self.box.Add(self.slider1, 0, wx.LEFT|wx.RIGHT, 10)
 
-        sl2values = {   0: ["Cutoff", 100, 15000, 5000, True], 
-                        1: ["Feedback", 0, 1, 0.5, False], 
-                        2: ["Slope", 0, .99, .75, False], 
-                        3: ["Fall time", 1, 60, 30, False], 
+        sl2values = {   0: ["Cutoff", 100, 15000, 5000, True],
+                        1: ["Feedback", 0, 1, 0.5, False],
+                        2: ["Slope", 0, .99, .75, False],
+                        3: ["Fall time", 1, 60, 30, False],
                         4: ["Ring vs Amp mod", 0, .5, 0, False],
                         5: ["SR Scale", 0.01, 1, 0.25, True],
-                        6: ["Feedback", 0, 1, 0.25, False], 
-                        7: ["Feedback", 0, 1, 0.5, False], 
+                        6: ["Feedback", 0, 1, 0.25, False],
+                        7: ["Feedback", 0, 1, 0.5, False],
                         8: ["Shift 2", -2000, 2000, 100, False],
-                        9: ["Detune", 0, 1, 0.5, False], 
+                        9: ["Detune", 0, 1, 0.5, False],
                     }[fxball.getFx()]
         text = wx.StaticText(self.panel, -1, sl2values[0])
         text.SetFont(font)
@@ -86,7 +86,7 @@ class FxBallControls(wx.Frame):
         self.Fit()
         self.SetMinSize(self.GetSize())
         self.SetMaxSize(self.GetSize())
-        
+
     def handleClose(self, event):
         self.Show(False)
 
@@ -95,7 +95,7 @@ class FxBallControls(wx.Frame):
 
     def handleSlider2(self, val):
         self.sg_audio.handleFxSlider2(self.fxball.getFx(), self.fxball.getId(), val)
-            
+
     def handleMul(self, val):
         self.sg_audio.handleFxMul(self.fxball.getId(), val)
 
@@ -149,8 +149,8 @@ def getColors(col, gradient):
     elif col == 9:
         firstColor = wx.Colour(127,30,255)
         secondColor = wx.Colour(gradient/2,30,gradient)
-    return firstColor, secondColor    
-    
+    return firstColor, secondColor
+
 def GetRoundMaskBitmap(w, h, radius):
     maskColor = wx.Color(30,30,30)
     shownColor = wx.Color(29,29,29)
@@ -208,7 +208,7 @@ class FxBall():
                 "gradient": self.gradient,
                 "fader": self.fader,
                 "controls": self.controls.save()}
-                
+
     def load(self, dict):
         self.controls.load(dict)
 
@@ -266,7 +266,7 @@ class FxBall():
         hyp = math.sqrt(x*x+y*y)
         if small:
             return hyp < (self.halfSize*2/3)
-        else:    
+        else:
             return hyp < self.halfSize
 
     def getAmpValue(self, pos):
