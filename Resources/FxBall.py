@@ -188,11 +188,12 @@ def GetRoundBitmap(w, h, mask, col, gradient):
     return b
 
 class FxBall():
-    def __init__(self, fx, id, sg_audio, pos, size=64, gradient=30, fader=1.):
+    def __init__(self, fx, id, sg_audio, pos, size=64, gradient=30, fader=1., xfac=1.0, yfac=1.0):
         self.fx = fx
         self.id = id
-        self.pos = pos
-        self.size, self.halfSize = size, size/2
+        self.pos = [pos[0] * xfac, pos[1] * yfac]
+        self.size = size * (xfac+yfac) * 0.5
+        self.halfSize = self.size / 2
         self._gradient = self.gradient = gradient
         self.fader = fader
         self._center = self.center = (self.pos[0]+self.halfSize, self.pos[1]+self.halfSize)

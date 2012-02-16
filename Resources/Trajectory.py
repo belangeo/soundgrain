@@ -115,21 +115,28 @@ class Trajectory:
                 'filterCut': self.filterCut,
                 'points': self.getPoints()}
 
-    def setAttributes(self, dict):
+    def setAttributes(self, dict, xfac=1.0, yfac=1.0):
         self.activeLp = dict['activeLp']
         self.editLevel = dict['editLevel']
         self.setTimeSpeed(dict['timeSpeed'])
         self.setAmplitude(dict.get('amplitude', 1.0))
         self.step = dict['step']
-        self.type = dict['type']
-        self.center = dict['center']
-        self.radius = dict['radius']
         self.setActive(dict['active'])
         self.freeze = dict['freeze']
-        self.circlePos = dict['circlePos']
         self.counter = dict['counter']
         self.filterCut = dict['filterCut']
-        self.setPoints(dict['points'])
+        self.setPoints(dict['points'], xfac=xfac, yfac=yfac)
+        self.type = dict['type']
+        if self.getType() in ['circle', 'oscil']:
+            self.center = [dict['center'][0]*xfac, dict['center'][1]*yfac]
+            self.setRadius(self.center[0] - self.getFirstPoint()[0])
+        else:
+            self.center = dict['center']
+            self.radius = dict['radius']
+        if len(self.points) >= 1:
+            self.circlePos = self.getFirstPoint()
+        else:
+            self.circlePos = None
 
     def setTranspo(self, x):
         self.transpo = x
@@ -331,11 +338,14 @@ class Trajectory:
     def getPoints(self):
         return self.points
 
-    def setPoints(self, plist):
+    def setPoints(self, plist, xfac=1.0, yfac=1.0):
         if not plist:
             self.clear()
         else:
-            self.points = [p for p in plist]
+            if xfac != 1.0 or yfac != 1.0:
+                self.points = [[p[0]*xfac, p[1]*yfac] for p in plist]
+            else:    
+                self.points = [p for p in plist]
             self.setInitPoints()
 
     def getPointPos(self):
