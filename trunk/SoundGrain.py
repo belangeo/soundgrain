@@ -34,6 +34,8 @@ from Resources.FxBall import FxBall
 from Resources.MidiSettings import MidiSettings
 from Resources.splash import SoundGrainSplashScreen
 
+SCREEN_SIZE = None
+
 class CommandFrame(wx.Frame):
     def __init__(self, *args, **kw):
         wx.Frame.__init__(self, *args, **kw)
@@ -209,10 +211,11 @@ class DrawingSurface(wx.Panel):
         self.needBitmap = True
         self.Refresh()
 
-    def restoreFxBalls(self, dict):
+    def restoreFxBalls(self, dict, xfac=1.0, yfac=1.0):
         if dict != {}:
             for dic in dict.values():
-                self.fxballs[dic["id"]] = FxBall(dic["fx"], dic["id"], self.parent.sg_audio, dic["pos"], dic["size"], dic["gradient"], dic["fader"])
+                self.fxballs[dic["id"]] = FxBall(dic["fx"], dic["id"], self.parent.sg_audio, dic["pos"], 
+                                            dic["size"], dic["gradient"], dic["fader"], xfac, yfac)
                 self.parent.sg_audio.addFx(dic["fx"], dic["id"])
                 self.fxballs[dic["id"]].load(dic["controls"])
             self.fxballValues = [fx for fx in self.fxballs.values()]
@@ -2149,6 +2152,8 @@ class MainFrame(wx.Frame):
                 self.SetSize((size[0]+7, size[1]+25))
             else:
                 self.SetSize(size)
+        xfac = float(self.panel.GetSize()[0]) / surfaceSize[0]
+        yfac = float(self.panel.GetSize()[1]) / surfaceSize[1]
         ### Control Frame ###
         self.granulatorControls.load(dict['ControlFrame'])
         ### Midi Frame ###
@@ -2168,14 +2173,14 @@ class MainFrame(wx.Frame):
         self.controls.loadSound(ensureNFD(dict['ControlPanel']['sound']))
         ### Trajectories ###
         for i, t in enumerate(self.panel.getAllTrajectories()):
-            t.setAttributes(dict['Trajectories'][str(i)])
+            t.setAttributes(dict['Trajectories'][str(i)], xfac, yfac)
         if dict.has_key('MemorizedTrajectory'):
-            self.panel.memorizedTrajectory.setAttributes(dict['MemorizedTrajectory'])
+            self.panel.memorizedTrajectory.setAttributes(dict['MemorizedTrajectory'], xfac, yfac)
         ### Grain Envelope ###
         if dict.has_key("Envelope"):
             self.envelopeFrame.load(dict["Envelope"])
         if dict.has_key('fxballs'):
-            self.panel.restoreFxBalls(dict["fxballs"])
+            self.panel.restoreFxBalls(dict["fxballs"], xfac, yfac)
 
     def loadFile(self, path):
         if self.midiSettings.IsShown():
@@ -2202,7 +2207,18 @@ class MainFrame(wx.Frame):
         self.setState(dict)
         self.SetTitle(title)
         self.panel.needBitmap = True
+        size = self.GetSize()
+        if size[0] > SCREEN_SIZE[0]:
+            x = SCREEN_SIZE[0] - 50
+        else:
+            x = size[0]
+        if size[1] > SCREEN_SIZE[1]:
+            y = SCREEN_SIZE[1] - 50
+        else:
+            y = size[1]
+        size = (x, y)
         wx.CallAfter(self.panel.Refresh)
+        wx.CallLater(100, self.SetSize, size)
 
     def createInitTempFile(self):
         d = {}
@@ -2396,8 +2412,10 @@ class MainFrame(wx.Frame):
 
 class SoundGrainApp(wx.PySimpleApp):
     def __init__(self, *args, **kwargs):
+        global SCREEN_SIZE
         wx.PySimpleApp.__init__(self, *args, **kwargs)
         X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
+        SCREEN_SIZE = (X, Y)
         if X < 900: sizex = X - 40
         else: sizex = 900
         if PLATFORM in ['win32', 'linux2']: defaultY = 670
