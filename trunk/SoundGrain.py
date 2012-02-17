@@ -182,6 +182,7 @@ class DrawingSurface(wx.Panel):
                 xscl = p[0] / float(cX)
                 yscl = p[1] / float(cY)
                 t.points[i] = (w * xscl, h * yscl)
+            t.setPointPos(t.getFirstPoint())
             if t.getType() in ['circle', 'oscil']:
                 center = t.getCenter()
                 xscl = center[0] / float(cX)
