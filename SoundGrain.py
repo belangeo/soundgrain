@@ -585,7 +585,7 @@ class DrawingSurface(wx.Panel):
                 return
             elif fxball.getInside(self.downPos, small=False):
                 if evt.AltDown():
-                    self.fxballs.remove(fxball)
+                    self.removeFxBall(key)
                     self.Refresh()
                 else:
                     self.fxball = fxball
@@ -1751,6 +1751,7 @@ class MainFrame(wx.Frame):
         self.editionLevel = 2
         self.audioDriver = None
         self.recall = self.undos = 0
+        self.sample_precision = SAMPLE_PRECISION
 
         self.status = wx.StatusBar(self, -1)
         self.SetStatusBar(self.status)
@@ -1814,8 +1815,8 @@ class MainFrame(wx.Frame):
         self.menuBar.Append(self.menu2, "&Audio Drivers")
 
         self.menu3 = wx.Menu()
-        self.menu3.Append(204, "Memorize Trajectory\tShift+Ctrl+M", "")
-        self.Bind(wx.EVT_MENU, self.handleMemorize, id=204)
+        self.menu3.Append(2004, "Memorize Trajectory\tShift+Ctrl+M", "")
+        self.Bind(wx.EVT_MENU, self.handleMemorize, id=2004)
         self.menu3.Append(2005, "Midi Settings...\tShift+Alt+Ctrl+M", "")
         self.Bind(wx.EVT_MENU, self.showMidiSettings, id=2005)
         self.menuBar.Append(self.menu3, "&Midi")
@@ -1893,6 +1894,21 @@ class MainFrame(wx.Frame):
             self.Bind(wx.EVT_MENU, self.handleDriver, id=menuId)
             if driver == self.driversList[self.driverIndexes.index(self.audioDriver)]:
                 self.menu2.Check(menuId, True)
+        self.menu2.AppendSeparator()
+        precision_label = self.menu2.Append(-1, "Sample Precision (Require restarting the app)", "")
+        precision_label.Enable(False)
+        menuId += 1
+        item32 = self.menu2.Append(menuId, "32-bit", "", wx.ITEM_CHECK)
+        if SAMPLE_PRECISION == "32-bit":
+            self.menu2.Check(menuId, True)
+            self.menu2.Enable(menuId, False)
+        self.Bind(wx.EVT_MENU, self.handlePrecision, id=menuId)
+        menuId += 1
+        item64 = self.menu2.Append(menuId, "64-bit", "", wx.ITEM_CHECK)
+        if SAMPLE_PRECISION == "64-bit":
+            self.menu2.Check(menuId, True)
+            self.menu2.Enable(menuId, False)
+        self.Bind(wx.EVT_MENU, self.handlePrecision, id=menuId)
         self.status.SetStatusText('Audio drivers loaded')
         self.controls.bootServer()
 
@@ -1990,6 +2006,22 @@ class MainFrame(wx.Frame):
         self.audioDriver = self.driverIndexes[menuId - 200]
         self.controls.shutdownServer()
         self.controls.bootServer()
+
+    def handlePrecision(self, evt):
+        menuId = evt.GetId()
+        item = self.menu2.FindItemById(menuId)
+        label = item.GetItemLabel()
+        self.sample_precision = label
+        if label == "32-bit":
+            self.menu2.Check(menuId, True)
+            self.menu2.Enable(menuId, False)
+            self.menu2.Check(menuId+1, False)
+            self.menu2.Enable(menuId+1, True)
+        elif label == "64-bit":
+            self.menu2.Check(menuId, True)
+            self.menu2.Enable(menuId, False)
+            self.menu2.Check(menuId-1, False)
+            self.menu2.Enable(menuId-1, True)
 
     def openFxWindow(self, evt):
         if self.granulatorControls.IsShown():
@@ -2321,6 +2353,7 @@ class MainFrame(wx.Frame):
         with open(os.path.join(os.path.expanduser("~"), ".soundgrain-init"), "w") as f:
             f.write("audioDriver=%s\n" % toSysEncoding(auDriver))
             f.write("midiDriver=%s\n" % toSysEncoding(miDriver))
+            f.write("samplePrecision=%s\n" % self.sample_precision)
         if self.granulatorControls.IsShown():
             self.granulatorControls.Hide()
         self.controls.meter.OnClose(evt)
@@ -2340,49 +2373,56 @@ class MainFrame(wx.Frame):
         win.writeTitle("File Menu")
         win.writeCommand("New...", "Start a new project.", "(Ctrl+N)")
         win.writeCommand("Open...", "Open a previously created .sg file.", "(Ctrl+O)")
-        win.writeCommand("Open Soundfile...", "Import a new sound into the drawing area", "(Shift+Ctrl+O)")
+        win.writeCommand("Open Soundfile...", "Import a new sound into the drawing area.", "(Shift+Ctrl+O)")
+        win.writeCommand("Insert Soundfile...", "Insert a new sound (with crossfade) into the current drawing area.", "(Shift+Ctrl+I)")
         win.writeCommand("Save", "Save the current state of the project.", "(Ctrl+S)")
         win.writeCommand("Save As...", "Save the current state of the project in a new .sg file.", "(Shift+Ctrl+S)")
-        win.writeCommand("Open FX Window", "Open the granulator's parameters window.", "(Ctrl+P)")
+        win.writeCommand("Open FX Window", ["Open the granulator's parameters window.", 
+                                            "This window, in the tab called 'Granulator', allows the user to change the number of grains, transposition, ", "grain size and various randoms of the granulator.", "In the second tab, called 'Y axis', one can decide on which parameters, and in what range, the Y axis of the drawing ", "area will be mapped.", "Available parameters are: Transposition, Amplitude, Grains Duration Random, Grains Position Random and Panning."], "(Ctrl+P)")
         win.writeCommand("Open Envelope Window", "Open a grapher window to modify the shape of the grain's envelope.", "(Ctrl+E)")
         win.writeCommand("Run", "Start/stop audio processing.", "(Ctrl+R)")
         win.writeTitle("Drawing Menu")
-        win.writeCommand("Undo, Redo", "Unlimited undo and redo stages for the drawing surface (only trajectories).", "(Ctrl+Z, Shift+Ctrl+Z)")
+        win.writeCommand("Undo, Redo", "Unlimited undo and redo stages for the drawing area (only trajectories).", "(Ctrl+Z, Shift+Ctrl+Z)")
         win.writeCommand("Draw Waveform", "If checked, the loaded soundfile's waveform will be drawn behind the trajectories.", "")
-        win.writeCommand("Activate Lowpass filter", ["If checked, all points of a trajectory will be filtered using a lowpass filter.",
+        win.writeCommand("Activate Lowpass filter", ["If checked, all points of a new trajectory will be filtered using a lowpass filter.",
+                                        "Controls of the filter are located in the Drawing section of the control panel.",
                                         "This can be used to smooth out the trajectory or to insert resonance in the curve when the Q is very high."], "")
-        win.writeCommand("Fill points", ["If checked, spaces between points in a trajectory (especially when stretching the curve) will be filled by additional points.",
+        win.writeCommand("Fill points", ["If checked, spaces between points in a trajectory (especially when stretching the curve) will be filled with additional points.",
                                     "If unchecked, the number of points in the trajectory won't change, allowing synchronization between similar trajectories."], "")
-        win.writeCommand("Edition levels", "Set the modification spread of a trajectory when edited with the mouse (higher values equal narrower transformations).", "")
+        win.writeCommand("Edition levels", "Set the modification spread of a trajectory when edited with the mouse (higher values mean narrower transformations).", "")
         win.writeCommand("Reinit counters", "Re-sync the trajectories's counters (automatically done when audio is started).", "(Ctrl+T)")
         win.writeTitle("Audio Drivers Menu")
-        win.rtc.WriteText("\nChoose the desired driver.\nThe drivers list is updated only on startup.\n")
+        win.writeCommand("Audio driver", "Choose the desired driver. The drivers list is updated only at startup.", "")
+        win.writeCommand("Sample Precision", "Set the audio sample precision either 32 or 64 bits. Require restarting the application.", "")
         win.writeTitle("Midi Menu")
         win.writeCommand("Memorize Trajectory", ["Memorize the state of the selected trajectory.",
-                                            "The ensuing snapshot will be the initial state for trajectories triggered by MIDI notes"], "(Shift+Ctrl+M)")
-        win.writeCommand("Midi Settings...", "Open the MIDI configuration window.", "")
+                                            "The ensuing snapshot will be the initial state for trajectories triggered by MIDI notes."], "(Shift+Ctrl+M)")
+        win.writeCommand("Midi Settings...", "Open the MIDI configuration and controls window.", "")
         win.writeTitle("FxBall Menu")
         win.writeCommand("Add Reverb ball", "Create a reverb region on the drawing surface.", "(Ctrl+1)")
         win.writeCommand("Add Delay ball", "Create a recursive delay region on the drawing surface.", "(Ctrl+2)")
         win.writeCommand("Add Disto ball", "Create a distortion region on the drawing surface.", "(Ctrl+3)")
         win.writeCommand("Add Waveguide ball", "Create a resonator region on the drawing surface.", "(Ctrl+4)")
-        win.writeCommand("Add RingMod ball", "Create a ring modulation region on the drawing surface.", "(Ctrl+5)")
+        win.writeCommand("Add Ring Modulator ball", "Create a ring modulation region on the drawing surface.", "(Ctrl+5)")
         win.writeCommand("Add Degrade ball", "Create a degradation region on the drawing surface.", "(Ctrl+6)")
         win.writeCommand("Add Harmonizer ball", "Create a harmonization region on the drawing surface.", "(Ctrl+7)")
+        win.writeCommand("Add Chorus ball", "Create a Chorusing region on the drawing surface.", "(Ctrl+8)")
+        win.writeCommand("Add Frequency Shift ball", "Create a frequency shifter region on the drawing surface.", "(Ctrl+9)")
+        win.writeCommand("Add Detuned Resonator ball", "Create an allpass-detuned resonator region on the drawing surface.", "(Ctrl+0)")
 
         win.writeBigTitle("Drawing Surface")
         win.writeTitle("Mouse Bindings")
-        win.writeCommand("Left-click in empty space", "Add a new trajectory.", "")
+        win.writeCommand("Left-click and drag in an empty space", "Create a new trajectory.", "")
         win.writeCommand("Left-click on red rectangle", "Move the trajectory.", "")
         win.writeCommand("Right-click on red rectangle", "Delete the trajectory.", "")
         win.writeCommand("Alt+click (or double-click) on red rectangle", "Duplicate the trajectory.", "")
         win.writeCommand("Left-click on blue diamond", "Scale the size of a circle or oscil trajectory.", "")
-        win.writeCommand("Left-click on a trajectory line", 'Drag and modify the shape of the trajectory (see "Edition levels").', "")
-        win.writeCommand("Left-click on the middle of an FxBall", "Move the ball.", "")
-        win.writeCommand("Left-click on the border of an FxBall", "Resize the ball.", "")
-        win.writeCommand("Right-click on an FxBall", "Open the effect's parameters window.", "")
+        win.writeCommand("Left-click and drag on a trajectory line", 'Modify the shape of the trajectory (see "Edition levels").', "")
+        win.writeCommand("Left-click on the middle part of an FxBall", "Move the ball.", "")
+        win.writeCommand("Left-click on the border part of an FxBall", "Resize the ball.", "")
+        win.writeCommand("Right-click on the middle part of an FxBall", "Open the effect's parameters window.", "")
         win.writeCommand("Alt+click (or double-click) on an FxBall", "Delete the ball.", "")
-        win.writeCommand("Shift+click, up and down motion on an FxBall", "Change the effects's fadein/fadeout ramp time.", "")
+        win.writeCommand("Shift+click on the middle part of an FxBall, up and down motion", "Change the effects's fadein/fadeout ramp time.", "")
 
         win.writeTitle("Keyboard Bindings")
         win.rtc.WriteText("\nWhen the focus is on the drawing surface:\n")

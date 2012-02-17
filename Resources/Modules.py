@@ -359,9 +359,9 @@ class GranulatorFrame(Module):
                                                                                 "0.", self.handleTransYMin, "1.", self.handleTransYMax)
         self.tx_yamp_ch, self.tx_amp_ymin, self.tx_amp_ymax = self.makeYaxisBox(self.box2, "Amplitude", 0, self.handleAmpCheck,
                                                                                 "0.", self.handleAmpYMin, "1.", self.handleAmpYMax)
-        self.tx_ydur_ch, self.tx_dur_ymin, self.tx_dur_ymax = self.makeYaxisBox(self.box2, "Grains duration random", 0, self.handleDurCheck,
+        self.tx_ydur_ch, self.tx_dur_ymin, self.tx_dur_ymax = self.makeYaxisBox(self.box2, "Grains Duration Random", 0, self.handleDurCheck,
                                                                                 "0.001", self.handleDurYMin, "0.5", self.handleDurYMax)
-        self.tx_ypos_ch, self.tx_pos_ymin, self.tx_pos_ymax = self.makeYaxisBox(self.box2, "Grains Position random", 0, self.handlePosCheck,
+        self.tx_ypos_ch, self.tx_pos_ymin, self.tx_pos_ymax = self.makeYaxisBox(self.box2, "Grains Position Random", 0, self.handlePosCheck,
                                                                                 "0.001", self.handlePosYMin, "0.5", self.handlePosYMax)
         self.tx_ypan_ch, self.tx_pan_ymin, self.tx_pan_ymax = self.makeYaxisBox(self.box2, "Panning", 0, self.handlePanCheck,
                                                                                 "0.", self.handlePanYMin, "1.", self.handlePanYMax)

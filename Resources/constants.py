@@ -44,6 +44,17 @@ if not os.path.isdir(RESOURCES_PATH) and sys.platform == "win32":
 
 IMAGES_PATH = os.path.join(RESOURCES_PATH, 'images')
 
+preffile = os.path.join(os.path.expanduser("~"), ".soundgrain-init")
+if os.path.isfile(preffile):
+    with open(preffile, "r") as f:
+        lines = f.readlines()
+        if len(lines) > 2:
+            SAMPLE_PRECISION = lines[2].split("=")[1].replace("\n", "")
+        else:
+            SAMPLE_PRECISION = "32-bit"
+else:
+    SAMPLE_PRECISION = "32-bit"
+
 TRAJTYPES = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 
 BACKGROUND_COLOUR = "#ECE6EA"
