@@ -12,8 +12,12 @@ Soundgrain 4.1.0:
 
 - Resize doesn't reset correctly FxBall position (double-click doesn't work) *** done (mac) ***
 
+- Resize correctly trajectories and fxballs when the screen is smaller than the opened file displaySize. *** done (mac) ***
+
 
 -- NEW FEATURES --
+
+- audio sample precision via the Audio Drivers menu *** done (mac) ***
 
 - new effects: Chorus, Freqshift, Detuned resonator *** done (mac) ***
 
@@ -27,8 +31,6 @@ Soundgrain 4.1.0:
 - More standard About window *** done ***
 
 - commands window in embeded window *** done ***
-
-- Use double precision by default *** done ***
 
 
 -- Windows --

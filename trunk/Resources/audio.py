@@ -19,9 +19,13 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 import math, time, random, wx, os
 from constants import *
-try:
-    from pyo64 import *
-except:
+
+if SAMPLE_PRECISION == "64-bit":
+    try:
+        from pyo64 import *
+    except:
+        from pyo import *
+else:
     from pyo import *
 
 USE_MIDI = False

@@ -266,7 +266,7 @@ class FxBall():
         x, y = self.center[0] - pos[0], self.center[1] - pos[1]
         hyp = math.sqrt(x*x+y*y)
         if small:
-            return hyp < (self.halfSize*2/3)
+            return hyp < (self.halfSize*1/3)
         else:
             return hyp < self.halfSize
 
