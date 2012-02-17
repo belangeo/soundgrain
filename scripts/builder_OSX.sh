@@ -27,3 +27,7 @@ cp -R SoundGrain_4.1.0/SoundGrain.app .
 tar -cjvf SoundGrain_4.1.0.tar.bz2 SoundGrain.app
 rm -rf SoundGrain_4.1.0
 rm -rf SoundGrain.app
+
+svn export . SoundGrain_4.1.0-src
+tar -cjvf SoundGrain_4.1.0-src.tar.bz2 SoundGrain_4.1.0-src
+rm -R SoundGrain_4.1.0-src
