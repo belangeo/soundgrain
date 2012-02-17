@@ -2139,7 +2139,8 @@ class MainFrame(wx.Frame):
             status, sndpath = self.checkForMixedSound()
             if not status:
                 return
-            self.controls.sndPath = sndpath
+            if sndpath != "":
+                self.controls.sndPath = sndpath
         self.currentFile = path
         self.currentPath = os.path.split(path)[0]
         saveDict = self.getState()
