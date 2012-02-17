@@ -27,7 +27,7 @@ DEFAULT_ENCODING = sys.getdefaultencoding()
 SYSTEM_ENCODING = sys.getfilesystemencoding()
 
 NAME = 'Soundgrain'
-SG_VERSION = '4.1.0'
+SG_VERSION = '4.1.1'
 PLATFORM = sys.platform
 MAX_STREAMS = 16
 
