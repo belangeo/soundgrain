@@ -133,10 +133,7 @@ class Trajectory:
         else:
             self.center = dict['center']
             self.radius = dict['radius']
-        if len(self.points) >= 1:
-            self.circlePos = self.getFirstPoint()
-        else:
-            self.circlePos = None
+        self.circlePos = dict['circlePos']
 
     def setTranspo(self, x):
         self.transpo = x
@@ -334,6 +331,9 @@ class Trajectory:
 
     def getFirstPoint(self):
         return self.points[0]
+
+    def setPointPos(self, point):
+        self.circlePos = point
 
     def getPoints(self):
         return self.points
