@@ -76,10 +76,10 @@ This is a short list of features that I want to add during the development of ve
 
 - Give the choice of the audio host
 
-- Support for ASIO driver on Windows
+- ~~Support for ASIO driver on Windows~~
 
-- More standard About window
+- ~~More standard About window~~
 
-- commands window in embeded html window
+- ~~commands window in embeded html window~~
 
-- Fine-tunning of the effects
+- ~~Fine-tunning of the effects~~
