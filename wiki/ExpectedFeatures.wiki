@@ -67,7 +67,7 @@ This is a short list of features that I want to add during the development of ve
 
 - Modulation mask with a .png file
 
-- Multiple sounds in the buffer
+- ~~Multiple sounds in the buffer~~
 
 ----
 *Need to be fixed*
