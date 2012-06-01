@@ -798,12 +798,13 @@ class DrawingSurface(wx.Panel):
             if t.getId() == selectedTraj:
                 self.selected = t
                 dc.SetPen(wx.Pen("#EEEEEE", width=2, style=wx.SOLID))
-            dc.DrawRoundedRectanglePointSize(t.getFirstPoint(), (13,13), 2)
-            dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0],t.getFirstPoint()[1], 13, 13), wx.ALIGN_CENTER)
-            if t.getType() in ['circle', 'oscil']:
-                dc.SetBrush(self.losaBrush)
-                dc.SetPen(self.losaPen)
-                dc.DrawRoundedRectanglePointSize((t.getLosangePoint()[0]-5,t.getLosangePoint()[1]-5), (10,10), 1)
+            if t.getFirstPoint() != None:
+                dc.DrawRoundedRectanglePointSize(t.getFirstPoint(), (13,13), 2)
+                dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0],t.getFirstPoint()[1], 13, 13), wx.ALIGN_CENTER)
+                if t.getType() in ['circle', 'oscil']:
+                    dc.SetBrush(self.losaBrush)
+                    dc.SetPen(self.losaPen)
+                    dc.DrawRoundedRectanglePointSize((t.getLosangePoint()[0]-5,t.getLosangePoint()[1]-5), (10,10), 1)
         dc.EndDrawing()
 
     def drawBackBitmap(self):

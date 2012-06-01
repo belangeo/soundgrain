@@ -330,7 +330,10 @@ class Trajectory:
         return wx.Rect(self.getFirstPoint()[0], self.getFirstPoint()[1], 10, 10).Contains(point)
 
     def getFirstPoint(self):
-        return self.points[0]
+        if self.points == []:
+            return None
+        else:
+            return self.points[0]
 
     def setPointPos(self, point):
         self.circlePos = point
