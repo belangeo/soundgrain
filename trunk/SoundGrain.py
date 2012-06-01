@@ -796,6 +796,7 @@ class DrawingSurface(wx.Panel):
             dc.SetPen(t.getPen())
             dc.DrawLines(t.getPoints())
             if t.getId() == selectedTraj:
+                self.selected = t
                 dc.SetPen(wx.Pen("#EEEEEE", width=2, style=wx.SOLID))
             dc.DrawRoundedRectanglePointSize(t.getFirstPoint(), (13,13), 2)
             dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0],t.getFirstPoint()[1], 13, 13), wx.ALIGN_CENTER)
@@ -806,7 +807,7 @@ class DrawingSurface(wx.Panel):
         dc.EndDrawing()
 
     def drawBackBitmap(self):
-        w,h = self.currentSize #self.GetSizeTuple()
+        w,h = self.currentSize
         if self.backBitmap == None or self.backBitmap.GetSize() != self.currentSize:
             self.backBitmap = wx.EmptyBitmap(w,h)
         dc = wx.MemoryDC(self.backBitmap)
@@ -1217,6 +1218,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.setTrajAmp(amp)
         if selToMax:
             self.selected = MAX_STREAMS
+        self.surface.needBitmap = True
 
     def handleSelected(self, event):
         if event.GetInt() != self.selected:
@@ -1471,7 +1473,7 @@ class ControlPanel(scrolled.ScrolledPanel):
     def bootServer(self):
         self.parent.sg_audio.boot(self.parent.audioDriver, self.nchnls, self.samplingRate, self.midiInterface)
         self.tog_audio.Enable()
-        if self.sndPath != "":
+        if self.sndPath != "" and self.tempState == None:
             self.loadSound(self.sndPath)
         if self.tempState != None:
             self.parent.setState(self.tempState)
@@ -1941,6 +1943,8 @@ class MainFrame(wx.Frame):
     def drawing(self):
         if not self.draw:
             self.panel.sndBitmap = None
+            self.panel.needBitmap = True
+            self.panel.Refresh()
         else:
             if self.controls.sndPath != "":
                 if self.controls.sndPath in self.panel.bitmapDict:
@@ -2186,8 +2190,11 @@ class MainFrame(wx.Frame):
                 self.SetSize((size[0]+7, size[1]+25))
             else:
                 self.SetSize(size)
-        xfac = float(self.panel.GetSize()[0]) / surfaceSize[0]
-        yfac = float(self.panel.GetSize()[1]) / surfaceSize[1]
+        if surfaceSize != None:
+            xfac = float(self.panel.GetSize()[0]) / surfaceSize[0]
+            yfac = float(self.panel.GetSize()[1]) / surfaceSize[1]
+        else:
+            xfac, yfac = 1, 1
         ### Control Frame ###
         self.granulatorControls.load(dict['ControlFrame'])
         ### Midi Frame ###
@@ -2215,6 +2222,7 @@ class MainFrame(wx.Frame):
             self.envelopeFrame.load(dict["Envelope"])
         if dict.has_key('fxballs'):
             self.panel.restoreFxBalls(dict["fxballs"], xfac, yfac)
+        self.controls.resetPlaybackSliders()
 
     def loadFile(self, path):
         if self.midiSettings.IsShown():
@@ -2449,7 +2457,7 @@ class MainFrame(wx.Frame):
         info.Name = 'Soundgrain'
         info.Version = '%s' % SG_VERSION
         info.Description = description
-        info.Copyright = u'(C) 2011 Olivier Bélanger'
+        info.Copyright = u'(C) %s Olivier Bélanger' % SG_YEAR
         wx.AboutBox(info)
 
 class SoundGrainApp(wx.PySimpleApp):

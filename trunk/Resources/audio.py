@@ -223,8 +223,14 @@ class SG_Audio:
                                                 self.num_grains, self.clock, self.srScale, chnls)
 
     def shutdown(self):
-        self.server.shutdown()
+        if hasattr(self, "table"):
+            del self.table
+        if hasattr(self, "pos_rnd"):
+            del self.pos_rnd
+        for i in range(MAX_STREAMS):
+            del self.streams[i].trigger
         self.streams = {}
+        self.fxs = {}
         del self.env
         del self.refresh_met
         del self.refresh_func
@@ -232,6 +238,7 @@ class SG_Audio:
         del self.dur_noise
         del self.srScale
         del self.trans_noise
+        del self.mixer
         if USE_MIDI:
             del self.notein
             del self.noteinpitch
@@ -240,6 +247,7 @@ class SG_Audio:
             del self.noteonFunc
             del self.noteoffThresh
             del self.noteoffFunc
+        self.server.shutdown()
 
     def recStart(self, filename, fileformat=0, sampletype=0):
         self.server.recordOptions(fileformat=fileformat, sampletype=sampletype)
