@@ -28,6 +28,7 @@ SYSTEM_ENCODING = sys.getfilesystemencoding()
 
 NAME = 'Soundgrain'
 SG_VERSION = '4.1.1'
+SG_YEAR = '2012'
 PLATFORM = sys.platform
 MAX_STREAMS = 16
 
@@ -60,6 +61,8 @@ TRAJTYPES = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 BACKGROUND_COLOUR = "#ECE6EA"
 
 def ensureNFD(unistr):
+    if unistr == None:
+        return ""
     if PLATFORM in ['linux2', 'win32']:
         encodings = [DEFAULT_ENCODING, SYSTEM_ENCODING,
                      'cp1252', 'iso-8859-1', 'utf-16']

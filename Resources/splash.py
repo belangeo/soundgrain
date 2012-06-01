@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import wx, sys, os
+from constants import *
 
 def GetRoundBitmap(w, h, r=10):
     maskColour = wx.Colour(0,0,0)
@@ -42,7 +43,7 @@ class SoundGrainSplashScreen(wx.Frame):
         dc = wx.ClientDC(self)
         dc.DrawBitmap(self.bmp, 0, 0, True)
 
-        self.fc = wx.FutureCall(3000, self.OnClose)
+        self.fc = wx.FutureCall(3500, self.OnClose)
 
         self.Center(wx.HORIZONTAL)
         if sys.platform == 'win32':
@@ -61,6 +62,14 @@ class SoundGrainSplashScreen(wx.Frame):
         dc.SetBrush(wx.Brush("#000000"))
         dc.DrawRectangle(0,0,w,h)
         dc.DrawBitmap(self.bmp, 0,0,True)
+        dc.SetTextForeground("#FFFFFF")
+        font = dc.GetFont()
+        font.SetFaceName("Monaco")
+        font.SetPixelSize((15,15))
+        dc.SetFont(font)
+        dc.DrawLabel(u"Olivier Bélanger", wx.Rect(0, 320, 400, 15), wx.ALIGN_CENTER)
+        dc.DrawLabel("iACT, %s" % SG_YEAR, wx.Rect(0, 335, 400, 15), wx.ALIGN_CENTER)
+        dc.DrawLabel("v. %s" % SG_VERSION, wx.Rect(0, 350, 400, 15), wx.ALIGN_CENTER)
 
     def OnClose(self):
         if self.mainframe:

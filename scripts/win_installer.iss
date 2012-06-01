@@ -7,7 +7,7 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{40AF40BB-C73D-46DF-A2F9-A19CCDEEF1DD}
 AppName=SoundGrain
-AppVersion=4.1.0
+AppVersion=4.1.1
 AppPublisher=iACT.umontreal.ca
 AppPublisherURL=http://code.google.com/p/soundgrain
 AppSupportURL=http://code.google.com/p/soundgrain
@@ -16,7 +16,7 @@ DefaultDirName={pf}\SoundGrain
 DisableDirPage=yes
 DefaultGroupName=SoundGrain
 AllowNoIcons=yes
-OutputBaseFilename=SoundGrain_4.1.0_setup
+OutputBaseFilename=SoundGrain_4.1.1_setup
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
@@ -30,7 +30,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "C:\Documents and Settings\olipetwin\svn\soundgrain\SoundGrain_Win\SoundGrain.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Documents and Settings\olipetwin\svn\soundgrain\SoundGrain_Win\Resources\*"; DestDir: "{app}\Resources"; Flags: ignoreversion recursesubdirs createallsubdirs
-SOurce: "C:\Documents and Settings\olipetwin\svn\soundgrain\SoundGrain_Win\examples\*"; DestDir: "{userdesktop}\soundgrain_examples"; Flags: ignoreversion
+Source: "C:\Documents and Settings\olipetwin\svn\soundgrain\SoundGrain_Win\examples\*"; DestDir: "{userdesktop}\soundgrain_examples"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]
@@ -46,6 +46,8 @@ Name: "{commondesktop}\SoundGrain"; Filename: "{app}\SoundGrain.exe"; Tasks: des
 [Run]
 Filename: "{app}\SoundGrain.exe"; Description: "{cm:LaunchProgram,SoundGrain}"; Flags: nowait postinstall skipifsilent
 
+[UninstallDelete]
+Type: files; Name: "{app}\SoundGrain Uninstall"
 
 
 
