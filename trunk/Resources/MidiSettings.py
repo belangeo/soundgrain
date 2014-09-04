@@ -58,7 +58,7 @@ class MidiSettings(wx.Frame):
                     self.selectedInterface = self.interfaceIndexes[self.interfaceList.index(miDriver)]
                 else:
                     self.selectedInterface = selected
-            self.popupInterface = wx.Choice(self.panel, id=-1, size=(200, 20), choices=self.interfaceList)
+            self.popupInterface = wx.Choice(self.panel, id=-1, size=(200, -1), choices=self.interfaceList)
             if self.selectedInterface:
                 self.popupInterface.SetSelection(self.interfaceIndexes.index(self.selectedInterface))
             self.popupInterface.Bind(wx.EVT_CHOICE, self.changeInterface)
@@ -70,7 +70,7 @@ class MidiSettings(wx.Frame):
         box.Add(self.popupInterface, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
 
         box.Add(wx.StaticText(self.panel, id=-1, label="Add / Remove method"), 0, wx.CENTER|wx.ALL, 2)
-        self.popupMethod = wx.Choice(self.panel, id=-1, size=(200, 20), choices=["Noteon / Noteoff", "Noteon / Noteon"])
+        self.popupMethod = wx.Choice(self.panel, id=-1, size=(200, -1), choices=["Noteon / Noteoff", "Noteon / Noteon"])
         self.popupMethod.SetSelection(0)
         self.popupMethod.Bind(wx.EVT_CHOICE, self.handleMethod)
         box.Add(self.popupMethod, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
@@ -96,9 +96,9 @@ class MidiSettings(wx.Frame):
         mainBox.Add(box, 0, wx.ALL, 10)
         self.panel.SetSizerAndFit(mainBox)
 
-        self.Fit()
-        self.SetMinSize(self.GetSize())
-        self.SetMaxSize(self.GetSize())
+        size = (230, 300)
+        self.SetMinSize(size)
+        self.SetMaxSize(size)
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
         self.Show(False)
 

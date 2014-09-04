@@ -18,8 +18,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
+import sys
+if sys.platform == "linux2":
+    import wxversion
+    if wxversion.checkInstalled("3.0"):
+        wxversion.select("3.0")
+    elif wxversion.checkInstalled("2.8"):
+        wxversion.select("2.8")
 
-import os, sys, math, tempfile, xmlrpclib, time, random
+import __builtin__
+__builtin__.SOUNDGRAIN_APP_OPENED = True
+
+import os, math, tempfile, xmlrpclib, time, random
 import wx
 import  wx.lib.scrolledpanel as scrolled
 import wx.richtext as rt
@@ -63,7 +73,7 @@ class CommandFrame(wx.Frame):
         self.rtc.Thaw()
 
     def writeBigTitle(self, text):
-        self.rtc.BeginAlignment(rt.TEXT_ALIGNMENT_CENTRE)
+        self.rtc.BeginAlignment(wx.TEXT_ALIGNMENT_CENTER)
         self.rtc.BeginBold()
         if PLATFORM in ["win32", "linux2"]:
             self.rtc.BeginFontSize(12)
@@ -286,12 +296,12 @@ class DrawingSurface(wx.Panel):
         return self.oscilScaling
 
     def SetColors(self, outline, bg, fill, rect, losa, wave):
-        self.outlinecolor = wx.Color(*outline)
-        self.backgroundcolor = wx.Color(*bg)
-        self.fillcolor = wx.Color(*fill)
-        self.rectcolor = wx.Color(*rect)
-        self.losacolor = wx.Color(*losa)
-        self.wavecolor = wx.Color(*wave)
+        self.outlinecolor = wx.Colour(*outline)
+        self.backgroundcolor = wx.Colour(*bg)
+        self.fillcolor = wx.Colour(*fill)
+        self.rectcolor = wx.Colour(*rect)
+        self.losacolor = wx.Colour(*losa)
+        self.wavecolor = wx.Colour(*wave)
         self.losaBrush = wx.Brush(self.losacolor, wx.SOLID)
         self.losaPen = wx.Pen(self.losacolor, width=1, style=wx.SOLID)
 
@@ -1033,6 +1043,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         box.Add(typeBox, 0, wx.CENTER|wx.ALL, 5)
 
         self.notebook = wx.Notebook(self, -1, style=wx.BK_DEFAULT | wx.EXPAND)
+        self.notebook.SetBackgroundColour(BACKGROUND_COLOUR)
         self.drawing = DrawingParameters(self.notebook)
         self.playback = PlaybackParameters(self.notebook)
         self.notebook.AddPage(self.drawing, "Drawing")
@@ -1667,7 +1678,7 @@ class EnvelopeFrame(wx.Frame):
         self.graph.outFunction = self.env.replace
 
     def handleClose(self, event):
-        self.Show(False)
+        self.Hide()
 
     def save(self):
         return {'envelope': self.graph.getPoints()}
@@ -2461,10 +2472,10 @@ class MainFrame(wx.Frame):
         info.Copyright = u'(C) %s Olivier Bélanger' % SG_YEAR
         wx.AboutBox(info)
 
-class SoundGrainApp(wx.PySimpleApp):
+class SoundGrainApp(wx.App):
     def __init__(self, *args, **kwargs):
         global SCREEN_SIZE
-        wx.PySimpleApp.__init__(self, *args, **kwargs)
+        wx.App.__init__(self, *args, **kwargs)
         X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
         SCREEN_SIZE = (X, Y)
         if X < 900: sizex = X - 40
@@ -2484,7 +2495,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         file = sys.argv[1]
 
-    app = SoundGrainApp()
+    app = SoundGrainApp(redirect=False)
     splash = SoundGrainSplashScreen(None, os.path.join(RESOURCES_PATH, "SoundGrainSplash.png"), app.frame)
     if file:
         wx.CallAfter(app.frame.loadFile, ensureNFD(file))

@@ -44,6 +44,7 @@ class Module(wx.Frame):
         self.panel = wx.Panel(self, -1)
         self.panel.SetBackgroundColour(BACKGROUND_COLOUR)
         self.notebook = wx.Notebook(self.panel, -1, style=wx.BK_DEFAULT | wx.EXPAND)
+        self.notebook.SetBackgroundColour(BACKGROUND_COLOUR)
         self.panel1 = wx.Panel(self.notebook, wx.ID_ANY)
         self.panel1.SetBackgroundColour(BACKGROUND_COLOUR)
         self.panel2 = wx.Panel(self.notebook, wx.ID_ANY)
@@ -368,12 +369,14 @@ class GranulatorFrame(Module):
         self.panel2.SetSizer(self.box2)
         self.notebook.AddPage(self.panel2, "Y Axis")
 
-        box.Add(self.notebook, 0, wx.ALL, 5)
+        box.Add(self.notebook, 1, wx.ALL, 5)
         self.panel.SetSizerAndFit(box)
 
         self.Fit()
-        self.SetMinSize(self.GetSize())
-        self.SetMaxSize(self.GetSize())
+        X = self.GetSize()[0]
+        Y = self.GetSize()[1] + self.tx_trans.GetSize()[1]
+        self.SetMinSize((X,Y))
+        self.SetMaxSize((X,Y))
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
         self.Show(False)
 

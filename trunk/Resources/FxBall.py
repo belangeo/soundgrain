@@ -152,8 +152,8 @@ def getColors(col, gradient):
     return firstColor, secondColor
 
 def GetRoundMaskBitmap(w, h, radius):
-    maskColor = wx.Color(30,30,30)
-    shownColor = wx.Color(29,29,29)
+    maskColor = wx.Colour(30,30,30)
+    shownColor = wx.Colour(29,29,29)
     b = wx.EmptyBitmap(w,h)
     dc = wx.MemoryDC(b)
     dc.SetPen(wx.Pen(maskColor, 1))
@@ -168,7 +168,7 @@ def GetRoundMaskBitmap(w, h, radius):
 
 def GetRoundBitmap(w, h, mask, col, gradient):
     firstColor, secondColor = getColors(col, gradient)
-    maskColor = wx.Color(30,30,30)
+    maskColor = wx.Colour(30,30,30)
     b = wx.EmptyBitmap(w,h)
     dc = wx.MemoryDC(b)
     dc.SetPen(wx.Pen(maskColor, 1))
