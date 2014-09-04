@@ -368,9 +368,13 @@ class SG_Audio:
                 self.activeStreams.append(which)
             if self.pan_check:
                 if self.streams[which].granulator != None:
+                    if which in self.mixer.getKeys():
+                        self.mixer.delInput(which)
                     self.mixer.addInput(which, self.streams[which].panner)
             else:
                 if self.streams[which].granulator != None:
+                    if which in self.mixer.getKeys():
+                        self.mixer.delInput(which)
                     self.mixer.addInput(which, self.streams[which].granulator)
         else:
             if which in self.activeStreams:

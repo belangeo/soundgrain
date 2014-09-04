@@ -64,11 +64,12 @@ class SoundGrainSplashScreen(wx.Frame):
         dc.DrawBitmap(self.bmp, 0,0,True)
         dc.SetTextForeground("#FFFFFF")
         font = dc.GetFont()
+        psize = font.GetPointSize()
         if PLATFORM == "win32":
             pass
         else:
             font.SetFaceName("Monaco")
-            font.SetPixelSize((15,15))
+            font.SetPointSize(psize)
         dc.SetFont(font)
         dc.DrawLabel(u"Olivier Bélanger", wx.Rect(0, 320, 400, 15), wx.ALIGN_CENTER)
         dc.DrawLabel("iACT, %s" % SG_YEAR, wx.Rect(0, 335, 400, 15), wx.ALIGN_CENTER)
