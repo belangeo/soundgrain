@@ -61,6 +61,8 @@ TRAJTYPES = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 BACKGROUND_COLOUR = "#ECE6EA"
 
 def ensureNFD(unistr):
+    if unistr == None:
+        return None
     if PLATFORM in ['linux2', 'win32']:
         encodings = [DEFAULT_ENCODING, SYSTEM_ENCODING,
                      'cp1252', 'iso-8859-1', 'utf-16']
