@@ -127,6 +127,8 @@ class DrawingSurface(wx.Panel):
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.SetBackgroundColour(BACKGROUND_COLOUR)
         self.parent = parent
+        dt = MyFileDropTarget(self)
+        self.SetDropTarget(dt)
         self.useMario = False
         self.backBitmap = None
         self.needBitmap = True
@@ -1350,7 +1352,7 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.insertSound(ensureNFD(sndPath), True)
 
     def loadSound(self, sndPath, force=False):
-        if sndPath != "":
+        if sndPath:
             if os.path.isfile(sndPath):
                 self.sndPath = sndPath
                 self.parent.sg_audio.loadSnd(toSysEncoding(self.sndPath))
@@ -1377,6 +1379,9 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.parent.log("")
 
     def insertSound(self, sndPath, force=False):
+        if not self.sndPath:
+            self.loadSound(sndPath)
+            return
         if sndPath:
             if os.path.isfile(sndPath):
                 self.sndPath = "Mixed sound " + str(random.randint(0, 10000))
@@ -2066,6 +2071,7 @@ class MainFrame(wx.Frame):
 
     def handleNew(self, evt):
         self.panel.sndBitmap = None
+        self.controls.sndPath = ""
         self.loadFile(os.path.join(RESOURCES_PATH, 'new_soundgrain_file.sg'))
 
     def handleOpen(self, evt):
@@ -2080,9 +2086,6 @@ class MainFrame(wx.Frame):
 
     def handleLoad(self, evt):
         self.controls.handleLoad()
-
-    def handleInsert(self, evt):
-        self.controls.handleInsert()
 
     def handleInsert(self, evt):
         self.controls.handleInsert()
@@ -2480,6 +2483,20 @@ class MainFrame(wx.Frame):
         info.Description = description
         info.Copyright = u'(C) %s Olivier Bélanger' % SG_YEAR
         wx.AboutBox(info)
+
+class MyFileDropTarget(wx.FileDropTarget):
+    def __init__(self, window):
+        wx.FileDropTarget.__init__(self)
+        self.window = window
+
+    def OnDropFiles(self, x, y, filenames):
+        for file in filenames:
+            ext = os.path.splitext(file)[1].replace(".", "")
+            if ext.lower() == "sg":
+                self.window.GetTopLevelParent().loadFile(ensureNFD(file))
+            elif ext.lower() in ["aif", "aiff", "wav", "wave"]:
+                self.window.GetTopLevelParent().controls.insertSound(ensureNFD(file))
+                
 
 class SoundGrainApp(wx.App):
     def __init__(self, *args, **kwargs):
