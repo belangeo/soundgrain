@@ -44,8 +44,6 @@ from Resources.FxBall import FxBall
 from Resources.MidiSettings import MidiSettings
 from Resources.splash import SoundGrainSplashScreen
 
-SCREEN_SIZE = None
-
 class CommandFrame(wx.Frame):
     def __init__(self, *args, **kw):
         wx.Frame.__init__(self, *args, **kw)
@@ -173,6 +171,11 @@ class DrawingSurface(wx.Panel):
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_SIZE, self.OnResize)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeave)
+
+        if sys.platform == "win32":
+            self.dcref = wx.BufferedPaintDC
+        else:
+            self.dcref = wx.PaintDC
 
     def setCurrentSize(self, size):
         self.currentSize = size
@@ -785,6 +788,7 @@ class DrawingSurface(wx.Panel):
         evt.Skip()
 
     def draw(self, dc):
+        #gc = wx.GraphicsContext_Create(dc)
         dc.BeginDrawing()
         dc.SetTextForeground("#000000")
         dc.SetFont(self.font)
@@ -804,6 +808,8 @@ class DrawingSurface(wx.Panel):
         for t in activeTrajs:
             dc.SetBrush(t.getBrush())
             dc.SetPen(t.getPen())
+            #gc.SetBrush(t.getBrush())
+            #gc.SetPen(t.getPen())  
             dc.DrawLines(t.getPoints())
             if t.getId() == selectedTraj:
                 self.selected = t
@@ -1751,10 +1757,10 @@ class InsertDialog(wx.Dialog):
                 self.insertSlider.GetValue(), self.crossfadeSlider.GetValue())
 
 class MainFrame(wx.Frame):
-    def __init__(self, parent, id, pos, size):
+    def __init__(self, parent, id, pos, size, screen_size):
         wx.Frame.__init__(self, parent, id, "", pos, size)
         self.SetMinSize((600,300))
-
+        self.screen_size = screen_size
         self.is_unsaved = False
         self.currentFile = None
         self.currentPath = None
@@ -2262,12 +2268,12 @@ class MainFrame(wx.Frame):
         self.SetTitle(title)
         self.panel.needBitmap = True
         size = self.GetSize()
-        if size[0] > SCREEN_SIZE[0]:
-            x = SCREEN_SIZE[0] - 50
+        if size[0] > self.screen_size[0]:
+            x = self.screen_size[0] - 50
         else:
             x = size[0]
-        if size[1] > SCREEN_SIZE[1]:
-            y = SCREEN_SIZE[1] - 50
+        if size[1] > self.screen_size[1]:
+            y = self.screen_size[1] - 50
         else:
             y = size[1]
         size = (x, y)
@@ -2474,27 +2480,40 @@ class MainFrame(wx.Frame):
 
 class SoundGrainApp(wx.App):
     def __init__(self, *args, **kwargs):
-        global SCREEN_SIZE
         wx.App.__init__(self, *args, **kwargs)
+    
+    def OnInit(self):
         X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
-        SCREEN_SIZE = (X, Y)
-        if X < 900: sizex = X - 40
-        else: sizex = 900
-        if PLATFORM in ['win32', 'linux2']: defaultY = 670
-        else: defaultY = 650
-        if Y < defaultY: sizey = Y - 40
-        else: sizey = defaultY
-        self.frame = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey))
-        self.loadFile = self.frame.loadFile
+        if X < 900: 
+            sizex = X - 40
+        else: 
+            sizex = 900
+        if PLATFORM in ['win32', 'linux2']: 
+            defaultY = 670
+        else: 
+            defaultY = 650
+        if Y < defaultY: 
+            sizey = Y - 40
+        else: 
+            sizey = defaultY
+        self.frame = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), screen_size=(X,Y))
+        return True
 
-    def MacOpenFile(self, filename):
-        self.loadFile(ensureNFD(filename))
+    def MacOpenFiles(self, filenames):
+        if type(filenames) != ListType:
+            filenames = [filenames]
+        self.frame.loadFile(ensureNFD(filenames[0]))
+
+    def MacReopenApp(self):
+        try:
+            self.frame.Raise()
+        except:
+            pass
 
 if __name__ == '__main__':
     file = None
     if len(sys.argv) > 1:
         file = sys.argv[1]
-
     app = SoundGrainApp(redirect=False)
     splash = SoundGrainSplashScreen(None, os.path.join(RESOURCES_PATH, "SoundGrainSplash.png"), app.frame)
     if file:
