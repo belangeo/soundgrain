@@ -61,8 +61,6 @@ TRAJTYPES = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 BACKGROUND_COLOUR = "#ECE6EA"
 
 def ensureNFD(unistr):
-    if unistr == None:
-        return ""
     if PLATFORM in ['linux2', 'win32']:
         encodings = [DEFAULT_ENCODING, SYSTEM_ENCODING,
                      'cp1252', 'iso-8859-1', 'utf-16']
@@ -70,23 +68,23 @@ def ensureNFD(unistr):
     else:
         encodings = [DEFAULT_ENCODING, SYSTEM_ENCODING,
                      'macroman', 'iso-8859-1', 'utf-16']
-        format = 'NFD'
-    if type(unistr) != UnicodeType:
+        format = 'NFC'
+    decstr = unistr
+    if type(decstr) != UnicodeType:
         for encoding in encodings:
             try:
-                unistr = unistr.decode(encoding)
+                decstr = decstr.decode(encoding)
                 break
             except UnicodeDecodeError:
                 continue
             except:
-                unistr = "UnableToDecodeString"
+                decstr = "UnableToDecodeString"
                 print "Unicode encoding not in a recognized format..."
                 break
-
-    if type(unistr) != UnicodeType:
-        return ""
+    if decstr == "UnableToDecodeString":
+        return unistr
     else:
-        return unicodedata.normalize(format, unistr)
+        return unicodedata.normalize(format, decstr)
 
 def toSysEncoding(unistr):
     try:
