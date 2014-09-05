@@ -1325,7 +1325,8 @@ class ControlPanel(scrolled.ScrolledPanel):
     def handleLoad(self):
         dlg = wx.FileDialog(self, message="Choose a sound file",
                             defaultFile="",
-                            wildcard="AIFF file |*.aif;*.aiff;*.aifc;*.AIF;*.AIFF;*.Aif;*.Aiff|" \
+                            wildcard="All Files |*.*|" \
+                                     "AIFF file |*.aif;*.aiff;*.aifc;*.AIF;*.AIFF;*.Aif;*.Aiff|" \
                                      "Wave file |*.wav;*.wave;*.WAV;*.WAVE;*.Wav;*.Wave",
                             style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
@@ -1337,7 +1338,8 @@ class ControlPanel(scrolled.ScrolledPanel):
         ok = False
         dlg = wx.FileDialog(self, message="Choose a sound file to insert",
                             defaultFile="",
-                            wildcard="AIFF file |*.aif;*.aiff;*.aifc;*.AIF;*.AIFF;*.Aif;*.Aiff|" \
+                            wildcard="All Files |*.*|" \
+                                     "AIFF file |*.aif;*.aiff;*.aifc;*.AIF;*.AIFF;*.Aif;*.Aiff|" \
                                      "Wave file |*.wav;*.wave;*.WAV;*.WAVE;*.Wav;*.Wave",
                             style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
@@ -2337,7 +2339,8 @@ class MainFrame(wx.Frame):
                 return_status = False
             dlg.Destroy()
             if save_dialog:
-                wildcard = "AIFF file|*.aiff;*.aif|" \
+                wildcard = "All Files|*.*|" \
+                           "AIFF file|*.aiff;*.aif|" \
                            "Wave file|*.wave;*.wav"
                 dlg2 = wx.FileDialog(self, message="Choose a filename...", defaultDir=os.getcwd(),
                     defaultFile="mixedtable.wav", wildcard=wildcard, style=wx.SAVE | wx.CHANGE_DIR)
