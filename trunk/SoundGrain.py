@@ -1069,7 +1069,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         box.Add(self.meter, 0, wx.LEFT, 10)
         box.AddSpacer(5)
 
-        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
+        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 2)
 
         box.Add(wx.StaticText(self, -1, "Project Settings"), 0, wx.CENTER | wx.ALL, 5)
 
@@ -1089,9 +1089,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         chnlsBox.Add(self.tx_chnls, 0, wx.TOP|wx.ALL, 2)
         projSettingsBox.Add(srBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         projSettingsBox.Add(chnlsBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
-        box.Add(projSettingsBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+        box.Add(projSettingsBox, 0, wx.LEFT | wx.RIGHT, 5)
 
-        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
+        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 2)
 
         soundBox = wx.BoxSizer(wx.HORIZONTAL)
         self.tog_audio = wx.ToggleButton(self, -1, "Start", size=(80,-1))
@@ -1100,7 +1100,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         soundBox.Add(self.tog_audio, 0, wx.CENTER |  wx.LEFT | wx.RIGHT, 5)
         box.Add(soundBox, 0, wx.CENTER | wx.ALL, 5)
 
-        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
+        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 2)
 
         box.Add(wx.StaticText(self, -1, "Record Settings"), 0, wx.CENTER | wx.ALL, 5)
 
@@ -1111,33 +1111,47 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.pop_fileformat = wx.Choice(self, -1, choices = ['WAV', 'AIFF'], size=(80,-1))
         self.pop_fileformat.SetSelection(0)
         self.pop_fileformat.Bind(wx.EVT_CHOICE, self.handleFileFormat)
-        fileformatBox.Add(self.pop_fileformat, 0, wx.TOP|wx.ALL, 2)
+        fileformatBox.Add(self.pop_fileformat, 0, wx.LEFT | wx.RIGHT, 5)
         sampletypeBox = wx.BoxSizer(wx.VERTICAL)
         sampletypeText = wx.StaticText(self, -1, "Sample Type")
         sampletypeBox.Add(sampletypeText, 0, wx.CENTER  | wx.LEFT | wx.RIGHT, 5)
         self.pop_sampletype = wx.Choice(self, -1, choices = ['16 int', '24 int', '32 int', '32 float'])
         self.pop_sampletype.SetSelection(0)
         self.pop_sampletype.Bind(wx.EVT_CHOICE, self.handleSampleType)
-        sampletypeBox.Add(self.pop_sampletype, 0, wx.TOP|wx.ALL, 2)
+        sampletypeBox.Add(self.pop_sampletype, 0, wx.LEFT | wx.RIGHT, 5)
         recSettingsBox.Add(fileformatBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         recSettingsBox.Add(sampletypeBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         box.Add(recSettingsBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
-        recBox = wx.BoxSizer(wx.HORIZONTAL)
+        rec1Box = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.tx_rec_folder = wx.TextCtrl( self, -1, "~/Desktop", size=(120, -1))
+        rec1Box.Add(self.tx_rec_folder, 0, wx.LEFT | wx.RIGHT, 10)
+        self.but_folder = wx.ToggleButton(self, -1, "Choose", size=(65,-1))
+        self.but_folder.SetFont(font)
+        rec1Box.Add(self.but_folder, 0, wx.ALIGN_CENTER)
+
+        rec2Box = wx.BoxSizer(wx.HORIZONTAL)
+
         self.tx_output = wx.TextCtrl( self, -1, "snd", size=(120, -1))
-        recBox.Add(self.tx_output, 0, wx.LEFT | wx.RIGHT, 10)
-        self.tog_record = wx.ToggleButton(self, -1, "Start", size=(50,-1))
+        rec2Box.Add(self.tx_output, 0, wx.LEFT | wx.RIGHT, 10)
+        self.tog_record = wx.ToggleButton(self, -1, "Start Rec", size=(65,-1))
         self.tog_record.SetFont(font)
-        self.tog_record.Disable()
-        recBox.Add(self.tog_record, 0, wx.ALIGN_CENTER)
-        box.Add(recBox, 0, wx.ALL, 5)
+        rec2Box.Add(self.tog_record, 0, wx.ALIGN_CENTER)
+        
+        box.Add(wx.StaticText(self, -1, "Destination"), 0, wx.LEFT | wx.RIGHT, 17)
+        box.Add(rec1Box, 0, wx.BOTTOM  | wx.LEFT | wx.RIGHT, 5)
+        box.Add(wx.StaticText(self, -1, "Filename"), 0, wx.LEFT | wx.RIGHT, 17)
+        box.Add(rec2Box, 0, wx.BOTTOM  | wx.LEFT | wx.RIGHT, 5)
 
 
         self.Bind(wx.EVT_CHOICE, self.handleType, self.trajType)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleClosed, self.closedToggle)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleAudio, self.tog_audio)
         self.tx_output.Bind(wx.EVT_CHAR, self.handleOutput)
+        self.tx_rec_folder.Bind(wx.EVT_CHAR, self.handleOutput)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleRecord, self.tog_record)
+        self.Bind(wx.EVT_TOGGLEBUTTON, self.chooseRecFolder, self.but_folder)
 
         self.SetAutoLayout(True)
 
@@ -1525,7 +1539,6 @@ class ControlPanel(scrolled.ScrolledPanel):
                 self.tog_audio.SetLabel('Stop')
                 self.tog_audio.SetValue(1)
                 self.parent.menu.Check(7, True)
-                self.tog_record.Enable()
 
                 for t in self.surface.getAllTrajectories():
                     t.initCounter()
@@ -1540,8 +1553,7 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.tog_audio.SetValue(0)
             self.parent.menu.Check(7, False)
             self.tog_record.SetValue(0)
-            self.tog_record.SetLabel('Start')
-            self.tog_record.Disable()
+            self.tog_record.SetLabel('Start Rec')
             self.parent.sg_audio.stop()
 
     def handleOutput(self, event):
@@ -1552,13 +1564,28 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def handleRecord(self, event):
         if event.GetInt() == 1:
-            filename = self.tx_output.GetValue()
+            folder = self.tx_rec_folder.GetValue()
+            if folder.startswith("~"):
+                folder = folder.replace("~", os.path.expanduser("~"), 1)
+            if os.path.isdir(folder):
+                filename = os.path.join(folder, self.tx_output.GetValue())
+            else:
+                filename = self.tx_output.GetValue()
             self.parent.sg_audio.recStart(filename, self.fileformat, self.sampletype)
-            self.tog_record.SetLabel('Stop')
+            self.tog_record.SetLabel('Stop Rec')
         else:
-            self.tog_record.SetLabel('Start')
+            self.tog_record.SetLabel('Start Rec')
             self.parent.sg_audio.recStop()
 
+    def chooseRecFolder(self, evt):
+        dlg = wx.DirDialog(self, message="Choose a folder to save Soundgrain's output sounds...",
+                            defaultPath=os.path.expanduser("~"))
+        if dlg.ShowModal() == wx.ID_OK:
+            path = dlg.GetPath()
+            self.tx_rec_folder.SetValue(ensureNFD(path))
+        dlg.Destroy()
+        self.but_folder.SetValue(0)
+        
     def logSndInfo(self):
         self.parent.log(self.sndInfoStr)
 
