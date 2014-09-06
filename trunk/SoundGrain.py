@@ -454,6 +454,7 @@ class DrawingSurface(wx.Panel):
                     self.setSelected(self.getActiveTrajectories()[0])
                 else:
                     self.setSelected(self.getTrajectory(0))
+            evt.StopPropagation()
             return
 
         off = {wx.WXK_UP: [0,1], wx.WXK_DOWN: [0,-1], wx.WXK_LEFT: [1,0], wx.WXK_RIGHT: [-1,0]}.get(evt.GetKeyCode(), [0,0])
@@ -466,6 +467,8 @@ class DrawingSurface(wx.Panel):
             traj.move(off)
             traj.setInitPoints()
             self.onMotion = True
+            evt.StopPropagation()
+            return
         # Move all trajectories
         elif off != [0,0]:
             for traj in self.getActiveTrajectories():
@@ -475,6 +478,8 @@ class DrawingSurface(wx.Panel):
                 traj.move(off)
                 traj.setInitPoints()
             self.onMotion = True
+            evt.StopPropagation()
+            return
         # Set freeze mode
         if evt.GetKeyCode() < 256:
             c = chr(evt.GetKeyCode())
@@ -570,6 +575,7 @@ class DrawingSurface(wx.Panel):
                 self.extremeXs = (min(Xs), max(Xs))
                 Ys = [p[1] for p in self.selected.getPoints()]
                 self.extremeYs = (min(Ys), max(Ys))
+                self.curCenters = [traj.getCenter() for traj in self.getActiveTrajectories()]
                 self.action = 'drag'
                 if self.selected.getType() not in  ['free', 'line']:
                     self.curCenter = self.selected.getCenter()
@@ -742,6 +748,16 @@ class DrawingSurface(wx.Panel):
                     center, clipedOffset = self.clipCircleMove(self.selected.getRadius(), self.curCenter, offset)
                     self.selected.setCenter(center)
                     self.selected.move(clipedOffset)
+                if evt.ShiftDown():
+                    for traj in self.getActiveTrajectories():
+                        if traj != self.selected:
+                            if traj.getType() in ['free', 'line']:
+                                clipedOffset = self.clip(offset, self.extremeXs, self.extremeYs)
+                                traj.move(clipedOffset)
+                            else:
+                                center, clipedOffset = self.clipCircleMove(traj.getRadius(), self.curCenters[traj.getId()], offset)
+                                traj.setCenter(center)
+                                traj.move(clipedOffset)
 
             elif self.action == 'rescale':
                 Xlen = abs(self.selected.getCenter()[0] - evt.GetPosition()[0])
@@ -2474,7 +2490,8 @@ class MainFrame(wx.Frame):
         win.writeBigTitle("Drawing Surface")
         win.writeTitle("Mouse Bindings")
         win.writeCommand("Left-click and drag in an empty space", "Create a new trajectory.", "")
-        win.writeCommand("Left-click on red rectangle", "Move the trajectory.", "")
+        win.writeCommand("Left-click and drag on red rectangle", "Move the trajectory.", "")
+        win.writeCommand("Left-click and drag on red rectangle while holding Shift key", "Move all trajectories.", "")
         win.writeCommand("Right-click on red rectangle", "Delete the trajectory.", "")
         win.writeCommand("Alt+click (or double-click) on red rectangle", "Duplicate the trajectory.", "")
         win.writeCommand("Left-click on blue diamond", "Scale the size of a circle or oscil trajectory.", "")
@@ -2522,7 +2539,7 @@ class MyFileDropTarget(wx.FileDropTarget):
             if ext.lower() == "sg":
                 self.window.GetTopLevelParent().loadFile(ensureNFD(file))
             elif ext.lower() in ["aif", "aiff", "wav", "wave"]:
-                self.window.GetTopLevelParent().controls.insertSound(ensureNFD(file))
+                self.window.GetTopLevelParent().controls.loadSound(ensureNFD(file))
                 
 
 class SoundGrainApp(wx.App):
