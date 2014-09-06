@@ -971,59 +971,24 @@ class DrawingSurface(wx.Panel):
 
     def analyse(self, file):
         size = self.GetSizeTuple()
-        X = size[0]
         self.file = file
-        self.list = self.parent.sg_audio.getViewTable(X)
+        self.list = self.parent.sg_audio.getViewTable(size)
         self.bitmapDict[self.file] = self.list
         self.create_bitmap()
 
     def create_bitmap(self):
-        gradient = True
         size = self.GetSizeTuple()
-        X = size[0]
-        self.length = len(self.list[0])
-        scalar = float(X) / (self.length - 1)
         self.sndBitmap = wx.EmptyBitmap(size[0], size[1])
         self.memory = wx.MemoryDC()
         self.memory.SelectObject(self.sndBitmap)
-        # dc background
+        gc = wx.GraphicsContext_Create(self.memory)
+        gc.SetPen(wx.Pen("#3F3F44"))
+        gc.SetBrush(wx.Brush("#3F3F44"))
         self.memory.SetBrush(wx.Brush(self.backgroundcolor))
         self.memory.DrawRectangle(0,0,size[0],size[1])
-        new_Y = size[1]  / float(len(self.list))
-        l = []
-        append = l.append
-        for chan in range(len(self.list)):
-            halfY = new_Y / 2
-            off = new_Y * chan
-            self.memory.SetPen(wx.Pen('#333333', 1))
-            self.memory.DrawLine(0,halfY+off,size[0],halfY+off)
-
-            # draw waveform
-            self.memory.SetPen(wx.Pen(self.wavecolor, 1))
-            if gradient:
-                if self.list[chan]:
-                    last = 0
-                    for i in range(X):
-                        y = int(round(i / scalar))
-                        val = int(halfY * self.list[chan][y])
-                        valToDraw = val * 1.5
-                        rec = wx.Rect(i, halfY+off, 1, valToDraw)
-                        self.memory.GradientFillLinear(rec, "#88889A", "#222234", wx.BOTTOM)
-                        rec = wx.Rect(i, halfY+off-valToDraw, 1, valToDraw)
-                        self.memory.GradientFillLinear(rec, "#88889A", "#222234", wx.UP)
-                        last = val
-            else:
-                if self.list[chan]:
-                    last = 0
-                    for i in range(X):
-                        y = int(round(i / scalar))
-                        val = int(((halfY * self.list[chan][y]) + last) / 2)
-                        valToDraw = val * 1.5
-                        append((i,halfY+off,i,halfY+off+valToDraw))
-                        append((i,halfY+off,i,halfY+off-valToDraw))
-                        last = val
-        if not gradient:
-            self.memory.DrawLineList(l)
+        for samples in self.list:
+            if len(samples):
+                gc.DrawLines(samples)
         self.memory.SelectObject(wx.NullBitmap)
         self.needBitmap = True
         self.Refresh()
@@ -1452,7 +1417,7 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def drawWaveform(self):
         if self.surface.sndBitmap and self.parent.draw:
-            self.surface.create_bitmap()
+            self.surface.analyse(self.sndPath)
 
     def getNchnls(self):
         return self.nchnls
