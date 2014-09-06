@@ -970,9 +970,8 @@ class DrawingSurface(wx.Panel):
         return [cx, cy], [offx, offy]
 
     def analyse(self, file):
-        size = self.GetSizeTuple()
         self.file = file
-        self.list = self.parent.sg_audio.getViewTable(size)
+        self.list = self.parent.sg_audio.getViewTable(self.GetSizeTuple())
         self.bitmapDict[self.file] = self.list
         self.create_bitmap()
 
