@@ -100,14 +100,14 @@ class ControlPanel(scrolled.ScrolledPanel):
         fileformatBox = wx.BoxSizer(wx.VERTICAL)
         fileformatText = wx.StaticText(self, -1, "File Format")
         fileformatBox.Add(fileformatText, 0, wx.CENTER | wx.LEFT | wx.RIGHT, 5)
-        self.pop_fileformat = wx.Choice(self, -1, choices = ['WAV', 'AIFF'], size=(80,-1))
+        self.pop_fileformat = wx.Choice(self, -1, choices=EXPORT_FORMATS, size=(80,-1))
         self.pop_fileformat.SetSelection(0)
         self.pop_fileformat.Bind(wx.EVT_CHOICE, self.handleFileFormat)
         fileformatBox.Add(self.pop_fileformat, 0, wx.LEFT | wx.RIGHT, 5)
         sampletypeBox = wx.BoxSizer(wx.VERTICAL)
         sampletypeText = wx.StaticText(self, -1, "Sample Type")
         sampletypeBox.Add(sampletypeText, 0, wx.CENTER  | wx.LEFT | wx.RIGHT, 5)
-        self.pop_sampletype = wx.Choice(self, -1, choices = ['16 int', '24 int', '32 int', '32 float'])
+        self.pop_sampletype = wx.Choice(self, -1, choices=EXPORT_TYPES)
         self.pop_sampletype.SetSelection(0)
         self.pop_sampletype.Bind(wx.EVT_CHOICE, self.handleSampleType)
         sampletypeBox.Add(self.pop_sampletype, 0, wx.LEFT | wx.RIGHT, 5)
@@ -332,11 +332,7 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def handleLoad(self):
         dlg = wx.FileDialog(self, message="Choose a sound file",
-                            defaultFile="",
-                            wildcard="All Files |*.*|" \
-                                     "AIFF file |*.aif;*.aiff;*.aifc;*.AIF;*.AIFF;*.Aif;*.Aiff|" \
-                                     "Wave file |*.wav;*.wave;*.WAV;*.WAVE;*.Wav;*.Wave",
-                            style=wx.OPEN)
+                            wildcard=AUDIO_WILDCARD, style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             sndPath = dlg.GetPath()
             self.loadSound(ensureNFD(sndPath))
@@ -345,11 +341,7 @@ class ControlPanel(scrolled.ScrolledPanel):
     def handleInsert(self):
         ok = False
         dlg = wx.FileDialog(self, message="Choose a sound file to insert",
-                            defaultFile="",
-                            wildcard="All Files |*.*|" \
-                                     "AIFF file |*.aif;*.aiff;*.aifc;*.AIF;*.AIFF;*.Aif;*.Aiff|" \
-                                     "Wave file |*.wav;*.wave;*.WAV;*.WAVE;*.Wav;*.Wave",
-                            style=wx.OPEN)
+                            wildcard=AUDIO_WILDCARD, style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             ok = True
             sndPath = dlg.GetPath()

@@ -79,8 +79,3 @@ class SoundGrainSplashScreen(wx.Frame):
         if self.mainframe:
             self.mainframe.Show()
         self.Destroy()
-
-if __name__ == '__main__':
-    app = wx.PySimpleApp()
-    frame = SoundGrainSplashScreen(None, img="SoundGrainSplash.png")
-    app.MainLoop()

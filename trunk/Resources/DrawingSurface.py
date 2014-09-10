@@ -14,7 +14,7 @@ class MyFileDropTarget(wx.FileDropTarget):
             ext = os.path.splitext(file)[1].replace(".", "")
             if ext.lower() == "sg":
                 self.window.GetTopLevelParent().loadFile(ensureNFD(file))
-            elif ext.lower() in ["aif", "aiff", "wav", "wave"]:
+            elif ext.lower() in ALLOWED_EXTENSIONS:
                 self.window.GetTopLevelParent().controls.loadSound(ensureNFD(file))
 
 class DrawingSurface(wx.Panel):
@@ -29,13 +29,12 @@ class DrawingSurface(wx.Panel):
         self.backBitmap = None
         self.needBitmap = True
         self.onMotion = False
-        self.pdc = wx.PseudoDC()
         self.marios = [wx.Bitmap(os.path.join(IMAGES_PATH, 'Mario%d.png' % i), wx.BITMAP_TYPE_PNG) for i in [1,2,3,2,4,5,6,5]]
         if PLATFORM in ['win32', 'linux2']:
-            self.font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)
+            self.font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL, face="Monospace")
             self.font_pos = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)
         else:
-            self.font = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL)
+            self.font = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL, face="Monospace")
             self.font_pos = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL)
         self.trajectories = [Trajectory(self, i+1) for i in range(MAX_STREAMS)]
         self.memorizedTrajectory = Trajectory(self, -1)
@@ -702,7 +701,7 @@ class DrawingSurface(wx.Panel):
         evt.Skip()
 
     def draw(self, dc):
-        #gc = wx.GraphicsContext_Create(dc)
+        gc = wx.GraphicsContext_Create(dc)
         dc.BeginDrawing()
         dc.SetTextForeground("#000000")
         dc.SetFont(self.font)
@@ -720,21 +719,20 @@ class DrawingSurface(wx.Panel):
         selectedTraj = self.parent.controls.getSelected()
         activeTrajs = [t for t in self.getActiveTrajectories() if len(t.getPoints()) > 1]
         for t in activeTrajs:
-            dc.SetBrush(t.getBrush())
-            dc.SetPen(t.getPen())
-            #gc.SetBrush(t.getBrush())
-            #gc.SetPen(t.getPen())  
-            dc.DrawLines(t.getPoints())
+            gc.SetBrush(t.getBrush(trans=True))
+            gc.SetPen(t.getPen(big=True))  
+            gc.DrawLines(t.getPoints())
             if t.getId() == selectedTraj:
                 self.selected = t
-                dc.SetPen(wx.Pen("#EEEEEE", width=2, style=wx.SOLID))
+                gc.SetPen(wx.Pen("#EEEEEE", width=2, style=wx.SOLID))
             if t.getFirstPoint() != None:
-                dc.DrawRoundedRectanglePointSize(t.getFirstPoint(), (13,13), 2)
-                dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0],t.getFirstPoint()[1], 13, 13), wx.ALIGN_CENTER)
+                gc.SetBrush(t.getBrush())
+                gc.DrawRoundedRectangle(t.getFirstPoint()[0]-7, t.getFirstPoint()[1]-7, 13, 13, 2)
+                dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0]-7,t.getFirstPoint()[1]-7, 13, 13), wx.ALIGN_CENTER)
                 if t.getType() in ['circle', 'oscil']:
-                    dc.SetBrush(self.losaBrush)
-                    dc.SetPen(self.losaPen)
-                    dc.DrawRoundedRectanglePointSize((t.getLosangePoint()[0]-5,t.getLosangePoint()[1]-5), (10,10), 1)
+                    gc.SetBrush(self.losaBrush)
+                    gc.SetPen(self.losaPen)
+                    gc.DrawRoundedRectangle(t.getLosangePoint()[0]-5, t.getLosangePoint()[1]-5, 10, 10, 2)
         dc.EndDrawing()
 
     def drawBackBitmap(self):
@@ -746,21 +744,13 @@ class DrawingSurface(wx.Panel):
         dc.SelectObject(wx.NullBitmap)
         self.needBitmap = False
 
-    def drawOnMotion(self):
-        self.pdc.RemoveAll()
-        self.draw(self.pdc)
-
     def OnPaint(self, evt):
         dc = wx.AutoBufferedPaintDC(self)
         dc.BeginDrawing()
-        if self.needBitmap:
-            self.drawBackBitmap()
 
-        if self.onMotion:
-            self.drawOnMotion()
-            self.pdc.DrawToDC(dc)
-        else:
-            dc.DrawBitmap(self.backBitmap,0,0)
+        if self.onMotion or self.needBitmap:
+            self.drawBackBitmap()
+        dc.DrawBitmap(self.backBitmap,0,0)
 
         activeTrajs = [t for t in self.getActiveTrajectories() if len(t.getPoints()) > 1 and t.circlePos]
         self.parent.sg_audio.setMixerChannelAmps(activeTrajs, self.fxballValues)
@@ -878,7 +868,7 @@ class DrawingSurface(wx.Panel):
         self.memory.SelectObject(self.sndBitmap)
         gc = wx.GraphicsContext_Create(self.memory)
         gc.SetPen(wx.Pen("#3F3F44"))
-        gc.SetBrush(wx.Brush("#3F3F44"))
+        gc.SetBrush(wx.Brush("#3F3F44", style=wx.TRANSPARENT))
         self.memory.SetBrush(wx.Brush(self.backgroundcolor))
         self.memory.DrawRectangle(0,0,size[0],size[1])
         for samples in self.list:

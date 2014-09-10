@@ -623,19 +623,18 @@ class MainFrame(wx.Frame):
                 return_status = False
             dlg.Destroy()
             if save_dialog:
-                wildcard = "All Files|*.*|" \
-                           "AIFF file|*.aiff;*.aif|" \
-                           "Wave file|*.wave;*.wav"
+                ext = EXPORT_FORMATS[self.controls.fileformat].lower()
+                wildcard = AUDIO_WILDCARD
                 dlg2 = wx.FileDialog(self, message="Choose a filename...", defaultDir=os.getcwd(),
-                    defaultFile="mixedtable.wav", wildcard=wildcard, style=wx.SAVE | wx.CHANGE_DIR)
+                    defaultFile="mixedtable.%s" % ext, wildcard=wildcard, style=wx.SAVE | wx.CHANGE_DIR)
                 if dlg2.ShowModal() == wx.ID_OK:
                     path = dlg2.GetPath()
                     if path != "":
                         p, ext = os.path.splitext(path)
-                        if ext.lower() in [".wav", ".wave"]:
-                            fileformat = 0
+                        if ext.upper() in EXPORT_FORMATS:
+                            fileformat = EXPORT_FORMATS[ext.upper()]
                         else:
-                            fileformat = 1
+                            fileformat = self.controls.fileformat
                         sampletype = self.controls.sampletype
                         self.sg_audio.table.save(path, fileformat, sampletype)
                         saved_path = path
