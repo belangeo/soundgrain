@@ -252,8 +252,10 @@ class SG_Audio:
     def recStart(self, filename, fileformat=0, sampletype=0):
         self.server.recordOptions(fileformat=fileformat, sampletype=sampletype)
         filename, ext = os.path.splitext(filename)
-        if fileformat == 0: ext = ".wav"
-        else: ext = ".aif"
+        if fileformat >= 0 and fileformat < 8:
+            ext = RECORD_EXTENSIONS[fileformat]
+        else: 
+            ext = ".wav"
         date = time.strftime('_%d_%b_%Y_%Hh%M')
         complete_filename = toSysEncoding(os.path.join(os.path.expanduser('~'), "Desktop", filename+date+ext))
         self.server.recstart(complete_filename)

@@ -60,6 +60,20 @@ TRAJTYPES = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 
 BACKGROUND_COLOUR = "#ECE6EA"
 
+ALLOWED_EXTENSIONS = ["wav","wave","aif","aiff","aifc","au","","sd2","flac","caf","ogg"]
+EXPORT_FORMATS = ['WAV', 'AIFF', 'AU', 'RAW', 'SD2', 'FLAC', 'CAF', 'OGG']
+EXPORT_TYPES = ['16 int', '24 int', '32 int', '32 float', '64 float', 'U-Law encoded', 'A-Law encoded']
+RECORD_EXTENSIONS = [".wav",".aif",".au","",".sd2",".flac",".caf",".ogg"]
+AUDIO_WILDCARD = "All Files |*.*|" \
+                 "Wave file |*.wav;*.wave;*.WAV;*.WAVE;*.Wav;*.Wave|" \
+                 "AIFF file |*.aif;*.aiff;*.aifc;*.AIF;*.AIFF;*.Aif;*.Aiff|" \
+                 "AU file |*.au;*.Au;*.AU|" \
+                 "RAW file |*|" \
+                 "SD2 file |*.sd2;*.Sd2;*.SD2|" \
+                 "FLAC file |*.flac;*.Flac;*.FLAC|" \
+                 "CAF file |*.caf;*.Caf;*.CAF|" \
+                 "OGG file |*.ogg;*.Ogg;*.OGG"
+
 def ensureNFD(unistr):
     if unistr == None:
         return None

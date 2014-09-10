@@ -66,7 +66,9 @@ class Trajectory:
         self.id = int(self.label)-1
         self.colour, self.bordercolour = chooseColour(int(self.label)-1)
         self.pen = wx.Pen(self.colour, width=1, style=wx.SOLID)
+        self.pen2 = wx.Pen(self.colour, width=2, style=wx.SOLID)
         self.brush = wx.Brush(self.colour, style=wx.SOLID)
+        self.brush2 = wx.Brush(self.colour, style=wx.TRANSPARENT)
         self.circlePen = wx.Pen(self.colour, width=8, style=wx.SOLID)
         self.activeLp = True
         self.editLevel = 2
@@ -158,11 +160,17 @@ class Trajectory:
     def getColour(self):
         return self.colour
 
-    def getPen(self):
-        return self.pen
+    def getPen(self, big=False):
+        if big:
+            return self.pen2
+        else:
+            return self.pen
 
-    def getBrush(self):
-        return self.brush
+    def getBrush(self, trans=False):
+        if trans:
+            return self.brush2
+        else:
+            return self.brush
 
     def getCirclePen(self):
         return self.circlePen
@@ -327,7 +335,7 @@ class Trajectory:
             self.circlePos = self.points[(self.counter-self.step) % len(self.points)]
 
     def getInsideRect(self, point):
-        return wx.Rect(self.getFirstPoint()[0], self.getFirstPoint()[1], 10, 10).Contains(point)
+        return wx.Rect(self.getFirstPoint()[0]-7, self.getFirstPoint()[1]-7, 13, 13).Contains(point)
 
     def getFirstPoint(self):
         if self.points == []:

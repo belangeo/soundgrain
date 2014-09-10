@@ -40,7 +40,8 @@ class SoundGrainApp(wx.App):
         wx.App.__init__(self, *args, **kwargs)
     
     def OnInit(self):
-        X,Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X), wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
+        X = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X)
+        Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
         if X < 900: 
             sizex = X - 40
         else: 
@@ -53,7 +54,8 @@ class SoundGrainApp(wx.App):
             sizey = Y - 40
         else: 
             sizey = defaultY
-        self.frame = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), screen_size=(X,Y))
+        self.frame = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), 
+                               screen_size=(X,Y))
         return True
 
     def MacOpenFiles(self, filenames):
@@ -72,7 +74,8 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         file = sys.argv[1]
     app = SoundGrainApp(redirect=False)
-    splash = SoundGrainSplashScreen(None, os.path.join(RESOURCES_PATH, "SoundGrainSplash.png"), app.frame)
+    splash = SoundGrainSplashScreen(None, os.path.join(RESOURCES_PATH, 
+                                    "SoundGrainSplash.png"), app.frame)
     if file:
         wx.CallAfter(app.frame.loadFile, ensureNFD(file))
     app.MainLoop()
