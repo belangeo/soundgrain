@@ -46,14 +46,10 @@ class SoundGrainApp(wx.App):
             sizex = X - 40
         else: 
             sizex = 900
-        if PLATFORM in ['win32', 'linux2']: 
-            defaultY = 670
-        else: 
-            defaultY = 650
-        if Y < defaultY: 
+        if Y < 670: 
             sizey = Y - 40
         else: 
-            sizey = defaultY
+            sizey = 670
         self.frame = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), 
                                screen_size=(X,Y))
         return True
