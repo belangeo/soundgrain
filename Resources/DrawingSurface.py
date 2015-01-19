@@ -719,16 +719,20 @@ class DrawingSurface(wx.Panel):
         selectedTraj = self.parent.controls.getSelected()
         activeTrajs = [t for t in self.getActiveTrajectories() if len(t.getPoints()) > 1]
         for t in activeTrajs:
+            recsize = 14
+            s2 = recsize / 2
             gc.SetBrush(t.getBrush(trans=True))
             gc.SetPen(t.getPen(big=True))  
             gc.DrawLines(t.getPoints())
             if t.getId() == selectedTraj:
+                recsize = 14
+                s2 = recsize / 2
                 self.selected = t
                 gc.SetPen(wx.Pen("#EEEEEE", width=2, style=wx.SOLID))
             if t.getFirstPoint() != None:
                 gc.SetBrush(t.getBrush())
-                gc.DrawRoundedRectangle(t.getFirstPoint()[0]-7, t.getFirstPoint()[1]-7, 13, 13, 2)
-                dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0]-7,t.getFirstPoint()[1]-7, 13, 13), wx.ALIGN_CENTER)
+                gc.DrawRoundedRectangle(t.getFirstPoint()[0]-s2, t.getFirstPoint()[1]-s2, recsize, recsize, 2)
+                dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0]-s2,t.getFirstPoint()[1]-s2, recsize, recsize), wx.ALIGN_CENTER)
                 if t.getType() in ['circle', 'oscil']:
                     gc.SetBrush(self.losaBrush)
                     gc.SetPen(self.losaPen)
@@ -745,7 +749,8 @@ class DrawingSurface(wx.Panel):
         self.needBitmap = False
 
     def OnPaint(self, evt):
-        dc = wx.AutoBufferedPaintDC(self)
+        dc = self.dcref(self)
+        gc = wx.GraphicsContext_Create(dc)
         dc.BeginDrawing()
 
         if self.onMotion or self.needBitmap:
@@ -757,9 +762,12 @@ class DrawingSurface(wx.Panel):
 
         if not self.useMario:
             for t in activeTrajs:
-                dc.SetPen(t.getPen())
-                dc.SetBrush(t.getBrush())
-                dc.DrawCirclePoint(t.circlePos, 4)
+                gc.SetPen(t.getPen())
+                gc.SetBrush(t.getBrush())
+                gc.DrawEllipse(t.circlePos[0]-5, t.circlePos[1]-5, 10, 10)
+                gc.SetPen(t.getBorderPen())
+                gc.SetBrush(t.getBorderBrush())
+                gc.DrawEllipse(t.circlePos[0]-2, t.circlePos[1]-2, 4, 4)
         else:
             for t in activeTrajs:
                 if t.lastCirclePos[0] < t.circlePos[0]: marioff = 0

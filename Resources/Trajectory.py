@@ -55,7 +55,7 @@ def chooseColour(i, numlines=24):
         return wx.Colour(clip(r),clip(g),clip(b))
 
     labelColour = colour(i, numlines, 1, 1)
-    objectColour = colour(i, numlines, .95, .85)
+    objectColour = colour(i, numlines, .85, .75)
 
     return objectColour, labelColour
 
@@ -70,6 +70,8 @@ class Trajectory:
         self.brush = wx.Brush(self.colour, style=wx.SOLID)
         self.brush2 = wx.Brush(self.colour, style=wx.TRANSPARENT)
         self.circlePen = wx.Pen(self.colour, width=8, style=wx.SOLID)
+        self.borderPen = wx.Pen(self.bordercolour, width=1, style=wx.SOLID)
+        self.borderBrush = wx.Brush(self.bordercolour, style=wx.SOLID)
         self.activeLp = True
         self.editLevel = 2
         self.timeSpeed = 25
@@ -175,8 +177,11 @@ class Trajectory:
     def getCirclePen(self):
         return self.circlePen
 
-    def getBorderColour(self):
-        return self.bordercolour
+    def getBorderPen(self):
+        return self.borderPen
+
+    def getBorderBrush(self):
+        return self.borderBrush
 
     def setTimeSpeed(self, speed):
         self.timeSpeed = speed

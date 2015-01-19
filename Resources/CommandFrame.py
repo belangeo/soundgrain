@@ -13,6 +13,11 @@ class CommandFrame(wx.Frame):
         self.menubar.Append(self.fileMenu, "&File")
         self.SetMenuBar(self.menubar)
 
+        if PLATFORM in ["win32", "linux2"]:
+            self.bigtitlefont, self.titlefont, self.commandfont = 12, 10, 8
+        else:
+            self.bigtitlefont, self.titlefont, self.commandfont = 16, 14, 12
+
         self.rtc = rt.RichTextCtrl(self, style=wx.VSCROLL|wx.HSCROLL|wx.NO_BORDER)
         self.rtc.SetEditable(False)
         self.rtc.SetBackgroundColour("#EDEDED")
@@ -80,7 +85,7 @@ class CommandFrame(wx.Frame):
         self.writeCommand("Shift+click on the middle part of an FxBall, up and down motion", "Change the effects's fadein/fadeout ramp time.", "")
 
         self.writeTitle("Keyboard Bindings")
-        self.rtc.WriteText("\nWhen the focus is on the drawing surface:\n")
+        self.rtc.WriteText("When the focus is on the drawing surface:\n")
         self.writeCommand("Delete key", "Delete the selected trajectory.", "")
         self.writeCommand("Arrow keys", "Move all trajectories.", "")
         self.writeCommand("Shift + arrow keys", "Move the selected trajectory.", "")
@@ -99,10 +104,7 @@ class CommandFrame(wx.Frame):
     def writeBigTitle(self, text):
         self.rtc.BeginAlignment(wx.TEXT_ALIGNMENT_CENTER)
         self.rtc.BeginBold()
-        if PLATFORM in ["win32", "linux2"]:
-            self.rtc.BeginFontSize(12)
-        else:
-            self.rtc.BeginFontSize(16)
+        self.rtc.BeginFontSize(self.bigtitlefont)
         self.rtc.Newline()
         self.rtc.Newline()
         self.rtc.WriteText(text)
@@ -114,10 +116,7 @@ class CommandFrame(wx.Frame):
     def writeTitle(self, text):
         self.rtc.BeginBold()
         self.rtc.BeginUnderline()
-        if PLATFORM in ["win32", "linux2"]:
-            self.rtc.BeginFontSize(10)
-        else:
-            self.rtc.BeginFontSize(14)
+        self.rtc.BeginFontSize(self.titlefont)
         self.rtc.Newline()
         self.rtc.WriteText(text)
         self.rtc.Newline()
@@ -126,10 +125,8 @@ class CommandFrame(wx.Frame):
         self.rtc.EndBold()
 
     def writeCommand(self, command, text, shortcut=""):
-        if PLATFORM in ["win32", "linux2"]:
-            self.rtc.BeginFontSize(8)
-        else:
-            self.rtc.BeginFontSize(12)
+        self.rtc.BeginFontSize(self.commandfont)
+        if PLATFORM == "darwin":
             shortcut = shortcut.replace("Ctrl", "Cmd")
         self.rtc.BeginBold()
         self.rtc.WriteText(command + " ")

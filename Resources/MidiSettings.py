@@ -127,7 +127,8 @@ class MidiSettings(wx.Frame):
                 self.parent.panel.sndBitmap = None
                 self.parent.panel.needBitmap = True
                 wx.CallAfter(self.parent.panel.Refresh)
-        self.selectedInterface = self.popupInterface.GetSelection()
+        selectedInterface = self.popupInterface.GetStringSelection()
+        self.selectedInterface = self.interfaceIndexes[self.interfaceList.index(selectedInterface)]
         self.parent.controls.midiInterface = self.selectedInterface
         self.parent.controls.shutdownServer()
         self.parent.controls.bootServer()

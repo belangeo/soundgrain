@@ -202,7 +202,7 @@ class SG_Audio:
         self.mixer = Mixer(outs=10, chnls=chnls)
         if midiInterface != None:
             USE_MIDI = True
-            self.notein = Notein(poly=10)
+            self.notein = Notein(poly=16)
             self.noteinpitch = Sig(self.notein["pitch"])
             self.noteinvelocity = Sig(self.notein["velocity"])
             self.noteonThresh = Thresh(self.notein["velocity"])

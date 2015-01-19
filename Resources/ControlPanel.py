@@ -34,7 +34,8 @@ class ControlPanel(scrolled.ScrolledPanel):
         popupBox.Add(self.trajType)
         typeBox.Add(popupBox, 0, wx.CENTER|wx.RIGHT, 5)
 
-        self.closedToggle = wx.ToggleButton(self, -1, 'Closed', size=(55,-1))
+        # TODO: Check the size of this button on Windows and OSX
+        self.closedToggle = wx.ToggleButton(self, -1, 'Closed', size=self.trajType.GetSize())
         font = self.closedToggle.GetFont()
         if PLATFORM in ['win32', 'linux2']:
             font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)
@@ -164,15 +165,16 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.drawing.sl_scaling.Disable()
 
     def handleType(self, event):
-        self.type = event.GetInt()
-        self.surface.setMode(self.type)
-        self.checkEnableWidgets()
+        self.processType(event.GetInt())
 
     def getType(self):
         return self.type
 
     def setType(self, type):
         self.trajType.SetSelection(type)
+        self.processType(type)
+
+    def processType(self, type):
         self.type = type
         self.surface.setMode(type)
         self.checkEnableWidgets()

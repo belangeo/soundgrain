@@ -61,6 +61,9 @@ class Biquad:
         self.init = True
 
 class BiquadLP(Biquad):
+    def __init__(self, freq=5000, q=0.5):
+        Biquad.__init__(self, freq, q)
+
     def computeCoeffs(self):
         self.b0 = (1 - self.c) / 2
         self.b1 = 1 - self.c
@@ -70,6 +73,9 @@ class BiquadLP(Biquad):
         self.a2 = 1 - self.alpha
 
 class BiquadHP(Biquad):
+    def __init__(self, freq=5000, q=0.5):
+        Biquad.__init__(self, freq, q)
+
     def computeCoeffs(self):
         self.b0 = (1 + self.c) / 2
         self.b1 = -(1 + self.c)
@@ -79,6 +85,9 @@ class BiquadHP(Biquad):
         self.a2 = 1 - self.alpha
 
 class BiquadBP(Biquad):
+    def __init__(self, freq=5000, q=0.5):
+        Biquad.__init__(self, freq, q)
+
     def computeCoeffs(self):
         self.b0 = self.alpha
         self.b1 = 0
@@ -88,6 +97,9 @@ class BiquadBP(Biquad):
         self.a2 = 1 - self.alpha
 
 class BiquadBR(Biquad):
+    def __init__(self, freq=5000, q=0.5):
+        Biquad.__init__(self, freq, q)
+
     def computeCoeffs(self):
         self.b0 = 1
         self.b1 = -2 * self.c
