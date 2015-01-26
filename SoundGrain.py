@@ -26,9 +26,6 @@ if sys.platform == "linux2":
     elif wxversion.checkInstalled("2.8"):
         wxversion.select("2.8")
 
-import __builtin__
-__builtin__.SOUNDGRAIN_APP_OPENED = True
-
 import os, wx
 from types import ListType
 from Resources.constants import *
