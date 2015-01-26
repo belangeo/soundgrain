@@ -51,6 +51,8 @@ class MidiSettings(wx.Frame):
         self.interfaceList, self.interfaceIndexes, selected = checkForMidiDrivers()
         self.interfaceList = [ensureNFD(driver) for driver in self.interfaceList]
         if self.interfaceList != []:
+            self.interfaceList.append("All")
+            self.interfaceIndexes.append(99)
             if miDriver == None:
                 self.selectedInterface = selected
             else:
