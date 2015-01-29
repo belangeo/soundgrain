@@ -74,20 +74,19 @@ class Fx:
         self.pan = SPan(self.process, outs=chnls, pan=0.5).out()
 
 class Granulator_Stream:
-    def __init__(self, order, env, trans_noise, dur_noise, num_grains, clock_func, srScale, chnls):
+    def __init__(self, order, env, trans_noise, dur_noise, dev_noise, clock_func, chnls):
         self.order = order
         self.env = env
         self.trans_noise = trans_noise
         self.dur_noise = dur_noise
-        self.num_grains = num_grains
+        self.dev_noise = dev_noise
         self.clock_func = clock_func
-        self.srScale = srScale
         self.chnls = chnls
         self.granulator = None
-        self.panner = None
 
         self.metro = Metro(time=0.025)
         self.duration = Randh(min=-1, max=1, freq=200, mul=0, add=.2)
+        self.density = Sig(value=32)
         self.base_pitch = SigTo(value=1, time=0.01)
         self.transpo = SigTo(value=1, time=0.001)
         self.traj_amp = SigTo(value=1, time=0.01, init=1)
@@ -96,7 +95,7 @@ class Granulator_Stream:
         self.y_pan = SigTo(value=0.5, time=0.01)
         self.y_dur = Randh(min=-1, max=1, freq=201, mul=0)
         self.y_pos = Randh(min=-1, max=1, freq=202, mul=0)
-        self.fader = SigTo(value=0, mul=1./(math.log(self.num_grains)+1.))
+        self.fader = SigTo(value=0, mul=0.707/(math.log(32)+1))
         self.trigger = TrigFunc(self.metro, self.clock_func, self.order)
 
     def create_granulator(self, table, pos_rnd):
@@ -104,25 +103,27 @@ class Granulator_Stream:
         self.pos_rnd = pos_rnd
         self.position = SigTo(value=0, time=0.01, mul=self.table.getSize(False))
         self.y_pos_rnd = Sig(self.y_pos, mul=self.table.getSize(False))
-        self.granulator = Granulator(table=self.table, env=self.env, pitch=self.base_pitch*self.y_pit*self.srScale*self.transpo,
+        self.granulator = Particle( table=self.table, 
+                                    env=self.env, 
+                                    dens=self.density,
+                                    pitch=self.base_pitch*self.y_pit*self.transpo*self.trans_noise,
                                     pos=self.position+self.pos_rnd+self.y_pos_rnd,
-                                    dur=self.duration*self.trans_noise+self.dur_noise+self.y_dur,
-                                    grains=self.num_grains, basedur=self.duration.add,
-                                    mul=self.fader*self.y_amp*self.traj_amp
+                                    dur=self.duration+self.dur_noise+self.y_dur,
+                                    dev=self.dev_noise,
+                                    pan=self.y_pan,
+                                    chnls=self.chnls,
+                                    mul=self.fader*self.y_amp*self.traj_amp,
                                     ).stop()
-        self.panner = SPan(input=self.granulator, outs=self.chnls, pan=self.y_pan).stop()
 
     def ajustLength(self):
         self.position.mul = self.table.getSize(False)
         self.y_pos_rnd.mul = self.table.getSize(False)
 
-    def setNumGrains(self, x):
-        self.num_grains = x
-        try:
-            self.granulator.grains = x
-        except:
-            pass
-        self.fader.mul = 1./(math.log(self.num_grains)+1.)
+    def setDensity(self, x):
+        self.density.value = x
+        if x < 1:
+            x = 1
+        self.fader.mul = 0.707/(math.log(x)+1)
 
     def setBasePitch(self, x):
         self.base_pitch.value = x
@@ -134,20 +135,10 @@ class Granulator_Stream:
         except:
             pass
 
-    def togglePan(self, state):
-        if self.granulator == None:
-            return
-        if state:
-            self.granulator.play()
-            self.panner.out()
-        else:
-            self.granulator.out(self.order)
-            self.panner.stop()
-
     def setActive(self, val):
         if val == 1:
             self.metro.play()
-            self.granulator.out(self.order)
+            self.granulator.out()
             self.fader.value = 1
         else:
             self.metro.stop()
@@ -163,30 +154,19 @@ class SG_Audio:
         self.deleteTraj = deleteTraj
         self.envFrame = envFrame
         self.chnls = 2
-        self.server_started = False
-        self.num_grains = 8
         self.activeStreams = []
         self.fxs = {}
         self.samplingRate = 44100
         self.globalAmplitude = 1.0
         self.midiTriggerMethod = 0
         self.midiPitches = []
-        if PLATFORM == "darwin":
-            self.server = Server(sr=self.samplingRate, buffersize=256, duplex=0)
-        elif PLATFORM == "linux2":
-            self.server = Server(sr=self.samplingRate, buffersize=256, duplex=0)
-        else:
-            self.server = Server(sr=self.samplingRate, buffersize=256, duplex=0)
-        self.pitch_check = 1
-        self.pitch_map = Map(0, 1, "lin")
-        self.amp_check = 0
-        self.amp_map = Map(0, 1, "lin")
-        self.dur_check = 0
-        self.dur_map = Map(0.001, 1, "log")
-        self.pos_check = 0
-        self.pos_map = Map(0.001, 1, "log")
-        self.pan_check = 0
-        self.pan_map = Map(0, 1, "lin")
+        self.server = Server(sr=self.samplingRate, buffersize=256, duplex=0)
+        self.check_dict = {"y_pit_check": 1, "y_amp_check": 0, 
+                           "y_dur_check": 0, "y_pos_check": 0, 
+                           "y_pan_check": 0}
+        self.map_dict = {"y_pit_map": [0, 1, 1], "y_amp_map": [0, 1, 1], 
+                           "y_dur_map": [0, 1, 4], "y_pos_map": [0, 1, 4], 
+                           "y_pan_map": [0, 1, 1]}
 
     def boot(self, driver, chnls, samplingRate, midiInterface):
         global USE_MIDI
@@ -205,22 +185,23 @@ class SG_Audio:
             self.notein = Notein(poly=16)
             self.noteinpitch = Sig(self.notein["pitch"])
             self.noteinvelocity = Sig(self.notein["velocity"])
-            self.noteonThresh = Thresh(self.notein["velocity"])
-            self.noteonFunc = TrigFunc(self.noteonThresh, self.noteon, range(10))
-            self.noteoffThresh = Thresh(self.notein["velocity"], threshold=.001, dir=1)
-            self.noteoffFunc = TrigFunc(self.noteoffThresh, self.noteoff, range(10))
+            self.noteonFunc = TrigFunc(self.notein["trigon"], self.noteon, range(10))
+            self.noteoffFunc = TrigFunc(self.notein["trigoff"], self.noteoff, range(10))
         self.env = CosTable([(0,0),(2440,1),(5751,1),(8191,0)])
         self.envFrame.setEnv(self.env)
         self.refresh_met = Metro(0.066666666666666666)
         self.refresh_func = TrigFunc(self.refresh_met, self.refresh_screen)
+        self.dens_noise = Randh(min=-1, max=1, freq=113, mul=0)
         self.pos_noise = Randh(min=-1, max=1, freq=199, mul=0)
         self.dur_noise = Randh(min=-1, max=1, freq=198, mul=0)
-        self.srScale = Sig(1)
+        self.dev_noise = Sig(0)
+        self.pit_noise = Randh(min=-1, max=1, freq=397, mul=0)
+        self.pan_noise = Randh(min=-1, max=1, freq=303, mul=0)
         self.trans_noise = Choice([1], freq=500)
         self.streams = {}
         for i in range(MAX_STREAMS):
             self.streams[i] = Granulator_Stream(i, self.env, self.trans_noise, self.dur_noise,
-                                                self.num_grains, self.clock, self.srScale, chnls)
+                                                self.dev_noise, self.clock, chnls)
 
     def shutdown(self):
         if hasattr(self, "table"):
@@ -236,16 +217,13 @@ class SG_Audio:
         del self.refresh_func
         del self.pos_noise
         del self.dur_noise
-        del self.srScale
         del self.trans_noise
         del self.mixer
         if USE_MIDI:
             del self.notein
             del self.noteinpitch
             del self.noteinvelocity
-            del self.noteonThresh
             del self.noteonFunc
-            del self.noteoffThresh
             del self.noteoffFunc
         self.server.shutdown()
 
@@ -268,14 +246,13 @@ class SG_Audio:
 
     def loadSnd(self, sndPath):
         ch, sndsr, dur = soundInfo(sndPath)
-        self.srScale.value = float(sndsr) / self.samplingRate
         self.table = SndTable(sndPath)
         self.table.normalize()
         self.pos_rnd = Sig(self.pos_noise, self.table.getSize(False))
         for gr in self.streams.values():
             gr.create_granulator(self.table, self.pos_rnd)
             gr.ajustLength()
-        if self.server_started:
+        if self.server.getIsStarted():
             for which in self.activeStreams:
                 self.streams[which].setActive(1)
 
@@ -284,7 +261,7 @@ class SG_Audio:
         self.pos_rnd.mul = self.table.getSize(False)
         for gr in self.streams.values():
             gr.ajustLength()
-        if self.server_started:
+        if self.server.getIsStarted():
             for which in self.activeStreams:
                 self.streams[which].setActive(1)
 
@@ -301,18 +278,39 @@ class SG_Audio:
     def getMidiMethod(self):
         return self.midiTriggerMethod
 
-    def setNumGrains(self, x):
-        self.num_grains = x
+    def setDensity(self, x):
         for gr in self.streams.values():
-            gr.setNumGrains(self.num_grains)
+            gr.setDensity(x)
 
     def setBasePitch(self, x):
         for gr in self.streams.values():
             gr.setBasePitch(x)
 
-    def setGrainSize(self, x):
+    def setGrainDur(self, x):
+        x *= 0.001
         for gr in self.streams.values():
             gr.setGrainSize(x)
+
+    def setGrainDev(self, x):
+        self.dev_noise.value = x
+
+    def setRandDens(self, x):
+        self.dens_noise.mul = x
+
+    def setRandDur(self, x):
+        self.dur_noise.mul = x
+
+    def setRandPos(self, x):
+        self.pos_noise.mul = x
+
+    def setRandPit(self, x):
+        self.pit_noise.mul = x
+
+    def setRandPan(self, x):
+        self.pan_noise.mul = x
+ 
+    def setDiscreteTrans(self, lst):
+        self.trans_noise.choice = lst
 
     def setMetroTime(self, which, x):
         self.streams[which].metro.time = x
@@ -323,60 +321,65 @@ class SG_Audio:
     def setTrajAmplitude(self, which, x):
         self.streams[which].traj_amp.value = x
 
+    def setCheck(self, which, state):
+        self.check_dict[which] = state
+
+    def setMapMin(self, which, value):
+        self.map_dict[which][0] = value
+
+    def setMapMax(self, which, value):
+        self.map_dict[which][1] = value
+
     def setXposition(self, which, x):
         self.streams[which].position.value = x
 
     def setYposition(self, which, x):
-        if self.pitch_check:
-            pit = self.pitch_map.get(x)
-            self.streams[which].y_pit.value = pit
+        if self.check_dict["y_pit_check"]:
+            rng = self.map_dict["y_pit_map"]
+            val = floatmap(x, rng[0], rng[1], rng[2])
+            self.streams[which].y_pit.value = val
         else:
             self.streams[which].y_pit.value = 1
-        if self.dur_check:
-            dur = self.dur_map.get(x)
-            self.streams[which].y_dur.mul = dur
+        if self.check_dict["y_dur_check"]:
+            rng = self.map_dict["y_dur_map"]
+            val = floatmap(x, rng[0], rng[1], rng[2])
+            self.streams[which].y_dur.value = val
         else:
             self.streams[which].y_dur.mul = 0
-        if self.pos_check:
-            pos = self.pos_map.get(x)
-            self.streams[which].y_pos.mul = pos
+        if self.check_dict["y_pos_check"]:
+            rng = self.map_dict["y_pos_map"]
+            val = floatmap(x, rng[0], rng[1], rng[2])
+            self.streams[which].y_pos.value = val
         else:
             self.streams[which].y_pos.mul = 0
-        if self.amp_check:
-            amp = self.amp_map.get(x)
-            self.streams[which].y_amp.value = amp
+        if self.check_dict["y_amp_check"]:
+            rng = self.map_dict["y_amp_map"]
+            val = floatmap(x, rng[0], rng[1], rng[2])
+            self.streams[which].y_amp.value = val
         else:
             self.streams[which].y_amp.value = 1
-        if self.pan_check and self.chnls != 1:
-            pan = self.pan_map.get(x)
-            self.streams[which].y_pan.value = pan
+        if self.check_dict["y_pan_check"] and self.chnls != 1:
+            rng = self.map_dict["y_pan_map"]
+            val = floatmap(x, rng[0], rng[1], rng[2])
+            self.streams[which].y_pan.value = val
         else:
             pass
 
     def setPanCheck(self, state):
         self.pan_check = state
-        for which in self.activeStreams:
-            self.streams[which].togglePan(state)
 
     def setActive(self, which, val):
         try:
             self.streams[which].setActive(val)
-            self.streams[which].togglePan(self.pan_check)
         except:
             pass
         if val == 1:
             if which not in self.activeStreams:
                 self.activeStreams.append(which)
-            if self.pan_check:
-                if self.streams[which].granulator != None:
-                    if which in self.mixer.getKeys():
-                        self.mixer.delInput(which)
-                    self.mixer.addInput(which, self.streams[which].panner)
-            else:
-                if self.streams[which].granulator != None:
-                    if which in self.mixer.getKeys():
-                        self.mixer.delInput(which)
-                    self.mixer.addInput(which, self.streams[which].granulator)
+            if self.streams[which].granulator != None:
+                if which in self.mixer.getKeys():
+                    self.mixer.delInput(which)
+                self.mixer.addInput(which, self.streams[which].granulator)
         else:
             if which in self.activeStreams:
                 self.activeStreams.remove(which)
@@ -453,10 +456,8 @@ class SG_Audio:
         self.refresh_met.play()
         self.server.start()
         self.server.amp = self.globalAmplitude
-        self.server_started = True
 
     def stop(self):
-        self.server_started = False
         self.refresh_met.stop()
         wx.CallAfter(self.server.stop)
 

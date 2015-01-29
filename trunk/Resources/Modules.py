@@ -17,12 +17,12 @@ You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import wx, sys
+import wx
 from pyolib._wxwidgets import ControlSlider
 from constants import BACKGROUND_COLOUR
 
 class Module(wx.Frame):
-    def __init__(self, parent, surface, sg_audio):
+    def __init__(self, parent, sg_audio):
         wx.Frame.__init__(self, parent, -1, "Controls")
         menuBar = wx.MenuBar()
         self.menu = wx.Menu()
@@ -38,7 +38,6 @@ class Module(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onRun, id=201)
 
         self.parent = parent
-        self.surface = surface
         self.sg_audio = sg_audio
 
         self.panel = wx.Panel(self, -1)
@@ -58,84 +57,79 @@ class Module(wx.Frame):
     def handleClose(self, event):
         self.Show(False)
 
-    ########################################################################################################
+    ################################################################################
     ### First window ###
-    ########################################################################################################
+    ################################################################################
     def makeSliderBox(self, box, label, minval, maxval, val, integer, log, callback):
         box.Add(wx.StaticText(self.panel1, -1, label), 0, wx.LEFT, 10)
         sliderBox = wx.BoxSizer(wx.HORIZONTAL)
-        slider = ControlSlider(self.panel1, minval, maxval, val, size=(250, 16), log=log, integer=integer, outFunction=callback)
+        slider = ControlSlider(self.panel1, minval, maxval, val, size=(250, 16), 
+                               log=log, integer=integer, outFunction=callback)
         sliderBox.Add(slider, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(sliderBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         return slider
 
-    def handleGrainOverlaps(self, val):
-        if val != self.grainoverlaps:
-            self.grainoverlaps = val
-            self.sg_audio.setNumGrains(self.grainoverlaps)
+    def handleDensity(self, x, fromSlider=True):
+        self.density = x
+        self.sg_audio.setDensity(x)
+        if not fromSlider:
+            self.sl_dens.SetValue(x)
 
-    def getGrainOverlaps(self):
-        return self.grainoverlaps
+    def handlePitch(self, x, fromSlider=True):
+        self.pitch = x
+        self.sg_audio.setBasePitch(x)
+        if not fromSlider:
+            self.sl_pit.SetValue(x)
 
-    def setGrainOverlaps(self, overlaps):
-        self.grainoverlaps = overlaps
-        self.sl_overlaps.SetValue(overlaps)
-        self.sg_audio.setNumGrains(self.grainoverlaps)
+    def handleGrainDur(self, x, fromSlider=True):
+        self.graindur = x
+        self.sg_audio.setGrainDur(x)
+        if not fromSlider:
+            self.sl_dur.SetValue(x)
 
-    def handlePitch(self, val):
-        self.pitch = val
-        self.sg_audio.setBasePitch(self.pitch)
+    def handleGrainDev(self, x, fromSlider=True):
+        self.graindev = x
+        self.sg_audio.setGrainDev(x)
+        if not fromSlider:
+            self.sl_dev.SetValue(x)
 
-    def getPitch(self):
-        return self.pitch
+    def handleRandDens(self, x, fromSlider=True):
+        self.rnddens = x
+        self.sg_audio.setRandDens(x)
+        if not fromSlider:
+            self.sl_rnddens.SetValue(x)
 
-    def setPitch(self, pitch):
-        self.pitch = pitch
-        self.sl_pit.SetValue(self.pitch)
-        self.sg_audio.setBasePitch(self.pitch)
+    def handleRandDur(self, x, fromSlider=True):
+        self.rnddur = x
+        self.sg_audio.setRandDur(self.rnddur * self.graindur * 0.001)
+        if not fromSlider:
+            self.sl_rnddur.SetValue(x)
 
-    def handleGrainSize(self, val):
-        self.grainsize = val
-        self.sg_audio.setGrainSize(self.grainsize * 0.001)
+    def handleRandPos(self, x, fromSlider=True):
+        self.rndpos = x
+        self.sg_audio.setRandPos(x)
+        if not fromSlider:
+            self.sl_rndpos.SetValue(x)
 
-    def getGrainSize(self):
-        return self.grainsize
+    def handleRandPit(self, x, fromSlider=True):
+        self.rndpit = x
+        self.sg_audio.setRandPit(x)
+        if not fromSlider:
+            self.sl_rndpit.SetValue(x)
 
-    def setGrainSize(self, size):
-        self.grainsize = size
-        self.sl_size.SetValue(self.grainsize)
-        self.sg_audio.setGrainSize(self.grainsize * 0.001)
-
-    def handleRandDur(self, val):
-        self.rnddur = val
-        self.sg_audio.dur_noise.mul = self.rnddur * self.grainsize * 0.001
-
-    def getRandDur(self):
-        return self.rnddur
-
-    def setRandDur(self, rnd):
-        self.rnddur = rnd
-        self.sl_rnddur.SetValue(self.rnddur)
-        self.sg_audio.dur_noise.mul = self.rnddur * self.grainsize * 0.001
-
-    def handleRandPos(self, val):
-        self.rndpos = val
-        self.sg_audio.pos_noise.mul = self.rndpos
-
-    def getRandPos(self):
-        return self.rndpos
-
-    def setRandPos(self, rnd):
-        self.rndpos = rnd
-        self.sl_rndpos.SetValue(self.rndpos)
-        self.sg_audio.pos_noise.mul = self.rndpos
+    def handleRandPan(self, x, fromSlider=True):
+        self.rndpan = x
+        self.sg_audio.setRandPan(x)
+        if not fromSlider:
+            self.sl_rndpan.SetValue(x)
 
     def makeTransBox(self, box):
-        box.Add(wx.StaticText(self.panel1, -1, "Random transposition per grain"), 0, wx.CENTER|wx.TOP, 5)
-        box.Add(wx.StaticText(self.panel1, -1, "List of transposition ratios"), 0, wx.CENTER|wx.TOP, 1)
+        box.Add(wx.StaticText(self.panel1, -1, "Random Transposition per Grain"), 0, wx.CENTER|wx.TOP, 5)
+        box.Add(wx.StaticText(self.panel1, -1, "List of Transposition Ratios"), 0, wx.CENTER|wx.TOP, 1)
         transBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_trans = wx.TextCtrl(self.panel1, -1, "1, ", size=(250, -1), style=wx.TE_PROCESS_ENTER)
+        self.tx_trans = wx.TextCtrl(self.panel1, -1, "1, ", size=(250, -1), style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB)
         self.tx_trans.Bind(wx.EVT_TEXT_ENTER, self.handleTrans)
+        self.tx_trans.Bind(wx.EVT_CHAR, self.onCharTrans)
         transBox.Add(self.tx_trans, 0, wx.LEFT | wx.RIGHT, 5)
         box.Add(transBox, 0, wx.ALL, 5)
 
@@ -144,228 +138,103 @@ class Module(wx.Frame):
 
     def setTrans(self, trans):
         self.tx_trans.SetValue(", ".join(str(t) for t in trans))
-        self.sg_audio.trans_noise.choice = self.getTrans()
+        self.handleTrans(None)
 
-    def handleTrans(self, event):
-        self.sg_audio.trans_noise.choice = self.getTrans()
+    def handleTrans(self, evt):
+        self.sg_audio.setDiscreteTrans(self.getTrans())
+
+    def onCharTrans(self, evt):
+        if evt.GetKeyCode() == wx.WXK_TAB:
+            self.handleTrans(evt)
+        evt.Skip()
 
     ########################################################################################################
     ### Second window ###
     ########################################################################################################
-    def makeYaxisBox(self, box, label, checked, ch_callback, minval, min_callback, maxval, max_callback):
-        box.Add(wx.StaticText(self.panel2, -1, label), 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
+    def makeYaxisBox(self, box, label, checked, minval, maxval, name):
+        label = wx.StaticText(self.panel2, -1, label)
+        font = label.GetFont()
+        font.SetWeight(wx.FONTWEIGHT_BOLD)
+        label.SetFont(font)
+        box.Add(label, 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
         textBox = wx.BoxSizer(wx.HORIZONTAL)
-        tx_check = wx.CheckBox(self.panel2, -1, "")
+        tx_check = wx.CheckBox(self.panel2, -1, "", name="y_%s_check" % name)
         tx_check.SetValue(checked)
-        tx_check.Bind(wx.EVT_CHECKBOX, ch_callback)
+        tx_check.Bind(wx.EVT_CHECKBOX, self.handleCheck)
         textBox.Add(tx_check, 0, wx.LEFT | wx.RIGHT, 10)
         textBox.Add(wx.StaticText(self.panel2, -1, "Min: "), 0, wx.TOP, 4)
-        tx_min = wx.TextCtrl(self.panel2, -1, minval, size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        tx_min.Bind(wx.EVT_TEXT_ENTER, min_callback)
+        tx_min = wx.TextCtrl(self.panel2, -1, minval, size=(50, -1), style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, name="y_%s_map" % name)
+        tx_min.Bind(wx.EVT_TEXT_ENTER, self.handleMapMin)
+        tx_min.Bind(wx.EVT_CHAR, self.onCharMapMin)
         textBox.Add(tx_min, 0, wx.RIGHT, 20)
         textBox.Add(wx.StaticText(self.panel2, -1, "Max: "), 0, wx.TOP, 4)
-        tx_max = wx.TextCtrl(self.panel2, -1, maxval, size=(50, -1), style=wx.TE_PROCESS_ENTER)
-        tx_max.Bind(wx.EVT_TEXT_ENTER, max_callback)
+        tx_max = wx.TextCtrl(self.panel2, -1, maxval, size=(50, -1), style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, name="y_%s_map" % name)
+        tx_max.Bind(wx.EVT_TEXT_ENTER, self.handleMapMax)
+        tx_max.Bind(wx.EVT_CHAR, self.onCharMapMax)
         textBox.Add(tx_max, 0, wx.RIGHT, 20)
         box.Add(textBox, 0, wx.LEFT | wx.RIGHT, 10)
         box.AddSpacer(5)
         return tx_check, tx_min, tx_max
 
-    def getTransCheck(self):
-        return self.tx_ytrans_ch.GetValue()
+    def handleCheck(self, evt):
+        which = evt.GetEventObject().GetName()
+        self.sg_audio.setCheck(which, evt.GetInt())
 
-    def setTransCheck(self, value):
-        self.tx_ytrans_ch.SetValue(value)
-        self.sg_audio.pitch_check = self.tx_ytrans_ch.GetValue()
+    def onCharMapMin(self, evt):
+        if evt.GetKeyCode() == wx.WXK_TAB:
+            self.handleMapMin(evt)
+        evt.Skip()
 
-    def handleTransCheck(self, event):
-        self.sg_audio.pitch_check = self.tx_ytrans_ch.GetValue()
+    def handleMapMin(self, evt):
+        which = evt.GetEventObject().GetName()
+        value = float(evt.GetEventObject().GetValue())
+        self.sg_audio.setMapMin(which, value)
 
-    def getTransYMin(self):
-        return float(self.tx_tr_ymin.GetValue())
+    def onCharMapMax(self, evt):
+        if evt.GetKeyCode() == wx.WXK_TAB:
+            self.handleMapMax(evt)
+        evt.Skip()
 
-    def setTransYMin(self, ymin):
-        self.tx_tr_ymin.SetValue(str(ymin))
-        self.sg_audio.pitch_map.setMin(float(self.tx_tr_ymin.GetValue()))
-
-    def handleTransYMin(self, event):
-        self.sg_audio.pitch_map.setMin(float(self.tx_tr_ymin.GetValue()))
-
-    def getTransYMax(self):
-        return float(self.tx_tr_ymax.GetValue())
-
-    def setTransYMax(self, ymax):
-        self.tx_tr_ymax.SetValue(str(ymax))
-        self.sg_audio.pitch_map.setMax(float(self.tx_tr_ymax.GetValue()))
-
-    def handleTransYMax(self, event):
-        self.sg_audio.pitch_map.setMax(float(self.tx_tr_ymax.GetValue()))
-
-    def getAmpCheck(self):
-        return self.tx_yamp_ch.GetValue()
-
-    def setAmpCheck(self, value):
-        self.tx_yamp_ch.SetValue(value)
-        self.sg_audio.amp_check = self.tx_yamp_ch.GetValue()
-
-    def handleAmpCheck(self, event):
-        self.sg_audio.amp_check = self.tx_yamp_ch.GetValue()
-
-    def getAmpYMin(self):
-        return float(self.tx_amp_ymin.GetValue())
-
-    def setAmpYMin(self, ymin):
-        self.tx_amp_ymin.SetValue(str(ymin))
-        self.sg_audio.amp_map.setMin(float(self.tx_amp_ymin.GetValue()))
-
-    def handleAmpYMin(self, event):
-        self.sg_audio.amp_map.setMin(float(self.tx_amp_ymin.GetValue()))
-
-    def getAmpYMax(self):
-        return float(self.tx_amp_ymax.GetValue())
-
-    def setAmpYMax(self, ymax):
-        self.tx_amp_ymax.SetValue(str(ymax))
-        self.sg_audio.amp_map.setMax(float(self.tx_amp_ymax.GetValue()))
-
-    def handleAmpYMax(self, event):
-        self.sg_audio.amp_map.setMax(float(self.tx_amp_ymax.GetValue()))
-
-    def getDurCheck(self):
-        return self.tx_ydur_ch.GetValue()
-
-    def setDurCheck(self, value):
-        self.tx_ydur_ch.SetValue(value)
-        self.sg_audio.dur_check = self.tx_ydur_ch.GetValue()
-
-    def handleDurCheck(self, event):
-        self.sg_audio.dur_check = self.tx_ydur_ch.GetValue()
-
-    def getDurYMin(self):
-        return float(self.tx_dur_ymin.GetValue())
-
-    def setDurYMin(self, ymin):
-        if ymin <= 0.:
-            ymin = 0.001
-        self.tx_dur_ymin.SetValue(str(ymin))
-        self.sg_audio.dur_map.setMin(float(self.tx_dur_ymin.GetValue()))
-
-    def handleDurYMin(self, event):
-        ymin = float(self.tx_dur_ymin.GetValue())
-        if ymin <= 0.:
-            ymin = 0.001
-            self.tx_dur_ymin.SetValue(str(ymin))
-        self.sg_audio.dur_map.setMin(ymin)
-
-    def getDurYMax(self):
-        return float(self.tx_dur_ymax.GetValue())
-
-    def setDurYMax(self, ymax):
-        self.tx_dur_ymax.SetValue(str(ymax))
-        self.sg_audio.dur_map.setMax(float(self.tx_dur_ymax.GetValue()))
-
-    def handleDurYMax(self, event):
-        self.sg_audio.dur_map.setMax(float(self.tx_dur_ymax.GetValue()))
-
-    def getPosCheck(self):
-        return self.tx_ypos_ch.GetValue()
-
-    def setPosCheck(self, value):
-        self.tx_ypos_ch.SetValue(value)
-        self.sg_audio.pos_check = self.tx_ypos_ch.GetValue()
-
-    def handlePosCheck(self, event):
-        self.sg_audio.pos_check = self.tx_ypos_ch.GetValue()
-
-    def getPosYMin(self):
-        return float(self.tx_pos_ymin.GetValue())
-
-    def setPosYMin(self, ymin):
-        if ymin <= 0.:
-            ymin = 0.001
-        self.tx_pos_ymin.SetValue(str(ymin))
-        self.sg_audio.pos_map.setMin(float(self.tx_pos_ymin.GetValue()))
-
-    def handlePosYMin(self, event):
-        ymin = float(self.tx_pos_ymin.GetValue())
-        if ymin <= 0.:
-            ymin = 0.001
-            self.tx_pos_ymin.SetValue(str(ymin))
-        self.sg_audio.pos_map.setMin(ymin)
-
-    def getPosYMax(self):
-        return float(self.tx_pos_ymax.GetValue())
-
-    def setPosYMax(self, ymax):
-        self.tx_pos_ymax.SetValue(str(ymax))
-        self.sg_audio.pos_map.setMax(float(self.tx_pos_ymax.GetValue()))
-
-    def handlePosYMax(self, event):
-        self.sg_audio.pos_map.setMax(float(self.tx_pos_ymax.GetValue()))
-
-    def getPanCheck(self):
-        return self.tx_ypan_ch.GetValue()
-
-    def setPanCheck(self, value):
-        self.tx_ypan_ch.SetValue(value)
-        self.sg_audio.setPanCheck(self.tx_ypan_ch.GetValue())
-
-    def handlePanCheck(self, event):
-        self.sg_audio.setPanCheck(self.tx_ypan_ch.GetValue())
-
-    def getPanYMin(self):
-        return float(self.tx_pan_ymin.GetValue())
-
-    def setPanYMin(self, ymin):
-        self.tx_pan_ymin.SetValue(str(ymin))
-        self.sg_audio.pan_map.setMin(float(self.tx_pan_ymin.GetValue()))
-
-    def handlePanYMin(self, event):
-        self.sg_audio.pan_map.setMin(float(self.tx_pan_ymin.GetValue()))
-
-    def getPanYMax(self):
-        return float(self.tx_pan_ymax.GetValue())
-
-    def setPanYMax(self, ymax):
-        self.tx_pan_ymax.SetValue(str(ymax))
-        self.sg_audio.pan_map.setMax(float(self.tx_pan_ymax.GetValue()))
-
-    def handlePanYMax(self, event):
-        self.sg_audio.pan_map.setMax(float(self.tx_pan_ymax.GetValue()))
+    def handleMapMax(self, evt):
+        which = evt.GetEventObject().GetName()
+        value = float(evt.GetEventObject().GetValue())
+        self.sg_audio.setMapMax(which, value)
 
 class GranulatorFrame(Module):
-    def __init__(self, parent, surface, sg_audio):
-        Module.__init__(self, parent, surface, sg_audio)
+    def __init__(self, parent, sg_audio):
+        Module.__init__(self, parent, sg_audio)
 
-        self.grainoverlaps = 8
+        self.density = 32
         self.pitch = 1.
-        self.grainsize = 200
+        self.graindur = 200
+        self.graindev = 0
+        self.rnddens = 0
         self.rnddur = 0
         self.rndpos = 0
-        self.amplitude = 0.7
+        self.rndpit = 0
+        self.rndpan = 0
 
         box = wx.BoxSizer(wx.VERTICAL)
 
         self.box1.AddSpacer(10)
-        self.sl_overlaps = self.makeSliderBox(self.box1, "Number of grains", 1, 100, self.grainoverlaps, True, False, self.handleGrainOverlaps)
-        self.sl_pit = self.makeSliderBox(self.box1, "Transposition", 0.25, 2., self.pitch, False, False, self.handlePitch)
-        self.sl_size = self.makeSliderBox(self.box1, "Grain size (ms)", 10, 500, self.grainsize, True, False, self.handleGrainSize)
-        self.sl_rnddur = self.makeSliderBox(self.box1, "Grain duration random", 0.001, 0.5, self.rnddur, False, True, self.handleRandDur)
-        self.sl_rndpos = self.makeSliderBox(self.box1, "Position random", 0.001, 0.5, self.rndpos, False, True, self.handleRandPos)
+        self.sl_dens = self.makeSliderBox(self.box1, "Density of Grains per Second", 1, 250, self.density, True, False, self.handleDensity)
+        self.sl_pit = self.makeSliderBox(self.box1, "Global Transposition", 0.25, 2., self.pitch, False, False, self.handlePitch)
+        self.sl_dur = self.makeSliderBox(self.box1, "Grain Duration (ms)", 10, 500, self.graindur, True, False, self.handleGrainDur)
+        self.sl_dev = self.makeSliderBox(self.box1, "Grain Start Time Deviation", 0, 1, self.graindev, False, False, self.handleGrainDev)
+        self.sl_rnddens = self.makeSliderBox(self.box1, "Grain Density Random", 0.001, 0.5, self.rnddens, False, True, self.handleRandDens)
+        self.sl_rnddur = self.makeSliderBox(self.box1, "Grain Duration Random", 0.001, 0.5, self.rnddur, False, True, self.handleRandDur)
+        self.sl_rndpos = self.makeSliderBox(self.box1, "Grain Position Random", 0.001, 0.5, self.rndpos, False, True, self.handleRandPos)
+        self.sl_rndpit = self.makeSliderBox(self.box1, "Grain Pitch Random", 0.001, 0.5, self.rndpit, False, True, self.handleRandPit)
+        self.sl_rndpan = self.makeSliderBox(self.box1, "Grain Pan Random", 0, 0.5, self.rndpan, False, False, self.handleRandPan)
         self.makeTransBox(self.box1)
         self.panel1.SetSizer(self.box1)
         self.notebook.AddPage(self.panel1, "Granulator")
 
-        self.tx_ytrans_ch, self.tx_tr_ymin, self.tx_tr_ymax = self.makeYaxisBox(self.box2, "Transposition", 1, self.handleTransCheck,
-                                                                                "0.", self.handleTransYMin, "1.", self.handleTransYMax)
-        self.tx_yamp_ch, self.tx_amp_ymin, self.tx_amp_ymax = self.makeYaxisBox(self.box2, "Amplitude", 0, self.handleAmpCheck,
-                                                                                "0.", self.handleAmpYMin, "1.", self.handleAmpYMax)
-        self.tx_ydur_ch, self.tx_dur_ymin, self.tx_dur_ymax = self.makeYaxisBox(self.box2, "Grains Duration Random", 0, self.handleDurCheck,
-                                                                                "0.001", self.handleDurYMin, "0.5", self.handleDurYMax)
-        self.tx_ypos_ch, self.tx_pos_ymin, self.tx_pos_ymax = self.makeYaxisBox(self.box2, "Grains Position Random", 0, self.handlePosCheck,
-                                                                                "0.001", self.handlePosYMin, "0.5", self.handlePosYMax)
-        self.tx_ypan_ch, self.tx_pan_ymin, self.tx_pan_ymax = self.makeYaxisBox(self.box2, "Panning", 0, self.handlePanCheck,
-                                                                                "0.", self.handlePanYMin, "1.", self.handlePanYMax)
+        self.tx_ypit_ch, self.tx_pit_ymin, self.tx_pit_ymax = self.makeYaxisBox(self.box2, "Transposition", 1, "0.", "1.", "pit")
+        self.tx_yamp_ch, self.tx_amp_ymin, self.tx_amp_ymax = self.makeYaxisBox(self.box2, "Amplitude", 0, "0.", "1.", "amp")
+        self.tx_ydur_ch, self.tx_dur_ymin, self.tx_dur_ymax = self.makeYaxisBox(self.box2, "Grains Duration Random", 0, "0.", "0.5", "dur")
+        self.tx_ypos_ch, self.tx_pos_ymin, self.tx_pos_ymax = self.makeYaxisBox(self.box2, "Grains Position Random", 0, "0.", "0.5", "pos")
+        self.tx_ypan_ch, self.tx_pan_ymin, self.tx_pan_ymax = self.makeYaxisBox(self.box2, "Panning", 0, "0.", "1.", "pan")
         self.panel2.SetSizer(self.box2)
         self.notebook.AddPage(self.panel2, "Y Axis")
 
@@ -381,47 +250,62 @@ class GranulatorFrame(Module):
         self.Show(False)
 
     def save(self):
-        return {'grainoverlaps': self.getGrainOverlaps(),
-                'grainsize': self.getGrainSize(),
-                'pitch': self.getPitch(),
-                'rnddur': self.getRandDur(),
-                'rndpos': self.getRandPos(),
+        return {'density': self.density,
+                'graindur': self.graindur,
+                'graindev': self.graindev,
+                'pitch': self.pitch,
+                'rnddens': self.rnddens,
+                'rnddur': self.rnddur,
+                'rndpos': self.rndpos,
+                'rndpit': self.rndpit,
+                'rndpan': self.rndpan,
                 'trans': self.getTrans(),
-                'transCheck': self.getTransCheck(),
-                'transYmin': self.getTransYMin(),
-                'transYmax': self.getTransYMax(),
-                'ampCheck': self.getAmpCheck(),
-                'ampYmin': self.getAmpYMin(),
-                'ampYmax': self.getAmpYMax(),
-                'durCheck': self.getDurCheck(),
-                'durYmin': self.getDurYMin(),
-                'durYmax': self.getDurYMax(),
-                'posCheck': self.getPosCheck(),
-                'posYmin': self.getPosYMin(),
-                'posYmax': self.getPosYMax(),
-                'panCheck': self.getPanCheck(),
-                'panYmin': self.getPanYMin(),
-                'panYmax': self.getPanYMax()}
+                'pitCheck': self.tx_ypit_ch.GetValue(),
+                'pitYmin': float(self.tx_pit_ymin.GetValue()),
+                'pitYmax': float(self.tx_pit_ymax.GetValue()),
+                'ampCheck': self.tx_yamp_ch.GetValue(),
+                'ampYmin': float(self.tx_amp_ymin.GetValue()),
+                'ampYmax': float(self.tx_amp_ymax.GetValue()),
+                'durCheck': self.tx_ydur_ch.GetValue(),
+                'durYmin': float(self.tx_dur_ymin.GetValue()),
+                'durYmax': float(self.tx_dur_ymax.GetValue()),
+                'posCheck': self.tx_ypos_ch.GetValue(),
+                'posYmin': float(self.tx_pos_ymin.GetValue()),
+                'posYmax': float(self.tx_pos_ymax.GetValue()),
+                'panCheck': self.tx_ypan_ch.GetValue(),
+                'panYmin': float(self.tx_pan_ymin.GetValue()),
+                'panYmax': float(self.tx_pan_ymax.GetValue())}
 
     def load(self, dict):
-        self.setGrainOverlaps(dict['grainoverlaps'])
-        self.setPitch(dict['pitch'])
-        self.setGrainSize(dict['grainsize'])
-        self.setRandDur(dict['rnddur'])
-        self.setRandPos(dict['rndpos'])
+        self.handleDensity(dict['density'], fromSlider=False)
+        self.handlePitch(dict['pitch'], fromSlider=False)
+        self.handleGrainDur(dict['graindur'], fromSlider=False)
+        self.handleGrainDev(dict['graindev'], fromSlider=False)
+        self.handleRandDens(dict['rnddens'], fromSlider=False)
+        self.handleRandDur(dict['rnddur'], fromSlider=False)
+        self.handleRandPos(dict['rndpos'], fromSlider=False)
+        self.handleRandPit(dict['rndpit'], fromSlider=False)
+        self.handleRandPan(dict['rndpan'], fromSlider=False)
         self.setTrans(dict['trans'])
-        self.setTransCheck(dict['transCheck'])
-        self.setTransYMin(dict['transYmin'])
-        self.setTransYMax(dict['transYmax'])
-        self.setAmpCheck(dict['ampCheck'])
-        self.setAmpYMin(dict['ampYmin'])
-        self.setAmpYMax(dict['ampYmax'])
-        self.setDurCheck(dict['durCheck'])
-        self.setDurYMin(dict['durYmin'])
-        self.setDurYMax(dict['durYmax'])
-        self.setPosCheck(dict['posCheck'])
-        self.setPosYMin(dict['posYmin'])
-        self.setPosYMax(dict['posYmax'])
-        self.setPanCheck(dict.get('panCheck', False))
-        self.setPanYMin(dict.get('panYmin', 0.))
-        self.setPanYMax(dict.get('panYmax', 1.))
+                     
+        checkboxes = {'pitCheck': self.tx_ypit_ch, 'ampCheck': self.tx_yamp_ch,
+                      'durCheck': self.tx_ydur_ch, 'posCheck': self.tx_ypos_ch,
+                      'panCheck': self.tx_ypan_ch}
+        for key, cb in checkboxes.items():
+            cb.SetValue(dict[key])
+            event = wx.PyCommandEvent(wx.EVT_CHECKBOX.typeId, cb.GetId())
+            event.SetEventObject(cb)
+            event.SetInt(dict[key])
+            wx.PostEvent(cb.GetEventHandler(), event)
+
+        textboxes = {'pitYmin': self.tx_pit_ymin, 'pitYmax': self.tx_pit_ymax,
+                     'ampYmin': self.tx_amp_ymin, 'ampYmax': self.tx_amp_ymax,
+                     'durYmin': self.tx_dur_ymin, 'durYmax': self.tx_dur_ymax,
+                     'posYmin': self.tx_pos_ymin, 'posYmax': self.tx_pos_ymax,
+                     'panYmin': self.tx_pan_ymin, 'panYmax': self.tx_pan_ymax}
+        for key, tb in textboxes.items():
+            tb.SetValue(str(dict[key]))
+            event = wx.PyCommandEvent(wx.EVT_TEXT_ENTER.typeId, tb.GetId())
+            event.SetEventObject(tb)
+            event.SetString(str(dict[key]))
+            wx.PostEvent(tb.GetEventHandler(), event)

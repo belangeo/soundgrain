@@ -68,12 +68,13 @@ class SoundGrainSplashScreen(wx.Frame):
         if PLATFORM == "win32":
             pass
         else:
-            font.SetFaceName("Monaco")
-            font.SetPointSize(psize)
+            font.SetFaceName("Monospace")
+            font.SetPointSize(psize+1)
+            font.SetWeight(wx.FONTWEIGHT_BOLD)
         dc.SetFont(font)
-        dc.DrawLabel(u"Olivier Bélanger", wx.Rect(0, 320, 400, 15), wx.ALIGN_CENTER)
-        dc.DrawLabel("iACT, %s" % SG_YEAR, wx.Rect(0, 335, 400, 15), wx.ALIGN_CENTER)
-        dc.DrawLabel("v. %s" % SG_VERSION, wx.Rect(0, 350, 400, 15), wx.ALIGN_CENTER)
+        dc.DrawLabel("%s v. %s" % (NAME, SG_VERSION), wx.Rect(0, 305, 400, 15), wx.ALIGN_CENTER)
+        dc.DrawLabel(u"Olivier Bélanger", wx.Rect(0, 322, 400, 15), wx.ALIGN_CENTER)
+        dc.DrawLabel("AjaxSoundStudio.com, %s" % SG_YEAR, wx.Rect(0, 339, 400, 15), wx.ALIGN_CENTER)
 
     def OnClose(self):
         if self.mainframe:

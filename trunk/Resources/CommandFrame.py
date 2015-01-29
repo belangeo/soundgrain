@@ -36,7 +36,7 @@ class CommandFrame(wx.Frame):
         self.writeCommand("Insert Soundfile...", "Insert a new sound (with crossfade) into the current drawing area.", "(Shift+Ctrl+I)")
         self.writeCommand("Save", "Save the current state of the project.", "(Ctrl+S)")
         self.writeCommand("Save As...", "Save the current state of the project in a new .sg file.", "(Shift+Ctrl+S)")
-        self.writeCommand("Open FX Window", ["Open the granulator's parameters window.", 
+        self.writeCommand("Open Granulator Controls", ["Open the granulator's parameters window.", 
                                             "This window, in the tab called 'Granulator', allows the user to change the number of grains, transposition, ", "grain size and various randoms of the granulator.", "In the second tab, called 'Y axis', one can decide on which parameters, and in what range, the Y axis of the drawing ", "area will be mapped.", "Available parameters are: Transposition, Amplitude, Grains Duration Random, Grains Position Random and Panning."], "(Ctrl+P)")
         self.writeCommand("Open Envelope Window", "Open a grapher window to modify the shape of the grain's envelope.", "(Ctrl+E)")
         self.writeCommand("Run", "Start/stop audio processing.", "(Ctrl+R)")
