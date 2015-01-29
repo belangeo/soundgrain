@@ -80,7 +80,7 @@ class MainFrame(wx.Frame):
         self.menu.Append(4, "Save as...\tShift+Ctrl+S")
         self.Bind(wx.EVT_MENU, self.handleSaveAs, id=4)
         self.menu.AppendSeparator()
-        self.menu.Append(6, "Open FX Window\tCtrl+P")
+        self.menu.Append(6, "Open Granulator Controls\tCtrl+P")
         self.Bind(wx.EVT_MENU, self.openFxWindow, id=6)
         self.menu.Append(5, "Open Envelope Window\tCtrl+E")
         self.Bind(wx.EVT_MENU, self.openEnvelopeWindow, id=5)
@@ -177,7 +177,7 @@ class MainFrame(wx.Frame):
         self.envelopeFrame = EnvelopeFrame(self)
         self.sg_audio = SG_Audio(self.panel.clock, self.panel.Refresh, self.controls, self.panel.addTrajFromMemory,
                                  self.panel.deleteMemorizedTraj, self.envelopeFrame)
-        self.granulatorControls = GranulatorFrame(self, self.panel, self.sg_audio)
+        self.granulatorControls = GranulatorFrame(self, self.sg_audio)
         self.midiSettings = MidiSettings(self, self.panel, self.sg_audio, miDriver)
         self.createInitTempFile()
 
@@ -691,7 +691,7 @@ class MainFrame(wx.Frame):
         "Soundgrain is written with Python and " \
         "WxPython and uses pyo as its audio engine.\n\n" \
 
-        info.Name = 'Soundgrain'
+        info.Name = NAME
         info.Version = '%s' % SG_VERSION
         info.Description = description
         info.Copyright = u'(C) %s Olivier Bélanger' % SG_YEAR
