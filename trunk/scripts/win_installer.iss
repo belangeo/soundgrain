@@ -30,7 +30,6 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "C:\Documents and Settings\olipetwin\svn\soundgrain\SoundGrain_Win\SoundGrain.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Documents and Settings\olipetwin\svn\soundgrain\SoundGrain_Win\Resources\*"; DestDir: "{app}\Resources"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\Documents and Settings\olipetwin\svn\soundgrain\SoundGrain_Win\examples\*"; DestDir: "{userdesktop}\soundgrain_examples"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]

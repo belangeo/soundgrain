@@ -26,7 +26,7 @@ if sys.platform == "linux2":
     elif wxversion.checkInstalled("2.8"):
         wxversion.select("2.8")
 
-import os, wx
+import wx
 from types import ListType
 from Resources.constants import *
 from Resources.splash import SoundGrainSplashScreen
@@ -35,21 +35,18 @@ from Resources.MainFrame import MainFrame
 class SoundGrainApp(wx.App):
     def __init__(self, *args, **kwargs):
         wx.App.__init__(self, *args, **kwargs)
-    
-    def OnInit(self):
-        X = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X)
-        Y = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
-        if X < 900: 
-            sizex = X - 40
-        else: 
+        sysx = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X)
+        sysy = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
+        if sysx < 900:
+            sizex = sysx - 40
+        else:
             sizex = 900
-        if Y < 670: 
-            sizey = Y - 40
-        else: 
+        if sysy < 670:
+            sizey = sysy - 40
+        else:
             sizey = 670
-        self.frame = MainFrame(None, -1, pos=(20,20), size=(sizex,sizey), 
-                               screen_size=(X,Y))
-        return True
+        self.frame = MainFrame(None, -1, pos=(20, 20), size=(sizex, sizey),
+                               screen_size=(sysx, sysy))
 
     def MacOpenFiles(self, filenames):
         if type(filenames) != ListType:
@@ -63,12 +60,11 @@ class SoundGrainApp(wx.App):
             pass
 
 if __name__ == '__main__':
-    file = None
+    sgfile = None
     if len(sys.argv) > 1:
-        file = sys.argv[1]
+        sgfile = sys.argv[1]
     app = SoundGrainApp(redirect=False)
-    splash = SoundGrainSplashScreen(None, os.path.join(RESOURCES_PATH, 
-                                    "SoundGrainSplash.png"), app.frame)
-    if file:
-        wx.CallAfter(app.frame.loadFile, ensureNFD(file))
+    splash = SoundGrainSplashScreen(None, SPLASH_FILE, app.frame)
+    if sgfile:
+        wx.CallAfter(app.frame.loadFile, ensureNFD(sgfile))
     app.MainLoop()

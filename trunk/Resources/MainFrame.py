@@ -148,7 +148,7 @@ class MainFrame(wx.Frame):
         menu5 = wx.Menu()
         helpItem = menu5.Append(wx.ID_ABOUT, '&About %s %s' % (NAME, SG_VERSION), 'wxPython RULES!!!')
         self.Bind(wx.EVT_MENU, self.showAbout, helpItem)
-        commands = menu5.Append(501, "Open SoundGrain Commands Page")
+        commands = menu5.Append(501, "Open SoundGrain Commands Page\tCtrl+H")
         self.Bind(wx.EVT_MENU, self.openCommandsPage, commands)
         self.menuBar.Append(menu5, '&Help')
 
@@ -681,7 +681,7 @@ class MainFrame(wx.Frame):
         self.status.SetStatusText(text)
 
     def openCommandsPage(self, evt):
-        win = CommandFrame(self, wx.ID_ANY, "Soundgrain Commands", size=(800, 650))
+        win = CommandFrame(self, wx.ID_ANY, "Soundgrain Commands", size=(900, 650))
 
     def showAbout(self, evt):
         info = wx.AboutDialogInfo()
