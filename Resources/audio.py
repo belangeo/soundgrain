@@ -44,10 +44,9 @@ def checkForMidiDrivers():
     selectedDriver = pm_get_default_input()
     return driverList, driverIndexes, selectedDriver
 
-# TODO
+# TODO:
 # RingMod, Chorus are weak
 # FreqShift freeze the CPU... ?!?!
-# Mettre a jour la page de commandes
 class Fx:
     def __init__(self, input, fx=0, chnls=2):
         self.input = input

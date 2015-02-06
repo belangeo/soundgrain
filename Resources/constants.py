@@ -44,6 +44,7 @@ if not os.path.isdir(RESOURCES_PATH) and sys.platform == "win32":
     RESOURCES_PATH = os.path.join(os.getenv("ProgramFiles"), "SoundGrain", "Resources")
 
 IMAGES_PATH = os.path.join(RESOURCES_PATH, 'images')
+SPLASH_FILE = os.path.join(RESOURCES_PATH, "SoundGrainSplash.png")
 
 preffile = os.path.join(os.path.expanduser("~"), ".soundgrain-init")
 if os.path.isfile(preffile):
