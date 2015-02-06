@@ -66,7 +66,7 @@ class Module(wx.Frame):
         slider = ControlSlider(self.panel1, minval, maxval, val, size=(250, 16), 
                                log=log, integer=integer, outFunction=callback)
         sliderBox.Add(slider, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(sliderBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+        box.Add(sliderBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
         return slider
 
     def handleDensity(self, x, fromSlider=True):
@@ -101,7 +101,7 @@ class Module(wx.Frame):
 
     def handleRandDur(self, x, fromSlider=True):
         self.rnddur = x
-        self.sg_audio.setRandDur(self.rnddur * self.graindur * 0.001)
+        self.sg_audio.setRandDur(x)
         if not fromSlider:
             self.sl_rnddur.SetValue(x)
 
@@ -156,7 +156,7 @@ class Module(wx.Frame):
         font = label.GetFont()
         font.SetWeight(wx.FONTWEIGHT_BOLD)
         label.SetFont(font)
-        box.Add(label, 0, wx.CENTER|wx.TOP|wx.BOTTOM, 5)
+        box.Add(label, 0, wx.CENTER|wx.TOP|wx.BOTTOM, 3)
         textBox = wx.BoxSizer(wx.HORIZONTAL)
         tx_check = wx.CheckBox(self.panel2, -1, "", name="y_%s_check" % name)
         tx_check.SetValue(checked)
@@ -173,7 +173,7 @@ class Module(wx.Frame):
         tx_max.Bind(wx.EVT_CHAR, self.onCharMapMax)
         textBox.Add(tx_max, 0, wx.RIGHT, 20)
         box.Add(textBox, 0, wx.LEFT | wx.RIGHT, 10)
-        box.AddSpacer(5)
+        box.AddSpacer(3)
         return tx_check, tx_min, tx_max
 
     def handleCheck(self, evt):
@@ -217,24 +217,28 @@ class GranulatorFrame(Module):
         box = wx.BoxSizer(wx.VERTICAL)
 
         self.box1.AddSpacer(10)
-        self.sl_dens = self.makeSliderBox(self.box1, "Density of Grains per Second", 1, 250, self.density, True, False, self.handleDensity)
+        self.sl_dens = self.makeSliderBox(self.box1, "Density of Grains per Second", 1, 500, self.density, True, False, self.handleDensity)
         self.sl_pit = self.makeSliderBox(self.box1, "Global Transposition", 0.25, 2., self.pitch, False, False, self.handlePitch)
-        self.sl_dur = self.makeSliderBox(self.box1, "Grain Duration (ms)", 10, 500, self.graindur, True, False, self.handleGrainDur)
-        self.sl_dev = self.makeSliderBox(self.box1, "Grain Start Time Deviation", 0, 1, self.graindev, False, False, self.handleGrainDev)
-        self.sl_rnddens = self.makeSliderBox(self.box1, "Grain Density Random", 0.001, 0.5, self.rnddens, False, True, self.handleRandDens)
-        self.sl_rnddur = self.makeSliderBox(self.box1, "Grain Duration Random", 0.001, 0.5, self.rnddur, False, True, self.handleRandDur)
-        self.sl_rndpos = self.makeSliderBox(self.box1, "Grain Position Random", 0.001, 0.5, self.rndpos, False, True, self.handleRandPos)
-        self.sl_rndpit = self.makeSliderBox(self.box1, "Grain Pitch Random", 0.001, 0.5, self.rndpit, False, True, self.handleRandPit)
-        self.sl_rndpan = self.makeSliderBox(self.box1, "Grain Pan Random", 0, 0.5, self.rndpan, False, False, self.handleRandPan)
+        self.sl_dur = self.makeSliderBox(self.box1, "Grains Duration (ms)", 5, 500, self.graindur, True, False, self.handleGrainDur)
+        self.sl_dev = self.makeSliderBox(self.box1, "Grains Start Time Deviation", 0, 1, self.graindev, False, False, self.handleGrainDev)
+        self.sl_rnddens = self.makeSliderBox(self.box1, "Grains Density Random", 0, 1, self.rnddens, False, False, self.handleRandDens)
+        self.sl_rndpit = self.makeSliderBox(self.box1, "Grains Pitch Random", 0, 0.5, self.rndpit, False, False, self.handleRandPit)
+        self.sl_rnddur = self.makeSliderBox(self.box1, "Grains Duration Random", 0, 1, self.rnddur, False, False, self.handleRandDur)
+        self.sl_rndpos = self.makeSliderBox(self.box1, "Grains Position Random", 0, 1, self.rndpos, False, False, self.handleRandPos)
+        self.sl_rndpan = self.makeSliderBox(self.box1, "Grains Panning Random", 0, 0.5, self.rndpan, False, False, self.handleRandPan)
         self.makeTransBox(self.box1)
         self.panel1.SetSizer(self.box1)
         self.notebook.AddPage(self.panel1, "Granulator")
 
-        self.tx_ypit_ch, self.tx_pit_ymin, self.tx_pit_ymax = self.makeYaxisBox(self.box2, "Transposition", 1, "0.", "1.", "pit")
-        self.tx_yamp_ch, self.tx_amp_ymin, self.tx_amp_ymax = self.makeYaxisBox(self.box2, "Amplitude", 0, "0.", "1.", "amp")
+        self.tx_ydns_ch, self.tx_dns_ymin, self.tx_dns_ymax = self.makeYaxisBox(self.box2, "Density of Grains Multiplier", 0, "0.", "1.", "dns")
+        self.tx_ypit_ch, self.tx_pit_ymin, self.tx_pit_ymax = self.makeYaxisBox(self.box2, "Transposition Multiplier", 1, "0.", "1.", "pit")
+        self.tx_ylen_ch, self.tx_len_ymin, self.tx_len_ymax = self.makeYaxisBox(self.box2, "Grains Duration Multiplier", 0, "0.", "1.", "len")
+        self.tx_ydev_ch, self.tx_dev_ymin, self.tx_dev_ymax = self.makeYaxisBox(self.box2, "Grains Start Time Deviation", 0, "0.", "1.", "dev")
+        self.tx_yamp_ch, self.tx_amp_ymin, self.tx_amp_ymax = self.makeYaxisBox(self.box2, "Amplitude Multiplier", 0, "0.", "1.", "amp")
+        self.tx_ytrs_ch, self.tx_trs_ymin, self.tx_trs_ymax = self.makeYaxisBox(self.box2, "Grains Transposition Random", 0, "0.", "1.", "trs")
         self.tx_ydur_ch, self.tx_dur_ymin, self.tx_dur_ymax = self.makeYaxisBox(self.box2, "Grains Duration Random", 0, "0.", "0.5", "dur")
         self.tx_ypos_ch, self.tx_pos_ymin, self.tx_pos_ymax = self.makeYaxisBox(self.box2, "Grains Position Random", 0, "0.", "0.5", "pos")
-        self.tx_ypan_ch, self.tx_pan_ymin, self.tx_pan_ymax = self.makeYaxisBox(self.box2, "Panning", 0, "0.", "1.", "pan")
+        self.tx_ypan_ch, self.tx_pan_ymin, self.tx_pan_ymax = self.makeYaxisBox(self.box2, "Grains Panning", 0, "0.", "1.", "pan")
         self.panel2.SetSizer(self.box2)
         self.notebook.AddPage(self.panel2, "Y Axis")
 
@@ -260,12 +264,24 @@ class GranulatorFrame(Module):
                 'rndpit': self.rndpit,
                 'rndpan': self.rndpan,
                 'trans': self.getTrans(),
+                'dnsCheck': self.tx_ydns_ch.GetValue(),
+                'dnsYmin': float(self.tx_dns_ymin.GetValue()),
+                'dnsYmax': float(self.tx_dns_ymax.GetValue()),
                 'pitCheck': self.tx_ypit_ch.GetValue(),
                 'pitYmin': float(self.tx_pit_ymin.GetValue()),
                 'pitYmax': float(self.tx_pit_ymax.GetValue()),
+                'lenCheck': self.tx_ylen_ch.GetValue(),
+                'lenYmin': float(self.tx_len_ymin.GetValue()),
+                'lenYmax': float(self.tx_len_ymax.GetValue()),
+                'devCheck': self.tx_ydev_ch.GetValue(),
+                'devYmin': float(self.tx_dev_ymin.GetValue()),
+                'devYmax': float(self.tx_dev_ymax.GetValue()),
                 'ampCheck': self.tx_yamp_ch.GetValue(),
                 'ampYmin': float(self.tx_amp_ymin.GetValue()),
                 'ampYmax': float(self.tx_amp_ymax.GetValue()),
+                'trsCheck': self.tx_ytrs_ch.GetValue(),
+                'trsYmin': float(self.tx_trs_ymin.GetValue()),
+                'trsYmax': float(self.tx_trs_ymax.GetValue()),
                 'durCheck': self.tx_ydur_ch.GetValue(),
                 'durYmin': float(self.tx_dur_ymin.GetValue()),
                 'durYmax': float(self.tx_dur_ymax.GetValue()),
@@ -288,8 +304,10 @@ class GranulatorFrame(Module):
         self.handleRandPan(dict['rndpan'], fromSlider=False)
         self.setTrans(dict['trans'])
                      
-        checkboxes = {'pitCheck': self.tx_ypit_ch, 'ampCheck': self.tx_yamp_ch,
-                      'durCheck': self.tx_ydur_ch, 'posCheck': self.tx_ypos_ch,
+        checkboxes = {'dnsCheck': self.tx_ydns_ch, 'pitCheck': self.tx_ypit_ch, 
+                      'lenCheck': self.tx_ylen_ch, 'devCheck': self.tx_ydev_ch,
+                      'ampCheck': self.tx_yamp_ch, 'trsCheck': self.tx_ytrs_ch, 
+                      'durCheck': self.tx_ydur_ch, 'posCheck': self.tx_ypos_ch, 
                       'panCheck': self.tx_ypan_ch}
         for key, cb in checkboxes.items():
             cb.SetValue(dict[key])
@@ -298,8 +316,12 @@ class GranulatorFrame(Module):
             event.SetInt(dict[key])
             wx.PostEvent(cb.GetEventHandler(), event)
 
-        textboxes = {'pitYmin': self.tx_pit_ymin, 'pitYmax': self.tx_pit_ymax,
+        textboxes = {'dnsYmin': self.tx_dns_ymin, 'dnsYmax': self.tx_dns_ymax,
+                     'pitYmin': self.tx_pit_ymin, 'pitYmax': self.tx_pit_ymax,
+                     'lenYmin': self.tx_len_ymin, 'lenYmax': self.tx_len_ymax,
+                     'devYmin': self.tx_dev_ymin, 'devYmax': self.tx_dev_ymax,
                      'ampYmin': self.tx_amp_ymin, 'ampYmax': self.tx_amp_ymax,
+                     'trsYmin': self.tx_dur_ymin, 'trsYmax': self.tx_dur_ymax,
                      'durYmin': self.tx_dur_ymin, 'durYmax': self.tx_dur_ymax,
                      'posYmin': self.tx_pos_ymin, 'posYmax': self.tx_pos_ymax,
                      'panYmin': self.tx_pan_ymin, 'panYmax': self.tx_pan_ymax}

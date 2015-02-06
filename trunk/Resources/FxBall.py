@@ -42,7 +42,7 @@ class FxBallControls(wx.Frame):
         if sys.platform == "win32":
             font.SetPointSize(psize-1)
         else:
-            font.SetPointSize(psize-2)
+            font.SetPointSize(psize-1)
         text.SetFont(font)
         self.box.Add(text, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
         self.box.AddSpacer(2)
@@ -83,9 +83,10 @@ class FxBallControls(wx.Frame):
 
         self.panel.SetSizerAndFit(self.box)
 
-        self.Fit()
-        self.SetMinSize(self.GetSize())
-        self.SetMaxSize(self.GetSize())
+        #self.Fit()
+        X, Y = self.GetSize()[0], self.GetSize()[1] + 20
+        self.SetMinSize((X, Y))
+        self.SetMaxSize((X, Y))
 
     def handleClose(self, event):
         self.Show(False)
