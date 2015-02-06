@@ -82,7 +82,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         chnlsBox.Add(self.tx_chnls, 0, wx.LEFT | wx.RIGHT, 5)
         projSettingsBox.Add(srBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         projSettingsBox.Add(chnlsBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
-        box.Add(projSettingsBox, 0, wx.LEFT | wx.RIGHT, 5)
+        box.Add(projSettingsBox, 0, wx.ALIGN_CENTER, 5)
 
         box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 2)
 
@@ -114,7 +114,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         sampletypeBox.Add(self.pop_sampletype, 0, wx.LEFT | wx.RIGHT, 5)
         recSettingsBox.Add(fileformatBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         recSettingsBox.Add(sampletypeBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
-        box.Add(recSettingsBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+        box.Add(recSettingsBox, 0, wx.ALIGN_CENTER | wx.BOTTOM, 5)
 
         rec1Box = wx.BoxSizer(wx.HORIZONTAL)
 
