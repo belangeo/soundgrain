@@ -4,6 +4,15 @@ from Resources.constants import *
 from types import ListType
 
 # TODO: Add ControlPanel in the doc and a little getting started. 
+# TODO: Doc written as markdown and displayed with wx.html.HtmlWindow
+"""
+import markdown
+from wx.html import HtmlWindow
+page = "text in markdown format..."
+htmlpage = markdown.markdown(page)
+htmlwin = HtmlWindow(self)
+htmlwin.SetPage(htmlpage)
+"""
 class CommandFrame(wx.Frame):
     def __init__(self, *args, **kw):
         wx.Frame.__init__(self, *args, **kw)
@@ -67,11 +76,11 @@ class CommandFrame(wx.Frame):
         self.writeCommand("Add Delay ball", "Create a recursive delay region on the drawing surface.", "(Ctrl+2)")
         self.writeCommand("Add Disto ball", "Create a distortion region on the drawing surface.", "(Ctrl+3)")
         self.writeCommand("Add Waveguide ball", "Create a resonator region on the drawing surface.", "(Ctrl+4)")
-        self.writeCommand("Add Ring Modulator ball", "Create a ring modulation region on the drawing surface.", "(Ctrl+5)")
+        self.writeCommand("Add Complex Resonator ball", "Create a very selective resonating region on the drawing surface.", "(Ctrl+5)")
         self.writeCommand("Add Degrade ball", "Create a degradation region on the drawing surface.", "(Ctrl+6)")
         self.writeCommand("Add Harmonizer ball", "Create a harmonization region on the drawing surface.", "(Ctrl+7)")
-        self.writeCommand("Add Chorus ball", "Create a Chorusing region on the drawing surface.", "(Ctrl+8)")
-        self.writeCommand("Add Frequency Shift ball", "Create a frequency shifter region on the drawing surface.", "(Ctrl+9)")
+        self.writeCommand("Add Clipper ball", "Create a hard clipping region on the drawing surface.", "(Ctrl+8)")
+        self.writeCommand("Add Flanger ball", "Create a flanging region on the drawing surface.", "(Ctrl+9)")
         self.writeCommand("Add Detuned Resonator ball", "Create an allpass-detuned resonator region on the drawing surface.", "(Ctrl+0)")
 
         self.writeBigTitle("Drawing Surface")

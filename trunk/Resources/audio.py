@@ -44,9 +44,6 @@ def checkForMidiDrivers():
     selectedDriver = pm_get_default_input()
     return driverList, driverIndexes, selectedDriver
 
-# TODO:
-# RingMod, Chorus are weak
-# FreqShift freeze the CPU... ?!?!
 class Fx:
     def __init__(self, input, fx=0, chnls=2):
         self.input = input
@@ -60,18 +57,18 @@ class Fx:
         elif fx == 3:
             self.process = Waveguide(self.input, freq=100, dur=30, mul=.3)
         elif fx == 4:
-            self.rsine = Sine(freq=100)
-            self.process = self.input * self.rsine
+            self.process = ComplexRes(self.input, freq=500, decay=1)
         elif fx == 5:
             self.process = Degrade(self.input, bitdepth=8, srscale=0.25)
         elif fx == 6:
             self.process = Harmonizer(self.input, transpo=-7, feedback=0.25)
         elif fx == 7:
-            self.process = Chorus(self.input, depth=1, feedback=0.5)
+            self.clip = Clip(self.input, min=-0.25, max=0.25, mul=0.33)
+            self.process = ButLP(self.clip, freq=5000)
         elif fx == 8:
-            self.shift1 = FreqShift(self.input, shift=-100, mul=.707)
-            self.shift2 = FreqShift(self.input, shift=100, mul=.707)
-            self.process = self.shift1 + self.shift2
+            self.lfo = Sine(freq=.2, mul=.0045, add=.005)
+            self.flange = Delay(self.input, delay=self.lfo, feedback=.5)
+            self.process = self.input + self.flange
         elif fx == 9:
             self.process = AllpassWG(self.input, freq=100, feed=0.999, detune=0.5, mul=.3)
         self.pan = SPan(self.process, outs=chnls, pan=0.5).out()
@@ -451,15 +448,17 @@ class SG_Audio:
         elif fx == 3:
             self.fxs[key].process.freq = val
         elif fx == 4:
-            self.fxs[key].rsine.freq = val
+            self.fxs[key].process.freq = val
         elif fx == 5:
             self.fxs[key].process.bitdepth = val
         elif fx == 6:
             self.fxs[key].process.transpo = val
         elif fx == 7:
-            self.fxs[key].process.depth = val
+            self.fxs[key].clip.min = -val
+            self.fxs[key].clip.max = val
+            self.fxs[key].clip.mul = 1.0 / val * 0.33
         elif fx == 8:
-            self.fxs[key].shift1.shift = val
+            self.fxs[key].lfo.freq = val
         elif fx == 9:
             self.fxs[key].process.freq = val
 
@@ -473,16 +472,15 @@ class SG_Audio:
         elif fx == 3:
             self.fxs[key].process.dur = val
         elif fx == 4:
-            self.fxs[key].rsine.mul = 1. - val
-            self.fxs[key].rsine.add = val
+            self.fxs[key].process.decay = val
         elif fx == 5:
             self.fxs[key].process.srscale = val
         elif fx == 6:
             self.fxs[key].process.feedback = val
         elif fx == 7:
-            self.fxs[key].process.feedback = val
+            self.fxs[key].process.freq = val
         elif fx == 8:
-            self.fxs[key].shift2.shift = val
+            self.fxs[key].flange.feedback = val
         elif fx == 9:
             self.fxs[key].process.detune = val
 
