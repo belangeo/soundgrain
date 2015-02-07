@@ -47,7 +47,7 @@ class MidiSettings(wx.Frame):
         mainBox = wx.BoxSizer(wx.VERTICAL)
         box = wx.BoxSizer(wx.VERTICAL)
 
-        box.Add(wx.StaticText(self.panel, id=-1, label="Midi interface"), 0, wx.CENTER|wx.ALL, 2)
+        box.Add(wx.StaticText(self.panel, id=-1, label="Midi Interface"), 0, wx.CENTER|wx.ALL, 2)
         self.interfaceList, self.interfaceIndexes, selected = checkForMidiDrivers()
         self.interfaceList = [ensureNFD(driver) for driver in self.interfaceList]
         if self.interfaceList != []:
@@ -71,7 +71,7 @@ class MidiSettings(wx.Frame):
             self.popupInterface.SetSelection(0)
         box.Add(self.popupInterface, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
 
-        box.Add(wx.StaticText(self.panel, id=-1, label="Add / Remove method"), 0, wx.CENTER|wx.ALL, 2)
+        box.Add(wx.StaticText(self.panel, id=-1, label="Add / Remove Method"), 0, wx.CENTER|wx.ALL, 2)
         self.popupMethod = wx.Choice(self.panel, id=-1, size=(200, -1), choices=["Noteon / Noteoff", "Noteon / Noteon"])
         self.popupMethod.SetSelection(0)
         self.popupMethod.Bind(wx.EVT_CHOICE, self.handleMethod)
@@ -79,14 +79,14 @@ class MidiSettings(wx.Frame):
 
         box.Add(wx.StaticLine(self.panel, size=(200, 1)), 0, wx.ALL, 5)
 
-        box.Add(wx.StaticText(self.panel, id=-1, label="Pitch mapping"), 0, wx.CENTER|wx.ALL, 5)
+        box.Add(wx.StaticText(self.panel, id=-1, label="Pitch Mapping"), 0, wx.CENTER|wx.ALL, 5)
 
         self.xTranspo = wx.CheckBox(self.panel, label="Transposition")
         self.xTranspo.SetValue(True)
         self.xTranspo.Bind(wx.EVT_CHECKBOX, self.handleTranspo)
         box.Add(self.xTranspo, 0, wx.ALL, 5)
 
-        self.xPosition = wx.CheckBox(self.panel, label="X axis position")
+        self.xPosition = wx.CheckBox(self.panel, label="X Axis Position")
         self.xPosition.Bind(wx.EVT_CHECKBOX, self.handlePosition)
         box.Add(self.xPosition, 0, wx.ALL, 5)
 
