@@ -43,6 +43,7 @@ else:
 if not os.path.isdir(RESOURCES_PATH) and sys.platform == "win32":
     RESOURCES_PATH = os.path.join(os.getenv("ProgramFiles"), "SoundGrain", "Resources")
 
+DOCUMENTATION_PATH = os.path.join(RESOURCES_PATH, "doc")
 IMAGES_PATH = os.path.join(RESOURCES_PATH, 'images')
 SPLASH_FILE = os.path.join(RESOURCES_PATH, "SoundGrainSplash.png")
 

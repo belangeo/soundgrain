@@ -146,9 +146,9 @@ class MainFrame(wx.Frame):
         self.menuBar.Append(self.menu4, "&FxBall")
 
         menu5 = wx.Menu()
-        helpItem = menu5.Append(wx.ID_ABOUT, '&About %s %s' % (NAME, SG_VERSION), 'wxPython RULES!!!')
+        helpItem = menu5.Append(wx.ID_ABOUT, '&About %s %s' % (NAME, SG_VERSION))
         self.Bind(wx.EVT_MENU, self.showAbout, helpItem)
-        commands = menu5.Append(501, "Open SoundGrain Commands Page\tCtrl+H")
+        commands = menu5.Append(501, "Open SoundGrain Documentation\tCtrl+H")
         self.Bind(wx.EVT_MENU, self.openCommandsPage, commands)
         self.menuBar.Append(menu5, '&Help')
 
@@ -175,7 +175,8 @@ class MainFrame(wx.Frame):
 
         self.SetTitle('Granulator')
         self.envelopeFrame = EnvelopeFrame(self)
-        self.sg_audio = SG_Audio(self.panel.clock, self.panel.Refresh, self.controls, self.panel.addTrajFromMemory,
+        self.sg_audio = SG_Audio(self.panel.clock, self.panel.Refresh, 
+                                 self.controls, self.panel.addTrajFromMemory,
                                  self.panel.deleteMemorizedTraj, self.envelopeFrame)
         self.granulatorControls = GranulatorFrame(self, self.sg_audio)
         self.midiSettings = MidiSettings(self, self.panel, self.sg_audio, miDriver)
@@ -351,6 +352,22 @@ class MainFrame(wx.Frame):
         self.recallTempFile(evt.GetId())
 
     def handleNew(self, evt):
+        cancel = False
+        if self.is_unsaved or newpath:
+            if self.currentFile == None:
+                curfile = "Granulator.sg"
+            else:
+                curfile = self.currentFile
+            dlg = wx.MessageDialog(self, "Do you want to save the changes you made in the document %s ?" % curfile,
+                                   'File Unsaved...', wx.YES_NO | wx.YES_DEFAULT | wx.CANCEL | wx.ICON_INFORMATION)
+            ret = dlg.ShowModal()
+            if ret == wx.ID_YES:
+                self.handleSave(None)
+            elif ret == wx.ID_CANCEL:
+                cancel = True
+            dlg.Destroy()
+        if cancel:
+            return
         self.panel.sndBitmap = None
         self.controls.sndPath = ""
         self.loadFile(os.path.join(RESOURCES_PATH, 'new_soundgrain_file.sg'))
@@ -681,7 +698,9 @@ class MainFrame(wx.Frame):
         self.status.SetStatusText(text)
 
     def openCommandsPage(self, evt):
-        win = CommandFrame(self, wx.ID_ANY, "Soundgrain Commands", size=(900, 650))
+        win = CommandFrame(self, wx.ID_ANY, 
+                           "%s %s - Documentation" % (NAME, SG_VERSION), 
+                           size=(900, 650))
 
     def showAbout(self, evt):
         info = wx.AboutDialogInfo()
