@@ -62,7 +62,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         box.Add(self.meter, 0, wx.LEFT, 10)
         box.AddSpacer(5)
 
-        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 2)
+        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
 
         box.Add(wx.StaticText(self, -1, "Project Settings"), 0, wx.CENTER | wx.ALL, 5)
 
@@ -84,7 +84,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         projSettingsBox.Add(chnlsBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         box.Add(projSettingsBox, 0, wx.ALIGN_CENTER, 5)
 
-        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 2)
+        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
 
         soundBox = wx.BoxSizer(wx.HORIZONTAL)
         self.tog_audio = wx.ToggleButton(self, -1, "Start", size=(80,-1))
@@ -93,7 +93,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         soundBox.Add(self.tog_audio, 0, wx.CENTER |  wx.LEFT | wx.RIGHT, 5)
         box.Add(soundBox, 0, wx.CENTER | wx.ALL, 5)
 
-        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 2)
+        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
 
         box.Add(wx.StaticText(self, -1, "Record Settings"), 0, wx.CENTER | wx.ALL, 5)
 
@@ -164,6 +164,7 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.drawing.sl_period.Disable()
             self.drawing.sl_scaling.Disable()
 
+    # TODO: replace all these handle, get, set, with single event
     def handleType(self, event):
         self.processType(event.GetInt())
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # encoding: utf-8
-
 import wx, sys, os
 from constants import *
 
@@ -25,8 +24,8 @@ class SoundGrainSplashScreen(wx.Frame):
     def __init__(self, parent, img, mainframe=None):
         display = wx.Display(0)
         size = display.GetGeometry()[2:]
-        wx.Frame.__init__(self, parent, -1, "", pos=(-1, size[1]/6),
-                         style = wx.FRAME_SHAPED | wx.SIMPLE_BORDER | wx.FRAME_NO_TASKBAR | wx.STAY_ON_TOP)
+        style = wx.FRAME_SHAPED|wx.SIMPLE_BORDER|wx.FRAME_NO_TASKBAR|wx.STAY_ON_TOP
+        wx.Frame.__init__(self, parent, -1, "", pos=(-1, size[1]/6), style=style)
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
@@ -72,9 +71,12 @@ class SoundGrainSplashScreen(wx.Frame):
             font.SetPointSize(psize+1)
             font.SetWeight(wx.FONTWEIGHT_BOLD)
         dc.SetFont(font)
-        dc.DrawLabel("%s v. %s" % (NAME, SG_VERSION), wx.Rect(0, 305, 400, 15), wx.ALIGN_CENTER)
-        dc.DrawLabel(u"Olivier Bélanger", wx.Rect(0, 322, 400, 15), wx.ALIGN_CENTER)
-        dc.DrawLabel("AjaxSoundStudio.com, %s" % SG_YEAR, wx.Rect(0, 339, 400, 15), wx.ALIGN_CENTER)
+        dc.DrawLabel("%s v. %s" % (NAME, SG_VERSION), 
+                     wx.Rect(0, 305, 400, 15), wx.ALIGN_CENTER)
+        dc.DrawLabel(u"Olivier Bélanger", 
+                     wx.Rect(0, 322, 400, 15), wx.ALIGN_CENTER)
+        dc.DrawLabel("AjaxSoundStudio.com, %s" % SG_YEAR, 
+                     wx.Rect(0, 339, 400, 15), wx.ALIGN_CENTER)
 
     def OnClose(self):
         if self.mainframe:

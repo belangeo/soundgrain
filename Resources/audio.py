@@ -63,7 +63,7 @@ class Fx:
         elif fx == 6:
             self.process = Harmonizer(self.input, transpo=-7, feedback=0.25)
         elif fx == 7:
-            self.clip = Clip(self.input, min=-0.25, max=0.25, mul=0.33)
+            self.clip = Clip(self.input, min=-0.1, max=0.1, mul=3.3)
             self.process = ButLP(self.clip, freq=5000)
         elif fx == 8:
             self.lfo = Sine(freq=.2, mul=.0045, add=.005)
