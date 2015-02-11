@@ -1,6 +1,10 @@
 Drawing Surface
 ===============
 
+A word on the drawing surface...
+
+______________________________________________________________________________
+
 Mouse Bindings
 --------------
 
@@ -52,6 +56,7 @@ Delete the ball.
 
 Change the effects's fadein/fadeout ramp time.
 
+______________________________________________________________________________
 
 Keyboard Bindings
 -----------------

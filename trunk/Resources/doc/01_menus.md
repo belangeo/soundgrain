@@ -2,9 +2,10 @@ Menu Bar
 ========
 
 This section provides documentation for the menu items located in the
-menu bar of the application. OSX users should replace the shortcut *Ctrl* 
-key with the *Cmd* key.
+menu bar of the application. OSX users should replace the shortcut _Ctrl_ 
+key with the _Cmd_ key.
 
+______________________________________________________________________________
 
 File Menu
 ---------
@@ -35,14 +36,15 @@ Save the current state of the project in a new .sg file.
 
 ##### Open Granulator Controls (*Ctrl+P*) #####
 
-Open the granulator's parameters window. This window, in the tab called 
-'Granulator', allows the user to change the density of grains per second, 
-the global transposition, the grain duration, the grain start time deviation 
-(synchronous vs asynchronous) and various randoms applied to the granulator. 
-In the second tab, called 'Y axis', one can decide on which parameters, and 
-its range, the Y axis of the drawing area will be mapped. Available parameters 
-are: Density of grains, transposition, grain duration, start time deviation, 
-amplitude, grain panning and various per grain randoms applied to the granulator.
+Open the [granulator's parameters window](04_granulator.md). This window, 
+in the tab called 'Granulator', allows the user to change the density of 
+grains per second, the global transposition, the grain duration, the grain 
+start time deviation (synchronous vs asynchronous) and various randoms 
+applied to the granulator. In the second tab, called 'Y axis', one can 
+decide on which parameters, and its range, the Y axis of the drawing area 
+will be mapped. Available parameters are: Density of grains, transposition, 
+grain duration, start time deviation, amplitude, grain panning and various 
+per grain randoms applied to the granulator.
 
 ##### Open Envelope Window (*Ctrl+E*) #####
 
@@ -52,6 +54,7 @@ Open a grapher window to modify the shape of the grain's envelope.
 
 Start/stop audio processing.
 
+______________________________________________________________________________
 
 Drawing Menu
 ------------
@@ -87,6 +90,7 @@ values mean narrower transformations).
 
 Re-sync the trajectories's counters (automatically done when audio is started).
 
+______________________________________________________________________________
 
 Audio Drivers Menu
 ------------------
@@ -99,6 +103,7 @@ Choose the desired audio driver. The drivers list is updated only at startup.
 
 Set the audio sample precision either 32 or 64 bits. Require restarting the application.
 
+______________________________________________________________________________
 
 Midi Menu
 ---------
@@ -114,6 +119,7 @@ Open the MIDI configuration and controls window.
 
 Need more about how to use midi controls...
 
+______________________________________________________________________________
 
 FxBall Menu
 -----------

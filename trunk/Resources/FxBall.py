@@ -7,8 +7,11 @@ from pyolib._wxwidgets import ControlSlider
 
 class FxBallControls(wx.Frame):
     def __init__(self, parent, fxball, sg_audio, size=(270, 200)):
-        title = "%s Controls" % {0: "Reverb", 1: "Delay", 2: "Disto", 3: "Waveguide", 4: "Complex Resonator",
-                                5: "Degrade", 6: "Harmonizer", 7: "Clipper", 8: "Flanger", 9: "AllpassWG"}[fxball.getFx()]
+        # TODO: move dictionaries in constants.py
+        fxTitles = {0: "Reverb", 1: "Delay", 2: "Disto", 3: "Waveguide", 
+                    4: "Complex Resonator", 5: "Degrade", 6: "Harmonizer", 
+                    7: "Clipper", 8: "Flanger", 9: "AllpassWG"}
+        title = "%s Controls" % fxTitles[fxball.getFx()]
         wx.Frame.__init__(self, parent, -1, title, size=size)
         self.parent = parent
         self.fxball = fxball
@@ -33,16 +36,13 @@ class FxBallControls(wx.Frame):
                         4: ["Frequency", 20, 4000, 1000, True],
                         5: ["Bit Depth", 2, 32, 8, True],
                         6: ["Transposition", -12, 12, -7, False],
-                        7: ["Threshold", 0.001, 0.25, 0.05, True],
+                        7: ["Threshold", 0.001, 0.25, 0.1, True],
                         8: ["LFO Freq", 0.1, 20, 0.2, True],
                         9: ["Frequency", 20, 500, 100, True],
                     }[fxball.getFx()]
         text = wx.StaticText(self.panel, -1, sl1values[0])
         font, psize = text.GetFont(), text.GetFont().GetPointSize()
-        if sys.platform == "win32":
-            font.SetPointSize(psize-1)
-        else:
-            font.SetPointSize(psize-1)
+        font.SetPointSize(psize-1)
         text.SetFont(font)
         self.box.Add(text, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
         self.box.AddSpacer(2)
@@ -83,7 +83,6 @@ class FxBallControls(wx.Frame):
 
         self.panel.SetSizerAndFit(self.box)
 
-        #self.Fit()
         X, Y = self.GetSize()[0], self.GetSize()[1] + 20
         self.SetMinSize((X, Y))
         self.SetMaxSize((X, Y))

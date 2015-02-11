@@ -135,6 +135,7 @@ class MidiSettings(wx.Frame):
         self.parent.controls.shutdownServer()
         self.parent.controls.bootServer()
 
+    # TODO: replace handle, set and get method with events
     def handleMethod(self, evt):
         self.sg_audio.setMidiMethod(self.popupMethod.GetSelection())
 
