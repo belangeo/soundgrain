@@ -52,9 +52,9 @@ class CommandFrame(wx.Frame):
         menubar.Append(fileMenu, "&File")
         self.SetMenuBar(menubar)
 
-        self.book = wx.Notebook(self, style=wx.NB_LEFT)
+        self.book = wx.Notebook(self, style=wx.NB_TOP)
 
-        for docfile in sorted(os.listdir(DOCUMENTATION_PATH)):
+        for docfile in sorted([f for f in os.listdir(DOCUMENTATION_PATH) if f.endswith(".md")]):
             with open(os.path.join(DOCUMENTATION_PATH, docfile), "r") as f:
                 page = f.read()
                 pos = page.find("\n")

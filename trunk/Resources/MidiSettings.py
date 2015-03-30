@@ -103,6 +103,7 @@ class MidiSettings(wx.Frame):
         self.SetMaxSize(size)
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
         self.Show(False)
+        wx.CallAfter(self.SetSize, size)
 
     def show(self):
         self.Show()
