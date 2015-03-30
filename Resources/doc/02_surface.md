@@ -1,7 +1,10 @@
 Drawing Surface
 ===============
 
-A word on the drawing surface...
+The drawing surface is the main panel of the application. It is where a 
+loaded soundfile is shown and where the user draws the granulation trajectories
+that will navigate into the sound. This page give the mouse and keyboard
+bindings used to create/modify/interact with the trajectories.
 
 ______________________________________________________________________________
 
@@ -61,7 +64,7 @@ ______________________________________________________________________________
 Keyboard Bindings
 -----------------
 
-When the focus is on the drawing surface:
+Whit the focus on the drawing surface:
 
 ##### Delete key #####
 

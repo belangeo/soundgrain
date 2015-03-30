@@ -76,6 +76,34 @@ AUDIO_WILDCARD = "All Files |*.*|" \
                  "CAF file |*.caf;*.Caf;*.CAF|" \
                  "OGG file |*.ogg;*.Ogg;*.OGG"
 
+FX_BALL_TITLES = {0: "Reverb", 1: "Delay", 2: "Disto", 3: "Waveguide", 
+                    4: "Complex Resonator", 5: "Degrade", 6: "Harmonizer", 
+                    7: "Clipper", 8: "Flanger", 9: "AllpassWG"}
+
+FX_BALL_SLIDER_1_INIT = {   0: ["Feedback", 0, 1, .75, False],
+                            1: ["Delay", 0.01, 1, 0.25, False],
+                            2: ["Drive", 0, 1, .75, False],
+                            3: ["Frequency", 20, 500, 100, True],
+                            4: ["Frequency", 20, 4000, 500, True],
+                            5: ["Bit Depth", 2, 32, 8, True],
+                            6: ["Transposition", -12, 12, -7, False],
+                            7: ["Threshold", 0.001, 0.25, 0.1, True],
+                            8: ["LFO Freq", 0.1, 20, 0.2, True],
+                            9: ["Frequency", 20, 500, 100, True],
+                        }
+
+FX_BALL_SLIDER_2_INIT = {   0: ["Cutoff", 100, 15000, 5000, True],
+                            1: ["Feedback", 0, 1, 0.5, False],
+                            2: ["Slope", 0, .99, .75, False],
+                            3: ["Fall time", 1, 60, 30, False],
+                            4: ["Decay", 0.001, 5, 1, True],
+                            5: ["SR Scale", 0.01, 1, 0.25, True],
+                            6: ["Feedback", 0, 1, 0.25, False],
+                            7: ["Cutoff", 100, 15000, 5000, True],
+                            8: ["Feedback", 0, 1, 0.5, False],
+                            9: ["Detune", 0, 1, 0.5, False],
+                        }
+
 def ensureNFD(unistr):
     if unistr == None:
         return None

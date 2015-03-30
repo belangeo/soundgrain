@@ -244,7 +244,7 @@ class SG_Audio:
         else: 
             ext = ".wav"
         date = time.strftime('_%d_%b_%Y_%Hh%M')
-        complete_filename = toSysEncoding(os.path.join(os.path.expanduser('~'), "Desktop", filename+date+ext))
+        complete_filename = toSysEncoding(filename + date + ext)
         self.server.recstart(complete_filename)
 
     def recStop(self):
@@ -383,7 +383,7 @@ class SG_Audio:
             val = floatmap(x, rng[0], rng[1], rng[2])
             self.streams[which].y_trs.mul = val
         else:
-            self.streams[which].y_dur.mul = 0
+            self.streams[which].y_trs.mul = 0
         if self.check_dict["y_dur_check"]:
             rng = self.map_dict["y_dur_map"]
             val = floatmap(x, rng[0], rng[1], rng[2])

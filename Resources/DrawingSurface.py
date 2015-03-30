@@ -149,6 +149,7 @@ class DrawingSurface(wx.Panel):
 
     def removeAllFxBalls(self):
         for key in self.fxballs.keys():
+            self.fxballs[key].hideControls()
             del self.fxballs[key]
             self.parent.sg_audio.removeFx(key)
         self.fxballValues = [fx for fx in self.fxballs.values()]
@@ -156,6 +157,7 @@ class DrawingSurface(wx.Panel):
         self.Refresh()
 
     def removeFxBall(self, key):
+        self.fxballs[key].hideControls()
         del self.fxballs[key]
         self.parent.sg_audio.removeFx(key)
         self.fxballValues = [fx for fx in self.fxballs.values()]

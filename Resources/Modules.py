@@ -124,10 +124,14 @@ class Module(wx.Frame):
             self.sl_rndpan.SetValue(x)
 
     def makeTransBox(self, box):
-        box.Add(wx.StaticText(self.panel1, -1, "Random Transposition per Grain"), 0, wx.CENTER|wx.TOP, 5)
-        box.Add(wx.StaticText(self.panel1, -1, "List of Transposition Ratios"), 0, wx.CENTER|wx.TOP, 1)
+        box.Add(wx.StaticText(self.panel1, -1, "Random Transposition per Grain"), 
+                              0, wx.CENTER|wx.TOP, 5)
+        box.Add(wx.StaticText(self.panel1, -1, "List of Transposition Ratios"), 
+                              0, wx.CENTER|wx.TOP, 1)
         transBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tx_trans = wx.TextCtrl(self.panel1, -1, "1, ", size=(250, -1), style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB)
+        tw, th = self.GetTextExtent("1,2,3,4,5,6,7,8,9,0")
+        self.tx_trans = wx.TextCtrl(self.panel1, -1, "1, ", size=(250, th*2), 
+                                    style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB)
         self.tx_trans.Bind(wx.EVT_TEXT_ENTER, self.handleTrans)
         self.tx_trans.Bind(wx.EVT_CHAR, self.onCharTrans)
         transBox.Add(self.tx_trans, 0, wx.LEFT | wx.RIGHT, 5)
@@ -163,12 +167,16 @@ class Module(wx.Frame):
         tx_check.Bind(wx.EVT_CHECKBOX, self.handleCheck)
         textBox.Add(tx_check, 0, wx.LEFT | wx.RIGHT, 10)
         textBox.Add(wx.StaticText(self.panel2, -1, "Min: "), 0, wx.TOP, 4)
-        tx_min = wx.TextCtrl(self.panel2, -1, minval, size=(50, -1), style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, name="y_%s_map" % name)
+        tx_min = wx.TextCtrl(self.panel2, -1, minval, size=(50, -1), 
+                             style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, 
+                             name="y_%s_map" % name)
         tx_min.Bind(wx.EVT_TEXT_ENTER, self.handleMapMin)
         tx_min.Bind(wx.EVT_CHAR, self.onCharMapMin)
         textBox.Add(tx_min, 0, wx.RIGHT, 20)
         textBox.Add(wx.StaticText(self.panel2, -1, "Max: "), 0, wx.TOP, 4)
-        tx_max = wx.TextCtrl(self.panel2, -1, maxval, size=(50, -1), style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, name="y_%s_map" % name)
+        tx_max = wx.TextCtrl(self.panel2, -1, maxval, size=(50, -1), 
+                             style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, 
+                             name="y_%s_map" % name)
         tx_max.Bind(wx.EVT_TEXT_ENTER, self.handleMapMax)
         tx_max.Bind(wx.EVT_CHAR, self.onCharMapMax)
         textBox.Add(tx_max, 0, wx.RIGHT, 20)
