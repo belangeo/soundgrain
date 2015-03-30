@@ -122,7 +122,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         rec1Box.Add(self.tx_rec_folder, 0, wx.LEFT | wx.RIGHT, 10)
         self.but_folder = wx.ToggleButton(self, -1, "Choose", size=(65,-1))
         self.but_folder.SetFont(font)
-        rec1Box.Add(self.but_folder, 0, wx.ALIGN_CENTER)
+        rec1Box.Add(self.but_folder, 1, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND | wx.RIGHT, 10)
 
         rec2Box = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -130,12 +130,12 @@ class ControlPanel(scrolled.ScrolledPanel):
         rec2Box.Add(self.tx_output, 0, wx.LEFT | wx.RIGHT, 10)
         self.tog_record = wx.ToggleButton(self, -1, "Start Rec", size=(65,-1))
         self.tog_record.SetFont(font)
-        rec2Box.Add(self.tog_record, 0, wx.ALIGN_CENTER)
+        rec2Box.Add(self.tog_record, 1, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND | wx.RIGHT, 10)
         
         box.Add(wx.StaticText(self, -1, "Destination"), 0, wx.LEFT | wx.RIGHT, 17)
-        box.Add(rec1Box, 0, wx.BOTTOM  | wx.LEFT | wx.RIGHT, 5)
+        box.Add(rec1Box, 0, wx.EXPAND | wx.BOTTOM  | wx.LEFT | wx.RIGHT, 5)
         box.Add(wx.StaticText(self, -1, "Filename"), 0, wx.LEFT | wx.RIGHT, 17)
-        box.Add(rec2Box, 0, wx.BOTTOM  | wx.LEFT | wx.RIGHT, 5)
+        box.Add(rec2Box, 0, wx.EXPAND | wx.BOTTOM  | wx.LEFT | wx.RIGHT, 5)
 
 
         self.Bind(wx.EVT_CHOICE, self.handleType, self.trajType)
