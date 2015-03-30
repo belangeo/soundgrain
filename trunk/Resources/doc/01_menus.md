@@ -117,12 +117,19 @@ initial state for trajectories triggered by MIDI notes.
 
 Open the MIDI configuration and controls window.
 
-Need more about how to use midi controls...
+See the [Midi Controls page](06_midi.md) for the detail about how to use MIDI 
+with Soundgrain.
 
 ______________________________________________________________________________
 
 FxBall Menu
 -----------
+
+FxBalls allow the user to add effect regions on the drawing surface. Only the
+trajectories that cross a ball (and only for the time that the trajectory is
+inside the ball) will send their audio output through the chosen effect.
+
+See the [FX Balls page](05_fxballs.md) for the detail about available effects.
 
 ##### Add Reverb ball (*Ctrl+1*) #####
 

@@ -549,6 +549,12 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.surface.SetFocus()
         event.Skip()
 
+    def setRecordFolder(self, str):
+        self.tx_rec_folder.SetValue(str)
+
+    def setRecordFilename(self, str):
+        self.tx_output.SetValue(str)
+
     def handleRecord(self, event):
         if event.GetInt() == 1:
             folder = self.tx_rec_folder.GetValue()
@@ -557,7 +563,7 @@ class ControlPanel(scrolled.ScrolledPanel):
             if os.path.isdir(folder):
                 filename = os.path.join(folder, self.tx_output.GetValue())
             else:
-                filename = self.tx_output.GetValue()
+                filename = os.path.join(os.path.expanduser('~'), "Desktop", self.tx_output.GetValue())
             self.parent.sg_audio.recStart(filename, self.fileformat, self.sampletype)
             self.tog_record.SetLabel('Stop Rec')
         else:

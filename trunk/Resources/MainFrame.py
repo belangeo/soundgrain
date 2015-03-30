@@ -447,6 +447,8 @@ class MainFrame(wx.Frame):
         saveDict['ControlPanel']['fileformat'] = self.controls.getFileFormat()
         saveDict['ControlPanel']['sampletype'] = self.controls.getSampleType()
         saveDict['ControlPanel']['sound'] = self.controls.sndPath
+        saveDict['ControlPanel']['recfolder'] = self.controls.tx_rec_folder.GetValue()
+        saveDict['ControlPanel']['filename'] = self.controls.tx_output.GetValue()
         ### Trajectories ###
         saveDict['Trajectories'] = {}
         for i, t in enumerate(self.panel.getAllTrajectories()):
@@ -533,6 +535,8 @@ class MainFrame(wx.Frame):
         self.controls.setFileFormat(dict['ControlPanel'].get('fileformat', 0))
         self.controls.setSampleType(dict['ControlPanel'].get('sampletype', 0))
         self.controls.loadSound(ensureNFD(dict['ControlPanel']['sound']))
+        self.controls.setRecordFolder(ensureNFD(dict['ControlPanel'].get('recfolder', '~/Desktop')))
+        self.controls.setRecordFilename(ensureNFD(dict['ControlPanel'].get('filename', 'snd')))
         ### Trajectories ###
         for i, t in enumerate(self.panel.getAllTrajectories()):
             t.setAttributes(dict['Trajectories'][str(i)], xfac, yfac)

@@ -7,11 +7,7 @@ from pyolib._wxwidgets import ControlSlider
 
 class FxBallControls(wx.Frame):
     def __init__(self, parent, fxball, sg_audio, size=(270, 200)):
-        # TODO: move dictionaries in constants.py
-        fxTitles = {0: "Reverb", 1: "Delay", 2: "Disto", 3: "Waveguide", 
-                    4: "Complex Resonator", 5: "Degrade", 6: "Harmonizer", 
-                    7: "Clipper", 8: "Flanger", 9: "AllpassWG"}
-        title = "%s Controls" % fxTitles[fxball.getFx()]
+        title = "%s Controls" % FX_BALL_TITLES[fxball.getFx()]
         wx.Frame.__init__(self, parent, -1, title, size=size)
         self.parent = parent
         self.fxball = fxball
@@ -29,17 +25,9 @@ class FxBallControls(wx.Frame):
         self.panel.SetBackgroundColour(BACKGROUND_COLOUR)
         self.box = wx.BoxSizer(wx.VERTICAL)
 
-        sl1values = {   0: ["Feedback", 0, 1, .75, False],
-                        1: ["Delay", 0.01, 1, 0.25, False],
-                        2: ["Drive", 0, 1, .75, False],
-                        3: ["Frequency", 20, 500, 100, True],
-                        4: ["Frequency", 20, 4000, 1000, True],
-                        5: ["Bit Depth", 2, 32, 8, True],
-                        6: ["Transposition", -12, 12, -7, False],
-                        7: ["Threshold", 0.001, 0.25, 0.1, True],
-                        8: ["LFO Freq", 0.1, 20, 0.2, True],
-                        9: ["Frequency", 20, 500, 100, True],
-                    }[fxball.getFx()]
+        sl1values = FX_BALL_SLIDER_1_INIT[fxball.getFx()]
+        sl2values = FX_BALL_SLIDER_2_INIT[fxball.getFx()]
+
         text = wx.StaticText(self.panel, -1, sl1values[0])
         font, psize = text.GetFont(), text.GetFont().GetPointSize()
         font.SetPointSize(psize-1)
@@ -49,17 +37,6 @@ class FxBallControls(wx.Frame):
         self.slider1 = ControlSlider(self.panel, sl1values[1], sl1values[2], sl1values[3], log=sl1values[4], size=(250,16), outFunction=self.handleSlider1)
         self.box.Add(self.slider1, 0, wx.LEFT|wx.RIGHT, 10)
 
-        sl2values = {   0: ["Cutoff", 100, 15000, 5000, True],
-                        1: ["Feedback", 0, 1, 0.5, False],
-                        2: ["Slope", 0, .99, .75, False],
-                        3: ["Fall time", 1, 60, 30, False],
-                        4: ["Decay", 0.001, 5, 1, True],
-                        5: ["SR Scale", 0.01, 1, 0.25, True],
-                        6: ["Feedback", 0, 1, 0.25, False],
-                        7: ["Cutoff", 100, 15000, 5000, True],
-                        8: ["Feedback", 0, 1, 0.5, False],
-                        9: ["Detune", 0, 1, 0.5, False],
-                    }[fxball.getFx()]
         text = wx.StaticText(self.panel, -1, sl2values[0])
         text.SetFont(font)
         self.box.Add(text, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
@@ -275,3 +252,6 @@ class FxBall():
     def openControls(self, pos):
         self.controls.SetPosition(pos)
         self.controls.Show()
+
+    def hideControls(self):
+        self.controls.Hide()
