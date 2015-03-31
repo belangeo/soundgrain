@@ -63,6 +63,7 @@ class FxBallControls(wx.Frame):
         X, Y = self.GetSize()[0], self.GetSize()[1] + 20
         self.SetMinSize((X, Y))
         self.SetMaxSize((X, Y))
+        wx.CallAfter(self.SetSize, (X, Y))
 
     def handleClose(self, event):
         self.Show(False)
