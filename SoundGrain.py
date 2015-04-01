@@ -41,11 +41,11 @@ class SoundGrainApp(wx.App):
             sizex = sysx - 40
         else:
             sizex = 900
-        if sysy < 670:
+        if sysy < 720:
             sizey = sysy - 40
         else:
-            sizey = 670
-        self.frame = MainFrame(None, -1, pos=(0, 25), size=(sizex, sizey),
+            sizey = 720
+        self.frame = MainFrame(None, -1, pos=(0, 20), size=(sizex, sizey),
                                screen_size=(sysx, sysy))
         if hasattr(self, "filenames"):
             self.frame.loadFile(ensureNFD(self.filenames[0]))
