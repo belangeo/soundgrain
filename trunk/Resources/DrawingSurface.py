@@ -30,9 +30,12 @@ class DrawingSurface(wx.Panel):
         self.needBitmap = True
         self.onMotion = False
         self.marios = [wx.Bitmap(os.path.join(IMAGES_PATH, 'Mario%d.png' % i), wx.BITMAP_TYPE_PNG) for i in [1,2,3,2,4,5,6,5]]
-        if PLATFORM in ['win32', 'linux2']:
+        if PLATFORM == 'linux2':
             self.font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL, face="Monospace")
             self.font_pos = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)
+        elif PLATFORM == 'win32':
+            self.font = wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.NORMAL, wx.NORMAL, face="Monospace")
+            self.font_pos = wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.NORMAL, wx.NORMAL)
         else:
             self.font = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL, face="Monospace")
             self.font_pos = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL)
