@@ -282,7 +282,7 @@ class DrawingSurface(wx.Panel):
             self.memorizedTrajectory.move((off, 0))
             self.memorizedTrajectory.setInitPoints()
 
-    def addTrajFromMemory(self, index, pitch, normy):
+    def addTrajFromMemory(self, index, pitch, normy, midinote):
         t = self.memorizedTrajectory
         for new_t in self.trajectories:
             if not new_t.getActive():
@@ -319,9 +319,9 @@ class DrawingSurface(wx.Panel):
             x, y = downPos[0], int((1.-normy)*h)
         else:
             if pitch <= 1:
-                normx = int((w/2) - (w * (1. - pitch) / self.midiOctaveSpread))
+                normx = int((w/2) - (w * (60 - midinote) / 12. / self.midiOctaveSpread))
             else:
-                normx = int((w/2) + (w * (1. - (1. / pitch)) / self.midiOctaveSpread))
+                normx = int((w/2) + (w * (midinote - 60) / 12. / self.midiOctaveSpread))
             x,y = normx, int((1.-normy)*h)
         if new_t.getType() in ['free', 'line']:
             offset = (downPos[0] - x, downPos[1] - y)
@@ -727,8 +727,9 @@ class DrawingSurface(wx.Panel):
             recsize = 14
             s2 = recsize / 2
             gc.SetBrush(t.getBrush(trans=True))
-            gc.SetPen(t.getPen(big=True))  
-            gc.DrawLines(t.getPoints())
+            gc.SetPen(t.getPen(big=True))
+            if len(t.getPoints()) >= 2:
+                gc.DrawLines(t.getPoints())
             if t.getId() == selectedTraj:
                 recsize = 14
                 s2 = recsize / 2
@@ -767,12 +768,13 @@ class DrawingSurface(wx.Panel):
 
         if not self.useMario:
             for t in activeTrajs:
-                gc.SetPen(t.getPen())
-                gc.SetBrush(t.getBrush())
-                gc.DrawEllipse(t.circlePos[0]-5, t.circlePos[1]-5, 10, 10)
-                gc.SetPen(t.getBorderPen())
-                gc.SetBrush(t.getBorderBrush())
-                gc.DrawEllipse(t.circlePos[0]-2, t.circlePos[1]-2, 4, 4)
+                if t.circlePos != None:
+                    gc.SetPen(t.getPen())
+                    gc.SetBrush(t.getBrush())
+                    gc.DrawEllipse(t.circlePos[0]-5, t.circlePos[1]-5, 10, 10)
+                    gc.SetPen(t.getBorderPen())
+                    gc.SetBrush(t.getBorderBrush())
+                    gc.DrawEllipse(t.circlePos[0]-2, t.circlePos[1]-2, 4, 4)
         else:
             for t in activeTrajs:
                 if t.lastCirclePos[0] < t.circlePos[0]: marioff = 0
