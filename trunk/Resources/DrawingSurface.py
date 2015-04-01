@@ -877,16 +877,16 @@ class DrawingSurface(wx.Panel):
     def create_bitmap(self):
         size = self.GetSizeTuple()
         self.sndBitmap = wx.EmptyBitmap(size[0], size[1])
-        self.memory = wx.MemoryDC()
-        self.memory.SelectObject(self.sndBitmap)
-        gc = wx.GraphicsContext_Create(self.memory)
+        memory = wx.MemoryDC()
+        memory.SelectObject(self.sndBitmap)
+        gc = wx.GraphicsContext_Create(memory)
         gc.SetPen(wx.Pen("#3F3F44"))
         gc.SetBrush(wx.Brush("#3F3F44", style=wx.TRANSPARENT))
-        self.memory.SetBrush(wx.Brush(self.backgroundcolor))
-        self.memory.DrawRectangle(0,0,size[0],size[1])
+        memory.SetBrush(wx.Brush(self.backgroundcolor))
+        memory.DrawRectangle(0,0,size[0],size[1])
         for samples in self.list:
             if len(samples):
                 gc.DrawLines(samples)
-        self.memory.SelectObject(wx.NullBitmap)
+        memory.SelectObject(wx.NullBitmap)
         self.needBitmap = True
         self.Refresh()

@@ -358,8 +358,9 @@ class MainFrame(wx.Frame):
                 curfile = "Granulator.sg"
             else:
                 curfile = self.currentFile
-            dlg = wx.MessageDialog(self, "Do you want to save the changes you made in the document %s ?" % curfile,
-                                   'File Unsaved...', wx.YES_NO | wx.YES_DEFAULT | wx.CANCEL | wx.ICON_INFORMATION)
+            dlg = wx.MessageDialog(self, 
+                    "Do you want to save the changes you made in the document %s ?" % curfile,
+                    'File Unsaved...', wx.YES_NO | wx.YES_DEFAULT | wx.CANCEL | wx.ICON_INFORMATION)
             ret = dlg.ShowModal()
             if ret == wx.ID_YES:
                 self.handleSave(None)
@@ -374,6 +375,7 @@ class MainFrame(wx.Frame):
 
     def handleOpen(self, evt):
         dlg = wx.FileDialog(self, message="Open SoundGrain file...",
+                            defaultDir=os.path.expanduser("~"),
                             defaultFile="",
                             wildcard="SoundGrain file (*.sg)|*.sg",
                             style=wx.OPEN)
@@ -396,6 +398,7 @@ class MainFrame(wx.Frame):
 
     def handleSaveAs(self, evt):
         dlg = wx.FileDialog(self, message="Save file as ...",
+                            defaultDir=os.path.expanduser("~"),
                             defaultFile="Granulator.sg",
                             style=wx.SAVE)
         if dlg.ShowModal() == wx.ID_OK:
@@ -646,8 +649,11 @@ class MainFrame(wx.Frame):
             if save_dialog:
                 ext = EXPORT_FORMATS[self.controls.fileformat].lower()
                 wildcard = AUDIO_WILDCARD
-                dlg2 = wx.FileDialog(self, message="Choose a filename...", defaultDir=os.getcwd(),
-                    defaultFile="mixedtable.%s" % ext, wildcard=wildcard, style=wx.SAVE | wx.CHANGE_DIR)
+                dlg2 = wx.FileDialog(self, message="Choose a filename...", 
+                                     defaultDir=os.path.expanduser("~"),
+                                     defaultFile="mixedtable.%s" % ext, 
+                                     wildcard=wildcard, 
+                                     style=wx.SAVE | wx.CHANGE_DIR)
                 if dlg2.ShowModal() == wx.ID_OK:
                     path = dlg2.GetPath()
                     if path != "":
