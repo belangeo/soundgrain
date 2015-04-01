@@ -38,7 +38,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.closedToggle = wx.ToggleButton(self, -1, 'Closed', size=self.trajType.GetSize())
         font = self.closedToggle.GetFont()
         if PLATFORM in ['win32', 'linux2']:
-            font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)
+            font = wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.NORMAL, wx.NORMAL)
         self.closedToggle.SetFont(font)
         typeBox.Add(self.closedToggle, wx.CENTER|wx.RIGHT, 5 )
         box.Add(typeBox, 0, wx.CENTER|wx.ALL, 5)
