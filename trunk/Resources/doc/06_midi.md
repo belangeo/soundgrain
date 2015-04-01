@@ -48,3 +48,10 @@ note will create the trajectory far left on the surface and the higher note
 will create the trajectory far right on the surface. The user can change the
 number of octaves which divide the surface with the __X Position Octave Spread__
 slider.
+
+Velocity Mapping
+----------------
+
+The velocity of the MIDI note gives the position of the trajectory on the Y axis.
+Velocity 0 is the bottom of the surface and velocity 127 is the top.
+ 
