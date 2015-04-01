@@ -28,14 +28,14 @@ class MidiSettings(wx.Frame):
         wx.Frame.__init__(self, parent, -1, "Midi Settings")
         menuBar = wx.MenuBar()
         self.menu = wx.Menu()
-        self.menu.Append(200, 'Close\tCtrl+W', "")
+        self.menu.Append(2010, 'Close\tCtrl+W', "")
         self.menu.AppendSeparator()
-        self.menu.Append(201, "Run\tCtrl+R", "", wx.ITEM_CHECK)
+        self.menu.Append(2011, "Run\tCtrl+R", "", wx.ITEM_CHECK)
         menuBar.Append(self.menu, "&File")
         self.SetMenuBar(menuBar)
 
         self.Bind(wx.EVT_CLOSE, self.handleClose)
-        self.Bind(wx.EVT_MENU, self.handleClose, id=200)
+        self.Bind(wx.EVT_MENU, self.handleClose, id=2010)
 
         self.parent = parent
         self.surface = surface

@@ -511,14 +511,14 @@ class SG_Audio:
             pits = self.noteinpitch.get(True)
             vels = self.noteinvelocity.get(True)
             pit, vel = midiToTranspo(pits[voice]), vels[voice]
-            self.createTraj(voice, pit, vel)
+            self.createTraj(voice, pit, vel, pits[voice])
         elif self.midiTriggerMethod == 1:
             pits = self.noteinpitch.get(True)
             vels = self.noteinvelocity.get(True)
             pit, vel = pits[voice], vels[voice]
             if pit not in self.midiPitches:
                 self.midiPitches.append(pit)
-                self.createTraj(pit, midiToTranspo(pit), vel)
+                self.createTraj(pit, midiToTranspo(pit), vel, pits[voice])
             else:
                 self.midiPitches.remove(pit)
                 self.deleteTraj(pit)
