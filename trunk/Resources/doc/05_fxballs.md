@@ -31,8 +31,7 @@ Related, in some way, to the size of the room.
 
 ##### Delay #####
 
-A delay line that does not produce click or transposition when the delay time
-change.
+A simple recursive delay line.
 
 <br>
 

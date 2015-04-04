@@ -51,7 +51,7 @@ class Fx:
         if fx == 0:
             self.process = WGVerb(self.input, feedback=.95, cutoff=5000, bal=1, mul=.7)
         elif fx == 1:
-            self.process = SmoothDelay(self.input, delay=.1, feedback=.75, crossfade=0.005)
+            self.process = Delay(self.input, delay=.1, feedback=.75)
         elif fx == 2:
             self.process = Disto(self.input, drive=.9, slope=.75, mul=.2)
         elif fx == 3:
