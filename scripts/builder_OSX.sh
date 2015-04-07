@@ -1,11 +1,11 @@
 rm -rf build dist
 
-export DMG_DIR="SoundGrain 5.0.0"
-export DMG_NAME="SoundGrain_5.0.0.dmg"
-export SRC_DIR="SoundGrain_5.0.0-src"
-export SRC_TAR="SoundGrain_5.0.0-src.tar.bz2"
+export DMG_DIR="SoundGrain 5.0.1"
+export DMG_NAME="SoundGrain_5.0.1.dmg"
+export SRC_DIR="SoundGrain_5.0.1-src"
+export SRC_TAR="SoundGrain_5.0.1-src.tar.bz2"
 
-py2applet --make-setup SoundGrain.py Resources/*
+py2applet --make-setup --argv-emulation=0 SoundGrain.py Resources/*
 python setup.py py2app --plist=scripts/Info.plist
 rm -f setup.py
 rm -rf build
@@ -40,7 +40,6 @@ ln -s /Applications .
 cd ..
 
 hdiutil create "$DMG_NAME" -srcfolder "$DMG_DIR"
-#tar -cjvf SoundGrain_4.1.1.tar.bz2 SoundGrain.app
 
 svn export . "$SRC_DIR"
 tar -cjvf "$SRC_TAR" "$SRC_DIR"
