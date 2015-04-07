@@ -47,14 +47,12 @@ class SoundGrainApp(wx.App):
             sizey = 720
         self.frame = MainFrame(None, -1, pos=(0, 20), size=(sizex, sizey),
                                screen_size=(sysx, sysy))
-        if hasattr(self, "filenames"):
-            self.frame.loadFile(ensureNFD(self.filenames[0]))
 
     def MacOpenFiles(self, filenames):
         if type(filenames) != ListType:
-            self.filenames = [filenames]
+            filenames = [filenames]
         if hasattr(self, "frame"):
-            self.frame.loadFile(ensureNFD(self.filenames[0]))
+            self.frame.loadFile(ensureNFD(filenames[0]))
 
     def MacReopenApp(self):
         try:
