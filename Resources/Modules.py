@@ -233,7 +233,7 @@ class GranulatorFrame(Module):
         self.sl_rndpit = self.makeSliderBox(self.box1, "Grains Pitch Random", 0, 0.5, self.rndpit, False, False, self.handleRandPit)
         self.sl_rnddur = self.makeSliderBox(self.box1, "Grains Duration Random", 0, 1, self.rnddur, False, False, self.handleRandDur)
         self.sl_rndpos = self.makeSliderBox(self.box1, "Grains Position Random", 0, 1, self.rndpos, False, False, self.handleRandPos)
-        self.sl_rndpan = self.makeSliderBox(self.box1, "Grains Panning Random", 0, 0.5, self.rndpan, False, False, self.handleRandPan)
+        self.sl_rndpan = self.makeSliderBox(self.box1, "Grains Panning Random", 0, 1, self.rndpan, False, False, self.handleRandPan)
         self.makeTransBox(self.box1)
         self.panel1.SetSizer(self.box1)
         self.notebook.AddPage(self.panel1, "Granulator")

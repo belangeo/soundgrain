@@ -1,5 +1,5 @@
 # encoding: utf-8
-import os, xmlrpclib, wx
+import os, xmlrpclib, wx, time
 from Resources.constants import *
 from Resources.audio import *
 from Resources.Modules import *
@@ -700,7 +700,9 @@ class MainFrame(wx.Frame):
         self.controls.meter.OnClose(evt)
         if self.sg_audio.server.getIsStarted():
             self.sg_audio.server.stop()
+            time.sleep(0.2)
         self.controls.shutdownServer()
+        time.sleep(0.2)
         self.Destroy()
         sys.exit()
 
