@@ -96,7 +96,7 @@ class Granulator_Stream:
         self.y_len = SigTo(value=1, time=0.01)
         self.y_dev = SigTo(value=1, time=0.01)
         self.y_amp = SigTo(value=1, time=0.01)
-        self.y_pan = SigTo(value=0.5, time=0.01)
+        self.y_pan = SigTo(value=0.5, time=0.01, mul=2, add=-1)
         # one global noise for every voices ?
         self.y_trs = Randh(min=-1, max=1, freq=231, mul=0, add=1).stop()
         self.y_dur = Randh(min=-1, max=1, freq=201, mul=0, add=1).stop()
@@ -109,6 +109,11 @@ class Granulator_Stream:
         self.pos_rnd = pos_rnd
         self.position = SigTo(value=0, time=0.01, mul=self.table.getSize(False))
         self.y_pos_rnd = Sig(self.y_pos, mul=self.table.getSize(False))
+        nchnls = len(self.table)
+        if nchnls == 1:
+            self.v_pan = 0.5
+        else:
+            self.v_pan = [i / float(nchnls - 1) for i in range(nchnls)]
         self.granulator = Particle( table=self.table, 
                                     env=self.env, 
                                     dens=self.dens_noise*self.y_dns,
@@ -116,7 +121,7 @@ class Granulator_Stream:
                                     pos=self.position+self.pos_rnd+self.y_pos_rnd,
                                     dur=self.dur_noise*self.y_len*self.y_dur,
                                     dev=self.dev_noise+self.y_dev,
-                                    pan=self.y_pan+self.pan_noise,
+                                    pan=Clip(self.y_pan+self.pan_noise+self.v_pan, 0, 1),
                                     chnls=self.chnls,
                                     mul=self.fader*self.y_amp*self.traj_amp,
                                     ).stop()
@@ -200,7 +205,7 @@ class SG_Audio:
         self.pos_noise = Randh(min=-1, max=1, freq=199, mul=0)
         self.dur_noise = Randh(min=0, max=0, freq=198, mul=0.2, add=0.2)
         self.dev_noise = Sig(0)
-        self.pan_noise = Randh(min=-0.5, max=0.5, freq=303, mul=0)
+        self.pan_noise = Randh(min=-1, max=1, freq=303, mul=0)
         self.trans_noise = Choice([1], freq=500)
 
         self.streams = {}
