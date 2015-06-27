@@ -16,6 +16,9 @@ Minimum versions (for running SoundGrain from sources):
 
 [pyo 0.7.5](http://ajaxsoundstudio.com/software/pyo/)
 
+[python-markdown 2.6.2](https://pypi.python.org/pypi/Markdown)
+
+
 Visit the [Official website](http://ajaxsoundstudio.com/software/soundgrain/)
 for more details.
 
