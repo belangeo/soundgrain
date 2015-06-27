@@ -1,7 +1,7 @@
-Graphical interface to control granular sound synthesis.
-========================================================
+Granular sound synthesis interface
+==================================
 
-Sound Grain is a graphical interface where users can draw 
+SoundGrain is a graphical interface where users can draw 
 and edit trajectories to control granular sound synthesis 
 modules. 
 
