@@ -1,0 +1,89 @@
+# Introduction #
+
+This is a short list of features that I want to add during the development of version 4.0
+
+
+# Details #
+
+- ~~MIDI support (each note adds a trajectory with a memorized shape)~~
+
+- ~~Temporary effects with circles user can drag and drop on the drawing surface.~~
+
+> - ~~Delay, Reverb, Harmonizer, RingMod, Waveguide~~
+
+- ~~Display of pointer position~~
+
+- ~~html page for shortcuts and commands~~
+
+- ~~.soundgrain-init file to store current Audio and Midi drivers~~
+
+- ~~Selected trajectory:~~
+
+> - ~~Add "all"~~
+
+> - ~~Bind Delete key to delete the selected trajectory~~
+
+- ~~Remove "Audio on" button, boot and shutdown should be automatic~~
+
+- ~~Add project sampling rate~~
+
+- ~~Record to disk settings:~~
+
+> - ~~File format, sample type, date and time automatically added to filename~~
+
+- ~~Y axis:~~
+
+> - ~~Add "pan" control~~
+
+- ~~Add audio level per trajectory~~
+
+- ~~Always remember the input audio file~~
+
+- ~~Fix number of channels bug~~
+
+- ~~Coreaudio as the default driver on OS X~~
+
+- ~~Windows binary~~
+
+
+---
+
+
+**List of features that I want to add during the development of a future version**
+
+
+- Fractal trajectories with random choice for path of the ball when lines are splitting.
+
+
+- Trajectory Behavior changes with objects user can drag and drop on the drawing surface.
+
+> - wall to change direction of the ball
+
+> - blur to create a moment of confusion and jitter on the trajectory
+
+> - trampoline to give a swing to the ball
+
+- Automation on trajectory's position
+
+- Algorithmic behavior of trajectories (oscillation, jittering, physical modeling, ...)
+
+- Modulation mask with a .png file
+
+- ~~Multiple sounds in the buffer~~
+
+
+---
+
+**Need to be fixed**
+
+- Better unicode support
+
+- Give the choice of the audio host
+
+- ~~Support for ASIO driver on Windows~~
+
+- ~~More standard About window~~
+
+- ~~commands window in embeded html window~~
+
+- ~~Fine-tunning of the effects~~
