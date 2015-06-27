@@ -16,3 +16,7 @@ Minimum versions (for running SoundGrain from sources):
 
 [pyo 0.7.5](http://ajaxsoundstudio.com/software/pyo/)
 
+Visit the [Official website](http://ajaxsoundstudio.com/software/soundgrain/)
+for more details.
+
+
