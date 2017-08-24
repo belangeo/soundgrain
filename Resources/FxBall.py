@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import wx, math
-from constants import *
+from .constants import *
 from pyolib._wxwidgets import ControlSlider
 
 class FxBallControls(wx.Frame):

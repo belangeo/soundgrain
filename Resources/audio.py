@@ -18,7 +18,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import math, time, random, wx, os
-from constants import *
+from .constants import *
 
 if SAMPLE_PRECISION == "64-bit":
     try:

@@ -19,15 +19,7 @@ You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys
-if sys.platform == "linux2":
-    import wxversion
-    if wxversion.checkInstalled("3.0"):
-        wxversion.select("3.0")
-    elif wxversion.checkInstalled("2.8"):
-        wxversion.select("2.8")
-
 import wx
-from types import ListType
 from Resources.constants import *
 from Resources.splash import SoundGrainSplashScreen
 from Resources.MainFrame import MainFrame
@@ -49,7 +41,7 @@ class SoundGrainApp(wx.App):
                                screen_size=(sysx, sysy))
 
     def MacOpenFiles(self, filenames):
-        if type(filenames) != ListType:
+        if type(filenames) is not list:
             filenames = [filenames]
         if hasattr(self, "frame"):
             self.frame.loadFile(ensureNFD(filenames[0]))

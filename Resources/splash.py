@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 import wx, sys, os
-from constants import *
+from .constants import *
 
 def GetRoundBitmap(w, h, r=10):
     maskColour = wx.Colour(0,0,0)
@@ -18,7 +18,10 @@ def GetRoundBitmap(w, h, r=10):
     return b
 
 def GetRoundShape(w, h, r=10):
-    return wx.RegionFromBitmap(GetRoundBitmap(w,h,r))
+    if sys.version_info[0] < 3:
+        return wx.RegionFromBitmap(GetRoundBitmap(w,h,r))
+    else:
+        return wx.Region(GetRoundBitmap(w,h,r))
 
 class SoundGrainSplashScreen(wx.Frame):
     def __init__(self, parent, img, mainframe=None):
@@ -42,7 +45,7 @@ class SoundGrainSplashScreen(wx.Frame):
         dc = wx.ClientDC(self)
         dc.DrawBitmap(self.bmp, 0, 0, True)
 
-        self.fc = wx.FutureCall(3500, self.OnClose)
+        self.fc = wx.CallLater(3500, self.OnClose)
 
         self.Center(wx.HORIZONTAL)
         if sys.platform == 'win32':

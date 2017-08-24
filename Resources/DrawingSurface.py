@@ -30,15 +30,12 @@ class DrawingSurface(wx.Panel):
         self.needBitmap = True
         self.onMotion = False
         self.marios = [wx.Bitmap(os.path.join(IMAGES_PATH, 'Mario%d.png' % i), wx.BITMAP_TYPE_PNG) for i in [1,2,3,2,4,5,6,5]]
-        if PLATFORM == 'linux2':
-            self.font = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL, face="Monospace")
-            self.font_pos = wx.Font(8, wx.NORMAL, wx.NORMAL, wx.NORMAL)
-        elif PLATFORM == 'win32':
-            self.font = wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.NORMAL, wx.NORMAL, face="Monospace")
-            self.font_pos = wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.NORMAL, wx.NORMAL)
+        if PLATFORM == "darwin":
+            fontsize = 10
         else:
-            self.font = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL, face="Monospace")
-            self.font_pos = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL)
+            fontsize = 8
+        self.font = wx.Font(fontsize, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+        self.font_pos = wx.Font(fontsize, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
         self.trajectories = [Trajectory(self, i+1) for i in range(MAX_STREAMS)]
         self.memorizedTrajectory = Trajectory(self, -1)
         self.memorizedId = {}
@@ -59,7 +56,7 @@ class DrawingSurface(wx.Panel):
         self.mode = TRAJTYPES[0]
         self.pointerPos = None
         self.SetColors(outline=(255,255,255), bg=(30,30,30), fill=(184,32,32), rect=(0,255,0), losa=(0,0,255), wave=(70,70,70))
-        self.currentSize = self.GetSizeTuple()
+        self.currentSize = tuple(self.GetSize())
 
         self.Bind(wx.EVT_KEY_DOWN, self.KeyDown)
         self.Bind(wx.EVT_KEY_UP, self.KeyUp)
@@ -88,7 +85,7 @@ class DrawingSurface(wx.Panel):
         evt.Skip()
 
     def OnResize(self, evt):
-        w,h = self.GetSizeTuple()
+        w,h = self.GetSize()
         cX, cY = self.currentSize[0], self.currentSize[1]
         for t in self.getActiveTrajectories():
             for i, p in enumerate(t.getPoints()):
@@ -171,7 +168,7 @@ class DrawingSurface(wx.Panel):
         t = self.trajectories[which]
         t.clock()
         if t.getActive():
-            w,h = self.GetSizeTuple()
+            w,h = self.GetSize()
             w,h = float(w), float(h)
             if t.getPointPos() != None:
                 x = t.getPointPos()[0]/w
@@ -211,7 +208,7 @@ class DrawingSurface(wx.Panel):
         self.losaPen = wx.Pen(self.losacolor, width=1, style=wx.SOLID)
 
     def getValues(self):
-        w,h = self.GetSizeTuple()
+        w,h = self.GetSize()
         w,h = float(w), float(h)
         vals = []
         for t in self.trajectories:
@@ -409,7 +406,7 @@ class DrawingSurface(wx.Panel):
 
     def MouseDoubleClick(self, evt):
         self.SetFocus()
-        self.downPos = evt.GetPositionTuple()
+        self.downPos = evt.GetPosition()
         for t in self.getActiveTrajectories():
             # Select or duplicate trajectory
             if t.getInsideRect(self.downPos):
@@ -449,7 +446,7 @@ class DrawingSurface(wx.Panel):
 
     def MouseDown(self, evt):
         self.SetFocus()
-        self.downPos = evt.GetPositionTuple()
+        self.downPos = evt.GetPosition()
         for t in self.getActiveTrajectories():
             # Select or duplicate trajectory
             if t.getInsideRect(self.downPos):
@@ -546,7 +543,7 @@ class DrawingSurface(wx.Panel):
                     self.ReleaseMouse()
                     return
                 if self.traj.getType() == 'free':
-                    self.traj.addFinalPoint(self.clipPos(evt.GetPositionTuple()), self.closed)
+                    self.traj.addFinalPoint(self.clipPos(evt.GetPosition()), self.closed)
                     if self.parent.fillPoints:
                         self.traj.fillPoints(self.closed)
                     self.traj.setInitPoints()
@@ -586,16 +583,16 @@ class DrawingSurface(wx.Panel):
         evt.Skip()
 
     def MouseMotion(self, evt):
-        self.pointerPos = evt.GetPositionTuple()
+        self.pointerPos = evt.GetPosition()
         if self.HasCapture() and evt.Dragging() and evt.LeftIsDown():
             if self.action == 'draw' and self.traj:
                 if self.traj.getType() == 'free':
-                    self.traj.addPoint(self.clipPos(evt.GetPositionTuple()))
+                    self.traj.addPoint(self.clipPos(evt.GetPosition()))
                 elif self.traj.getType() == 'line':
                     self.traj.points = []
                     self.traj.lpx.reinit()
                     self.traj.lpy.reinit()
-                    x,y = self.clipPos(evt.GetPositionTuple())
+                    x,y = self.clipPos(evt.GetPosition())
 
                     x2 = abs(x-self.downPos[0])
                     y2 = abs(y-self.downPos[1])
@@ -638,12 +635,12 @@ class DrawingSurface(wx.Panel):
 
             elif self.action == 'drag':
                 if self.selected.getType() in ['free', 'line']:
-                    x,y = evt.GetPositionTuple()
+                    x,y = evt.GetPosition()
                     offset = (self.downPos[0] - x, self.downPos[1] - y)
                     clipedOffset = self.clip(offset, self.extremeXs, self.extremeYs)
                     self.selected.move(clipedOffset)
                 else:
-                    x,y = self.clipPos(evt.GetPositionTuple())
+                    x,y = self.clipPos(evt.GetPosition())
                     offset = (self.downPos[0] - x, self.downPos[1] - y)
                     center, clipedOffset = self.clipCircleMove(self.selected.getRadius(), self.curCenter, offset)
                     self.selected.setCenter(center)
@@ -683,18 +680,18 @@ class DrawingSurface(wx.Panel):
                         y = math.sin(math.pi * self.oscilPeriod * i * scaleR) * r
                         self.selected.addCirclePoint((int(round(x + self.selected.getCenter()[0])), int(round(y + self.selected.getCenter()[1]))))
             elif self.action == 'edit':
-                x,y = evt.GetPositionTuple()
+                x,y = evt.GetPosition()
                 offset = (self.downPos[0] - x, self.downPos[1] - y)
                 self.selected.editTraj(self.pindex, offset)
             elif self.action == 'drag_ball':
-                pos = evt.GetPositionTuple()
+                pos = evt.GetPosition()
                 if evt.ShiftDown():
                     off = (self.downPos[1] - pos[1])
                     self.fxball.setGradient(off)
                 else:
                     self.fxball.move(pos)
             elif self.action == 'rescale_ball':
-                pos = evt.GetPositionTuple()
+                pos = evt.GetPosition()
                 x = self.fxball.center[0] - pos[0]
                 y = self.fxball.center[1] - pos[1]
                 hyp = math.sqrt(x*x+y*y)
@@ -707,11 +704,10 @@ class DrawingSurface(wx.Panel):
 
     def draw(self, dc):
         gc = wx.GraphicsContext_Create(dc)
-        dc.BeginDrawing()
         dc.SetTextForeground("#000000")
         dc.SetFont(self.font)
         if not self.sndBitmap:
-            w,h = self.GetSizeTuple()
+            w,h = self.GetSize()
             dc.SetBrush(wx.Brush(self.backgroundcolor, wx.SOLID))
             dc.Clear()
             dc.SetPen(wx.Pen(self.outlinecolor, width=1, style=wx.SOLID))
@@ -743,7 +739,6 @@ class DrawingSurface(wx.Panel):
                     gc.SetBrush(self.losaBrush)
                     gc.SetPen(self.losaPen)
                     gc.DrawRoundedRectangle(t.getLosangePoint()[0]-5, t.getLosangePoint()[1]-5, 10, 10, 2)
-        dc.EndDrawing()
 
     def drawBackBitmap(self):
         w,h = self.currentSize
@@ -757,7 +752,6 @@ class DrawingSurface(wx.Panel):
     def OnPaint(self, evt):
         dc = self.dcref(self)
         gc = wx.GraphicsContext_Create(dc)
-        dc.BeginDrawing()
 
         if self.onMotion or self.needBitmap:
             self.drawBackBitmap()
@@ -783,13 +777,12 @@ class DrawingSurface(wx.Panel):
                 dc.DrawBitmap(bitmario, t.circlePos[0]-8, t.circlePos[1]-8, True)
 
         if self.pointerPos != None:
-            w,h = self.GetSizeTuple()
+            w,h = self.GetSize()
             dc.SetTextForeground("#FFFFFF")
             dc.SetFont(self.font_pos)
             xvalue = self.pointerPos[0] / float(w) * self.parent.controls.sndDur
             yvalue = (h - self.pointerPos[1]) / float(h)
-            dc.DrawText("X: %.3f   Y: %.3f" % (xvalue, yvalue), w-100, h-13)
-        dc.EndDrawing()
+            dc.DrawText("X: %.3f  Y: %.3f" % (xvalue, yvalue), w-110, h-13)
 
     def clip(self, off, exXs, exYs):
         Xs = [p[0] for p in self.selected.getPoints()]
@@ -797,7 +790,7 @@ class DrawingSurface(wx.Panel):
         Ys = [p[1] for p in self.selected.getPoints()]
         minY, maxY = min(Ys), max(Ys)
         x,y = off
-        sizex, sizey = self.GetSizeTuple()
+        sizex, sizey = self.GetSize()
         offset = self.screenOffset
         if exXs[0] - off[0] >= offset and exXs[1] - off[0] <= sizex - offset:
             x = x
@@ -815,7 +808,7 @@ class DrawingSurface(wx.Panel):
 
     def clipPos(self, pos):
         x,y = pos
-        sizex, sizey = self.GetSizeTuple()
+        sizex, sizey = self.GetSize()
         offset = self.screenOffset
         if x < offset: x = offset
         elif x > (sizex-offset): x = sizex - offset
@@ -826,7 +819,7 @@ class DrawingSurface(wx.Panel):
         return (x,y)
 
     def clipCirclePos(self, rad, center, lastRad):
-        sizex, sizey = self.GetSizeTuple()
+        sizex, sizey = self.GetSize()
         offset = self.screenOffset
         flag = True
         radius1 = radius2 = radius3 = radius4 = 1000000
@@ -848,7 +841,7 @@ class DrawingSurface(wx.Panel):
             return min(radius1, radius2, radius3, radius4)
 
     def clipCircleMove(self, rad, center, offset):
-        sizex, sizey = self.GetSizeTuple()
+        sizex, sizey = self.GetSize()
         off = self.screenOffset
         if center[0] - offset[0] - rad >= 0 + off and center[0] - offset[0] + rad <= sizex - off:
             cx = center[0] - offset[0]
@@ -872,12 +865,12 @@ class DrawingSurface(wx.Panel):
 
     def analyse(self, file):
         self.file = file
-        self.list = self.parent.sg_audio.getViewTable(self.GetSizeTuple())
+        self.list = self.parent.sg_audio.getViewTable(self.GetSize())
         self.bitmapDict[self.file] = self.list
         self.create_bitmap()
 
     def create_bitmap(self):
-        size = self.GetSizeTuple()
+        size = tuple(self.GetSize())
         self.sndBitmap = wx.EmptyBitmap(size[0], size[1])
         memory = wx.MemoryDC()
         memory.SelectObject(self.sndBitmap)

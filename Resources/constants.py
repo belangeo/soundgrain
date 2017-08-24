@@ -18,10 +18,11 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os, sys, unicodedata
-from types import UnicodeType
 
-reload(sys)
-sys.setdefaultencoding("utf-8")
+if sys.version_info[0] < 3:
+    unicode_t = unicode
+else:
+    unicode_t = str
 
 DEFAULT_ENCODING = sys.getdefaultencoding()
 SYSTEM_ENCODING = sys.getfilesystemencoding()
@@ -107,7 +108,7 @@ FX_BALL_SLIDER_2_INIT = {   0: ["Cutoff", 100, 15000, 5000, True],
 def ensureNFD(unistr):
     if unistr == None:
         return None
-    if PLATFORM in ['linux2', 'win32']:
+    if PLATFORM.startswith('linux') or PLATFORM == 'win32':
         encodings = [DEFAULT_ENCODING, SYSTEM_ENCODING,
                      'cp1252', 'iso-8859-1', 'utf-16']
         format = 'NFC'
@@ -116,7 +117,7 @@ def ensureNFD(unistr):
                      'macroman', 'iso-8859-1', 'utf-16']
         format = 'NFC'
     decstr = unistr
-    if type(decstr) != UnicodeType:
+    if type(decstr) != unicode_t:
         for encoding in encodings:
             try:
                 decstr = decstr.decode(encoding)
@@ -125,7 +126,7 @@ def ensureNFD(unistr):
                 continue
             except:
                 decstr = "UnableToDecodeString"
-                print "Unicode encoding not in a recognized format..."
+                print("Unicode encoding not in a recognized format...")
                 break
     if decstr == "UnableToDecodeString":
         return unistr

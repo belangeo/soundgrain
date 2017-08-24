@@ -1,5 +1,5 @@
 # encoding: utf-8
-import os, xmlrpclib, wx, time
+import os, wx, time
 from Resources.constants import *
 from Resources.audio import *
 from Resources.Modules import *
@@ -9,6 +9,11 @@ from Resources.MidiSettings import MidiSettings
 from Resources.CommandFrame import CommandFrame
 from Resources.DrawingSurface import DrawingSurface
 from Resources.ControlPanel import ControlPanel
+
+if sys.version_info[0] < 3:
+    import xmlrpclib
+else:
+    import xmlrpc.client as xmlrpclib
 
 class EnvelopeFrame(wx.Frame):
     def __init__(self, parent, size=(600, 300)):
@@ -114,7 +119,7 @@ class MainFrame(wx.Frame):
             menuId = 1000 + i
             self.submenu1.Append(menuId, str(level), "", wx.ITEM_RADIO)
             self.Bind(wx.EVT_MENU, self.handlesEditionLevels, id=menuId)
-        self.menu1.AppendMenu(999, "Edition levels", self.submenu1)
+        self.menu1.AppendSubMenu(self.submenu1, "Edition levels")
         self.menu1.InsertSeparator(7)
         self.menu1.Append(103, "Reinit counters\tCtrl+T", "")
         self.Bind(wx.EVT_MENU, self.handleReinit, id=103)
@@ -378,7 +383,7 @@ class MainFrame(wx.Frame):
                             defaultDir=os.path.expanduser("~"),
                             defaultFile="",
                             wildcard="SoundGrain file (*.sg)|*.sg",
-                            style=wx.OPEN)
+                            style=wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
             self.loadFile(ensureNFD(path))
@@ -400,7 +405,7 @@ class MainFrame(wx.Frame):
         dlg = wx.FileDialog(self, message="Save file as ...",
                             defaultDir=os.path.expanduser("~"),
                             defaultFile="Granulator.sg",
-                            style=wx.SAVE)
+                            style=wx.FD_SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
             if os.path.isfile(path):
@@ -429,9 +434,9 @@ class MainFrame(wx.Frame):
         saveDict['MainFrame']['lowpass'] = self.lowpass
         saveDict['MainFrame']['fillPoints'] = self.fillPoints
         saveDict['MainFrame']['editionLevel'] = self.editionLevel
-        saveDict['MainFrame']['size'] = self.GetSizeTuple()
+        saveDict['MainFrame']['size'] = tuple(self.GetSize())
         ### Surface Panel ###
-        saveDict["SurfaceSize"] = self.panel.GetSizeTuple()
+        saveDict["SurfaceSize"] = tuple(self.panel.GetSize())
         ### Controls Frame ###
         saveDict['ControlFrame'] = self.granulatorControls.save()
         ### Midi Frame ###
@@ -543,12 +548,12 @@ class MainFrame(wx.Frame):
         ### Trajectories ###
         for i, t in enumerate(self.panel.getAllTrajectories()):
             t.setAttributes(dict['Trajectories'][str(i)], xfac, yfac)
-        if dict.has_key('MemorizedTrajectory'):
+        if 'MemorizedTrajectory' in dict:
             self.panel.memorizedTrajectory.setAttributes(dict['MemorizedTrajectory'], xfac, yfac)
         ### Grain Envelope ###
-        if dict.has_key("Envelope"):
+        if "Envelope" in dict:
             self.envelopeFrame.load(dict["Envelope"])
-        if dict.has_key('fxballs'):
+        if 'fxballs' in dict:
             self.panel.restoreFxBalls(dict["fxballs"], xfac, yfac)
         self.controls.resetPlaybackSliders()
 
@@ -653,7 +658,7 @@ class MainFrame(wx.Frame):
                                      defaultDir=os.path.expanduser("~"),
                                      defaultFile="mixedtable.%s" % ext, 
                                      wildcard=wildcard, 
-                                     style=wx.SAVE | wx.CHANGE_DIR)
+                                     style=wx.FD_SAVE | wx.FD_CHANGE_DIR)
                 if dlg2.ShowModal() == wx.ID_OK:
                     path = dlg2.GetPath()
                     if path != "":

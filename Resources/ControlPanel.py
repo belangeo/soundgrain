@@ -37,8 +37,8 @@ class ControlPanel(scrolled.ScrolledPanel):
         # TODO: Check the size of this button on Windows and OSX
         self.closedToggle = wx.ToggleButton(self, -1, 'Closed', size=self.trajType.GetSize())
         font = self.closedToggle.GetFont()
-        if PLATFORM in ['win32', 'linux2']:
-            font = wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.NORMAL, wx.NORMAL)
+        if PLATFORM.startswith('linux') or PLATFORM == 'win32':
+            font = wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
         self.closedToggle.SetFont(font)
         typeBox.Add(self.closedToggle, wx.CENTER|wx.RIGHT, 5 )
         box.Add(typeBox, 0, wx.CENTER|wx.ALL, 5)
@@ -147,9 +147,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.Bind(wx.EVT_TOGGLEBUTTON, self.chooseRecFolder, self.but_folder)
 
         self.SetAutoLayout(True)
-
-        self.SetSizer(box)
-        self.SetBestSize()
+        self.SetSizerAndFit(box)
         self.SetupScrolling(scroll_x = False)
 
     def checkEnableWidgets(self):
@@ -335,7 +333,7 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def handleLoad(self):
         dlg = wx.FileDialog(self, message="Choose a sound file",
-                            wildcard=AUDIO_WILDCARD, style=wx.OPEN)
+                            wildcard=AUDIO_WILDCARD, style=wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             sndPath = dlg.GetPath()
             self.loadSound(ensureNFD(sndPath))
@@ -344,7 +342,7 @@ class ControlPanel(scrolled.ScrolledPanel):
     def handleInsert(self):
         ok = False
         dlg = wx.FileDialog(self, message="Choose a sound file to insert",
-                            wildcard=AUDIO_WILDCARD, style=wx.OPEN)
+                            wildcard=AUDIO_WILDCARD, style=wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             ok = True
             sndPath = dlg.GetPath()

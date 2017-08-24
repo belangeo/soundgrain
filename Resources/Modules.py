@@ -19,7 +19,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx
 from pyolib._wxwidgets import ControlSlider
-from constants import BACKGROUND_COLOUR
+from .constants import BACKGROUND_COLOUR
 
 class Module(wx.Frame):
     def __init__(self, parent, sg_audio):
