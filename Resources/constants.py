@@ -28,8 +28,8 @@ DEFAULT_ENCODING = sys.getdefaultencoding()
 SYSTEM_ENCODING = sys.getfilesystemencoding()
 
 NAME = 'Soundgrain'
-SG_VERSION = '5.0.1'
-SG_YEAR = '2015'
+SG_VERSION = '5.1.0'
+SG_YEAR = '2017'
 PLATFORM = sys.platform
 MAX_STREAMS = 16
 

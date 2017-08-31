@@ -320,7 +320,7 @@ class Trajectory:
         self.initPoints = [(p[0], p[1]) for p in self.points]
 
     def editTraj(self, index, offset):
-        p_off = len(self.initPoints) / self.editLevel
+        p_off = int(len(self.initPoints) / self.editLevel)
         # clicked point
         self.points[index] = [self.initPoints[index][0] - offset[0], self.initPoints[index][1] - offset[1]]
         for i in range(1, p_off):

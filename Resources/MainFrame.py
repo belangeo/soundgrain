@@ -15,6 +15,11 @@ if sys.version_info[0] < 3:
 else:
     import xmlrpc.client as xmlrpclib
 
+if "phoenix" in wx.version():
+    from wx.adv import AboutDialogInfo, AboutBox
+else:
+    from wx import AboutDialogInfo, AboutBox
+
 class EnvelopeFrame(wx.Frame):
     def __init__(self, parent, size=(600, 300)):
         wx.Frame.__init__(self, parent, -1, "Envelope Shape", size=size)
@@ -720,15 +725,15 @@ class MainFrame(wx.Frame):
                            size=(900, 650))
 
     def showAbout(self, evt):
-        info = wx.AboutDialogInfo()
+        info = AboutDialogInfo()
 
         description = "Soundgrain is a graphical interface where " \
         "users can draw and edit trajectories to control granular sound synthesis.\n\n" \
         "Soundgrain is written with Python and " \
         "WxPython and uses pyo as its audio engine.\n\n" \
 
-        info.Name = NAME
-        info.Version = '%s' % SG_VERSION
-        info.Description = description
-        info.Copyright = u'(C) %s Olivier Bélanger' % SG_YEAR
-        wx.AboutBox(info)
+        info.SetName(NAME)
+        info.SetVersion('%s' % SG_VERSION)
+        info.SetDescription(description)
+        info.SetCopyright(u'(C) %s Olivier Bélanger' % SG_YEAR)
+        AboutBox(info)
