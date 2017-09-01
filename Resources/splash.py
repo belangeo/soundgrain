@@ -67,14 +67,12 @@ class SoundGrainSplashScreen(wx.Frame):
         dc.SetTextForeground("#FFFFFF")
         font = dc.GetFont()
         psize = font.GetPointSize()
-        if PLATFORM == "darwin":
-            font.SetFaceName("Monospace")
-            font.SetPointSize(psize)
-            font.SetWeight(wx.FONTWEIGHT_BOLD)
-        else:
-            font.SetFaceName("Monospace")
+        if PLATFORM == "win32":
             font.SetPointSize(psize+1)
-            font.SetWeight(wx.FONTWEIGHT_BOLD)
+        else:
+            font.SetPointSize(psize)
+        font.SetFaceName("Monospace")
+        font.SetWeight(wx.FONTWEIGHT_BOLD)
         dc.SetFont(font)
         dc.DrawLabel("%s v. %s" % (NAME, SG_VERSION), 
                      wx.Rect(0, 305, 400, 15), wx.ALIGN_CENTER)

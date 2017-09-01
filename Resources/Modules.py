@@ -19,7 +19,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx
 from pyolib._wxwidgets import ControlSlider
-from .constants import BACKGROUND_COLOUR
+from .constants import BACKGROUND_COLOUR, PLATFORM
 
 class Module(wx.Frame):
     def __init__(self, parent, sg_audio):
@@ -61,12 +61,19 @@ class Module(wx.Frame):
     ### First window ###
     ################################################################################
     def makeSliderBox(self, box, label, minval, maxval, val, integer, log, callback):
-        box.Add(wx.StaticText(self.panel1, -1, label), 0, wx.LEFT, 10)
+        staticLabel = wx.StaticText(self.panel1, -1, label)
+        font, psize = staticLabel.GetFont(), staticLabel.GetFont().GetPointSize()
+        if PLATFORM == "win32":
+            font.SetPointSize(psize-1)
+        else:
+            font.SetPointSize(psize-2)
+        staticLabel.SetFont(font)
+        box.Add(staticLabel, 0, wx.LEFT, 10)
         sliderBox = wx.BoxSizer(wx.HORIZONTAL)
         slider = ControlSlider(self.panel1, minval, maxval, val, size=(250, 16), 
                                log=log, integer=integer, outFunction=callback)
         sliderBox.Add(slider, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(sliderBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        box.Add(sliderBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         return slider
 
     def handleDensity(self, x, fromSlider=True):
@@ -124,14 +131,19 @@ class Module(wx.Frame):
             self.sl_rndpan.SetValue(x)
 
     def makeTransBox(self, box):
-        box.Add(wx.StaticText(self.panel1, -1, "Random Transposition per Grain"), 
-                              0, wx.CENTER|wx.TOP, 5)
-        box.Add(wx.StaticText(self.panel1, -1, "List of Transposition Ratios"), 
-                              0, wx.CENTER|wx.TOP, 1)
+        staticLabel1 = wx.StaticText(self.panel1, -1, "Random Pitch per Grain (list of ratios)")
+        font, psize = staticLabel1.GetFont(), staticLabel1.GetFont().GetPointSize()
+        if PLATFORM == "win32":
+            font.SetPointSize(psize-1)
+        else:
+            font.SetPointSize(psize-2)
+        staticLabel1.SetFont(font)
+        box.Add(staticLabel1, 0, wx.CENTER|wx.TOP, 5)
         transBox = wx.BoxSizer(wx.HORIZONTAL)
         tw, th = self.GetTextExtent("1,2,3,4,5,6,7,8,9,0")
-        self.tx_trans = wx.TextCtrl(self.panel1, -1, "1, ", size=(250, th*2), 
+        self.tx_trans = wx.TextCtrl(self.panel1, -1, "1, ", size=(250, -1), 
                                     style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB)
+        self.tx_trans.SetFont(font)
         self.tx_trans.Bind(wx.EVT_TEXT_ENTER, self.handleTrans)
         self.tx_trans.Bind(wx.EVT_CHAR, self.onCharTrans)
         transBox.Add(self.tx_trans, 0, wx.LEFT | wx.RIGHT, 5)
@@ -157,31 +169,42 @@ class Module(wx.Frame):
     ########################################################################################################
     def makeYaxisBox(self, box, label, checked, minval, maxval, name):
         label = wx.StaticText(self.panel2, -1, label)
-        font = label.GetFont()
+        font, psize = label.GetFont(), label.GetFont().GetPointSize()
+        if PLATFORM == "win32":
+            font.SetPointSize(psize-1)
+        else:
+            font.SetPointSize(psize-2)
         font.SetWeight(wx.FONTWEIGHT_BOLD)
         label.SetFont(font)
-        box.Add(label, 0, wx.CENTER|wx.TOP|wx.BOTTOM, 3)
+        box.Add(label, 0, wx.CENTER|wx.TOP|wx.BOTTOM, 2)
         textBox = wx.BoxSizer(wx.HORIZONTAL)
         tx_check = wx.CheckBox(self.panel2, -1, "", name="y_%s_check" % name)
         tx_check.SetValue(checked)
         tx_check.Bind(wx.EVT_CHECKBOX, self.handleCheck)
         textBox.Add(tx_check, 0, wx.LEFT | wx.RIGHT, 10)
-        textBox.Add(wx.StaticText(self.panel2, -1, "Min: "), 0, wx.TOP, 4)
+        minLabel = wx.StaticText(self.panel2, -1, "Min: ")
+        font.SetWeight(wx.FONTWEIGHT_NORMAL)
+        minLabel.SetFont(font)
+        textBox.Add(minLabel, 0, wx.TOP, 4)
         tx_min = wx.TextCtrl(self.panel2, -1, minval, size=(50, -1), 
                              style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, 
                              name="y_%s_map" % name)
+        tx_min.SetFont(font)
         tx_min.Bind(wx.EVT_TEXT_ENTER, self.handleMapMin)
         tx_min.Bind(wx.EVT_CHAR, self.onCharMapMin)
         textBox.Add(tx_min, 0, wx.RIGHT, 20)
-        textBox.Add(wx.StaticText(self.panel2, -1, "Max: "), 0, wx.TOP, 4)
+        maxLabel = wx.StaticText(self.panel2, -1, "Max: ")
+        maxLabel.SetFont(font)
+        textBox.Add(maxLabel, 0, wx.TOP, 4)
         tx_max = wx.TextCtrl(self.panel2, -1, maxval, size=(50, -1), 
                              style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, 
                              name="y_%s_map" % name)
+        tx_max.SetFont(font)
         tx_max.Bind(wx.EVT_TEXT_ENTER, self.handleMapMax)
         tx_max.Bind(wx.EVT_CHAR, self.onCharMapMax)
         textBox.Add(tx_max, 0, wx.RIGHT, 20)
         box.Add(textBox, 0, wx.LEFT | wx.RIGHT, 10)
-        box.AddSpacer(3)
+        box.AddSpacer(2)
         return tx_check, tx_min, tx_max
 
     def handleCheck(self, evt):
