@@ -183,7 +183,7 @@ class MainFrame(wx.Frame):
 
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
-        self.SetTitle('Granulator')
+        self.SetTitle('%s %s - ' % (NAME, SG_VERSION))
         self.envelopeFrame = EnvelopeFrame(self)
         self.sg_audio = SG_Audio(self.panel.clock, self.panel.Refresh, 
                                  self.controls, self.panel.addTrajFromMemory,
@@ -489,7 +489,7 @@ class MainFrame(wx.Frame):
         f = open(path, 'w')
         f.write(msg)
         f.close()
-        self.SetTitle(os.path.split(self.currentFile)[1])
+        self.SetTitle('%s %s - %s' % (NAME, SG_VERSION, os.path.split(self.currentFile)[1]))
         self.is_unsaved = False
 
     def setState(self, dict):
@@ -574,12 +574,12 @@ class MainFrame(wx.Frame):
         if 'new_soundgrain_file.sg' in path:
             self.currentFile = None
             self.currentPath = None
-            title = "Granulator"
+            title = '%s %s - ' % (NAME, SG_VERSION)
             self.status.SetStatusText("")
         else:
             self.currentFile = path
             self.currentPath = os.path.split(path)[0]
-            title = os.path.split(self.currentFile)[1]
+            title = '%s %s - %s' % (NAME, SG_VERSION, os.path.split(self.currentFile)[1])
         self.panel.trajectories = [Trajectory(self.panel, i+1) for i in range(MAX_STREAMS)]
         self.panel.memorizedTrajectory = Trajectory(self.panel, -1)
         self.panel.memorizedId = {}

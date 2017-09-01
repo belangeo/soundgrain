@@ -100,6 +100,24 @@ class Module(wx.Frame):
         if not fromSlider:
             self.sl_dev.SetValue(x)
 
+    def handleFilterFreq(self, x, fromSlider=True):
+        self.filtfreq = x
+        self.sg_audio.setFilterFreq(x)
+        if not fromSlider:
+            self.sl_filtf.SetValue(x)
+
+    def handleFilterQ(self, x, fromSlider=True):
+        self.filtq = x
+        self.sg_audio.setFilterQ(x)
+        if not fromSlider:
+            self.sl_filtq.SetValue(x)
+
+    def handleFilterType(self, x, fromSlider=True):
+        self.filtt = x
+        self.sg_audio.setFilterType(x)
+        if not fromSlider:
+            self.sl_filtt.SetValue(x)
+
     def handleRandDens(self, x, fromSlider=True):
         self.rnddens = x
         self.sg_audio.setRandDens(x)
@@ -130,8 +148,20 @@ class Module(wx.Frame):
         if not fromSlider:
             self.sl_rndpan.SetValue(x)
 
+    def handleRandFilterFreq(self, x, fromSlider=True):
+        self.rndffr = x
+        self.sg_audio.setRandFilterFreq(x)
+        if not fromSlider:
+            self.sl_rndffr.SetValue(x)
+
+    def handleRandFilterQ(self, x, fromSlider=True):
+        self.rndfqr = x
+        self.sg_audio.setRandFilterQ(x)
+        if not fromSlider:
+            self.sl_rndfqr.SetValue(x)
+
     def makeTransBox(self, box):
-        staticLabel1 = wx.StaticText(self.panel1, -1, "Random Pitch per Grain (list of ratios)")
+        staticLabel1 = wx.StaticText(self.panel1, -1, "Random Transpo per Grain (list of ratios)")
         font, psize = staticLabel1.GetFont(), staticLabel1.GetFont().GetPointSize()
         if PLATFORM == "win32":
             font.SetPointSize(psize-1)
@@ -140,7 +170,6 @@ class Module(wx.Frame):
         staticLabel1.SetFont(font)
         box.Add(staticLabel1, 0, wx.CENTER|wx.TOP, 5)
         transBox = wx.BoxSizer(wx.HORIZONTAL)
-        tw, th = self.GetTextExtent("1,2,3,4,5,6,7,8,9,0")
         self.tx_trans = wx.TextCtrl(self.panel1, -1, "1, ", size=(250, -1), 
                                     style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB)
         self.tx_trans.SetFont(font)
@@ -164,6 +193,39 @@ class Module(wx.Frame):
             self.handleTrans(evt)
         evt.Skip()
 
+    def makeFilterTransBox(self, box):
+        staticLabel1 = wx.StaticText(self.panel1, -1, "Random Filter Freq per Grain (list of ratios)")
+        font, psize = staticLabel1.GetFont(), staticLabel1.GetFont().GetPointSize()
+        if PLATFORM == "win32":
+            font.SetPointSize(psize-1)
+        else:
+            font.SetPointSize(psize-2)
+        staticLabel1.SetFont(font)
+        box.Add(staticLabel1, 0, wx.CENTER|wx.TOP, 5)
+        transBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.tx_ftrans = wx.TextCtrl(self.panel1, -1, "1, ", size=(250, -1), 
+                                     style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB)
+        self.tx_ftrans.SetFont(font)
+        self.tx_ftrans.Bind(wx.EVT_TEXT_ENTER, self.handleFilterTrans)
+        self.tx_ftrans.Bind(wx.EVT_CHAR, self.onCharFilterTrans)
+        transBox.Add(self.tx_ftrans, 0, wx.LEFT | wx.RIGHT, 5)
+        box.Add(transBox, 0, wx.ALL, 5)
+
+    def getFilterTrans(self):
+        return [float(value) for value in self.tx_ftrans.GetValue().split(',') if value not in [" ", ""]]
+
+    def setFilterTrans(self, trans):
+        self.tx_ftrans.SetValue(", ".join(str(t) for t in trans))
+        self.handleFilterTrans(None)
+
+    def handleFilterTrans(self, evt):
+        self.sg_audio.setDiscreteFilterTrans(self.getFilterTrans())
+
+    def onCharFilterTrans(self, evt):
+        if evt.GetKeyCode() == wx.WXK_TAB:
+            self.handleFilterTrans(evt)
+        evt.Skip()
+
     ########################################################################################################
     ### Second window ###
     ########################################################################################################
@@ -176,7 +238,7 @@ class Module(wx.Frame):
             font.SetPointSize(psize-2)
         font.SetWeight(wx.FONTWEIGHT_BOLD)
         label.SetFont(font)
-        box.Add(label, 0, wx.CENTER|wx.TOP|wx.BOTTOM, 2)
+        box.Add(label, 0, wx.CENTER|wx.TOP|wx.BOTTOM, 3)
         textBox = wx.BoxSizer(wx.HORIZONTAL)
         tx_check = wx.CheckBox(self.panel2, -1, "", name="y_%s_check" % name)
         tx_check.SetValue(checked)
@@ -204,7 +266,7 @@ class Module(wx.Frame):
         tx_max.Bind(wx.EVT_CHAR, self.onCharMapMax)
         textBox.Add(tx_max, 0, wx.RIGHT, 20)
         box.Add(textBox, 0, wx.LEFT | wx.RIGHT, 10)
-        box.AddSpacer(2)
+        box.AddSpacer(4)
         return tx_check, tx_min, tx_max
 
     def handleCheck(self, evt):
@@ -239,25 +301,36 @@ class GranulatorFrame(Module):
         self.pitch = 1.
         self.graindur = 200
         self.graindev = 0
+        self.filtfreq = 15000.0
+        self.filtq = 0.7
+        self.filtt = 0.0
         self.rnddens = 0
         self.rnddur = 0
         self.rndpos = 0
         self.rndpit = 0
         self.rndpan = 0
+        self.rndffr = 0
+        self.rndfqr = 0
 
         box = wx.BoxSizer(wx.VERTICAL)
 
         self.box1.AddSpacer(10)
         self.sl_dens = self.makeSliderBox(self.box1, "Density of Grains per Second", 1, 500, self.density, True, False, self.handleDensity)
         self.sl_pit = self.makeSliderBox(self.box1, "Global Transposition", 0.25, 2., self.pitch, False, False, self.handlePitch)
-        self.sl_dur = self.makeSliderBox(self.box1, "Grains Duration (ms)", 5, 500, self.graindur, True, False, self.handleGrainDur)
+        self.sl_dur = self.makeSliderBox(self.box1, "Grains Duration (ms)", 5, 1000, self.graindur, True, False, self.handleGrainDur)
         self.sl_dev = self.makeSliderBox(self.box1, "Grains Start Time Deviation", 0, 1, self.graindev, False, False, self.handleGrainDev)
+        self.sl_filtf = self.makeSliderBox(self.box1, "Grains Filter Frequency", 20.0, 18000.0, self.filtfreq, False, True, self.handleFilterFreq)
+        self.sl_filtq = self.makeSliderBox(self.box1, "Grains Filter Q", 0.5, 20.0, self.filtq, False, True, self.handleFilterQ)
+        self.sl_filtt = self.makeSliderBox(self.box1, "Grains Filter Type (lp - hp - bp - bs - ap)", 0, 4, self.filtt, True, False, self.handleFilterType)
         self.sl_rnddens = self.makeSliderBox(self.box1, "Grains Density Random", 0, 1, self.rnddens, False, False, self.handleRandDens)
         self.sl_rndpit = self.makeSliderBox(self.box1, "Grains Pitch Random", 0, 0.5, self.rndpit, False, False, self.handleRandPit)
         self.sl_rnddur = self.makeSliderBox(self.box1, "Grains Duration Random", 0, 1, self.rnddur, False, False, self.handleRandDur)
         self.sl_rndpos = self.makeSliderBox(self.box1, "Grains Position Random", 0, 1, self.rndpos, False, False, self.handleRandPos)
         self.sl_rndpan = self.makeSliderBox(self.box1, "Grains Panning Random", 0, 1, self.rndpan, False, False, self.handleRandPan)
+        self.sl_rndffr = self.makeSliderBox(self.box1, "Grains Filter Freq Random", 0, 1, self.rndffr, False, False, self.handleRandFilterFreq)
+        self.sl_rndfqr = self.makeSliderBox(self.box1, "Grains Filter Q Random", 0, 1, self.rndfqr, False, False, self.handleRandFilterQ)
         self.makeTransBox(self.box1)
+        self.makeFilterTransBox(self.box1)
         self.panel1.SetSizer(self.box1)
         self.notebook.AddPage(self.panel1, "Granulator")
 
@@ -266,9 +339,13 @@ class GranulatorFrame(Module):
         self.tx_ylen_ch, self.tx_len_ymin, self.tx_len_ymax = self.makeYaxisBox(self.box2, "Grains Duration Multiplier", 0, "0.", "1.", "len")
         self.tx_ydev_ch, self.tx_dev_ymin, self.tx_dev_ymax = self.makeYaxisBox(self.box2, "Grains Start Time Deviation", 0, "0.", "1.", "dev")
         self.tx_yamp_ch, self.tx_amp_ymin, self.tx_amp_ymax = self.makeYaxisBox(self.box2, "Amplitude Multiplier", 0, "0.", "1.", "amp")
+        self.tx_yfif_ch, self.tx_fif_ymin, self.tx_fif_ymax = self.makeYaxisBox(self.box2, "Grains Filter Freq Multiplier", 0, "0.", "1.", "fif")
+        self.tx_yfiq_ch, self.tx_fiq_ymin, self.tx_fiq_ymax = self.makeYaxisBox(self.box2, "Grains Filter Q Multiplier", 0, "0.", "1.", "fiq")
         self.tx_ytrs_ch, self.tx_trs_ymin, self.tx_trs_ymax = self.makeYaxisBox(self.box2, "Grains Transposition Random", 0, "0.", "1.", "trs")
         self.tx_ydur_ch, self.tx_dur_ymin, self.tx_dur_ymax = self.makeYaxisBox(self.box2, "Grains Duration Random", 0, "0.", "0.5", "dur")
         self.tx_ypos_ch, self.tx_pos_ymin, self.tx_pos_ymax = self.makeYaxisBox(self.box2, "Grains Position Random", 0, "0.", "0.5", "pos")
+        self.tx_yffr_ch, self.tx_ffr_ymin, self.tx_ffr_ymax = self.makeYaxisBox(self.box2, "Grains Filter Freq Random", 0, "0.", "1.0", "ffr")
+        self.tx_yfqr_ch, self.tx_fqr_ymin, self.tx_fqr_ymax = self.makeYaxisBox(self.box2, "Grains Filter Q Random", 0, "0.", "1.0", "fqr")
         self.tx_ypan_ch, self.tx_pan_ymin, self.tx_pan_ymax = self.makeYaxisBox(self.box2, "Grains Panning", 0, "0.", "1.", "pan")
         self.panel2.SetSizer(self.box2)
         self.notebook.AddPage(self.panel2, "Y Axis")
@@ -289,12 +366,18 @@ class GranulatorFrame(Module):
                 'graindur': self.graindur,
                 'graindev': self.graindev,
                 'pitch': self.pitch,
+                'filtfreq': self.filtfreq,
+                'filtq': self.filtq,
+                'filtt': self.filtt,
                 'rnddens': self.rnddens,
                 'rnddur': self.rnddur,
                 'rndpos': self.rndpos,
                 'rndpit': self.rndpit,
                 'rndpan': self.rndpan,
+                'rndffr': self.rndffr,
+                'rndfqr': self.rndfqr,
                 'trans': self.getTrans(),
+                'ftrans': self.getFilterTrans(),
                 'dnsCheck': self.tx_ydns_ch.GetValue(),
                 'dnsYmin': float(self.tx_dns_ymin.GetValue()),
                 'dnsYmax': float(self.tx_dns_ymax.GetValue()),
@@ -310,6 +393,12 @@ class GranulatorFrame(Module):
                 'ampCheck': self.tx_yamp_ch.GetValue(),
                 'ampYmin': float(self.tx_amp_ymin.GetValue()),
                 'ampYmax': float(self.tx_amp_ymax.GetValue()),
+                'fifCheck': self.tx_yfif_ch.GetValue(),
+                'fifYmin': float(self.tx_fif_ymin.GetValue()),
+                'fifYmax': float(self.tx_fif_ymax.GetValue()),
+                'fiqCheck': self.tx_yfiq_ch.GetValue(),
+                'fiqYmin': float(self.tx_fiq_ymin.GetValue()),
+                'fiqYmax': float(self.tx_fiq_ymax.GetValue()),
                 'trsCheck': self.tx_ytrs_ch.GetValue(),
                 'trsYmin': float(self.tx_trs_ymin.GetValue()),
                 'trsYmax': float(self.tx_trs_ymax.GetValue()),
@@ -319,6 +408,12 @@ class GranulatorFrame(Module):
                 'posCheck': self.tx_ypos_ch.GetValue(),
                 'posYmin': float(self.tx_pos_ymin.GetValue()),
                 'posYmax': float(self.tx_pos_ymax.GetValue()),
+                'ffrCheck': self.tx_yffr_ch.GetValue(),
+                'ffrYmin': float(self.tx_ffr_ymin.GetValue()),
+                'ffrYmax': float(self.tx_ffr_ymax.GetValue()),
+                'fqrCheck': self.tx_yfqr_ch.GetValue(),
+                'fqrYmin': float(self.tx_fqr_ymin.GetValue()),
+                'fqrYmax': float(self.tx_fqr_ymax.GetValue()),
                 'panCheck': self.tx_ypan_ch.GetValue(),
                 'panYmin': float(self.tx_pan_ymin.GetValue()),
                 'panYmax': float(self.tx_pan_ymax.GetValue())}
@@ -328,23 +423,32 @@ class GranulatorFrame(Module):
         self.handlePitch(dict['pitch'], fromSlider=False)
         self.handleGrainDur(dict['graindur'], fromSlider=False)
         self.handleGrainDev(dict['graindev'], fromSlider=False)
+        self.handleFilterFreq(dict.get('filtfreq', 15000.0), fromSlider=False)
+        self.handleFilterQ(dict.get('filtq', 0.7), fromSlider=False)
+        self.handleFilterType(dict.get('filtt', 0.0), fromSlider=False)
         self.handleRandDens(dict['rnddens'], fromSlider=False)
         self.handleRandDur(dict['rnddur'], fromSlider=False)
         self.handleRandPos(dict['rndpos'], fromSlider=False)
         self.handleRandPit(dict['rndpit'], fromSlider=False)
         self.handleRandPan(dict['rndpan'], fromSlider=False)
+        self.handleRandFilterFreq(dict.get('rndffr', 0.0), fromSlider=False)
+        self.handleRandFilterQ(dict.get('rndfqr', 0.0), fromSlider=False)
         self.setTrans(dict['trans'])
+        self.setFilterTrans(dict.get('ftrans', [1.0]))
                      
         checkboxes = {'dnsCheck': self.tx_ydns_ch, 'pitCheck': self.tx_ypit_ch, 
                       'lenCheck': self.tx_ylen_ch, 'devCheck': self.tx_ydev_ch,
                       'ampCheck': self.tx_yamp_ch, 'trsCheck': self.tx_ytrs_ch, 
                       'durCheck': self.tx_ydur_ch, 'posCheck': self.tx_ypos_ch, 
-                      'panCheck': self.tx_ypan_ch}
+                      'panCheck': self.tx_ypan_ch, 'fifCheck': self.tx_yfif_ch,
+                      'fiqCheck': self.tx_yfiq_ch, 'ffrCheck': self.tx_yffr_ch,
+                      'fqrCheck': self.tx_yfqr_ch}
         for key, cb in checkboxes.items():
-            cb.SetValue(dict[key])
+            value = dict.get(key, 0)
+            cb.SetValue(value)
             event = wx.PyCommandEvent(wx.EVT_CHECKBOX.typeId, cb.GetId())
             event.SetEventObject(cb)
-            event.SetInt(dict[key])
+            event.SetInt(value)
             wx.PostEvent(cb.GetEventHandler(), event)
 
         textboxes = {'dnsYmin': self.tx_dns_ymin, 'dnsYmax': self.tx_dns_ymax,
@@ -352,13 +456,21 @@ class GranulatorFrame(Module):
                      'lenYmin': self.tx_len_ymin, 'lenYmax': self.tx_len_ymax,
                      'devYmin': self.tx_dev_ymin, 'devYmax': self.tx_dev_ymax,
                      'ampYmin': self.tx_amp_ymin, 'ampYmax': self.tx_amp_ymax,
+                     'fifYmin': self.tx_fif_ymin, 'fifYmax': self.tx_fif_ymax,
+                     'fiqYmin': self.tx_fiq_ymin, 'fiqYmax': self.tx_fiq_ymax,
                      'trsYmin': self.tx_dur_ymin, 'trsYmax': self.tx_dur_ymax,
                      'durYmin': self.tx_dur_ymin, 'durYmax': self.tx_dur_ymax,
                      'posYmin': self.tx_pos_ymin, 'posYmax': self.tx_pos_ymax,
+                     'ffrYmin': self.tx_ffr_ymin, 'ffrYmax': self.tx_ffr_ymax,
+                     'fqrYmin': self.tx_fqr_ymin, 'fqrYmax': self.tx_fqr_ymax,
                      'panYmin': self.tx_pan_ymin, 'panYmax': self.tx_pan_ymax}
         for key, tb in textboxes.items():
-            tb.SetValue(str(dict[key]))
+            if "min" in key:
+                value = dict.get(key, 0.0)
+            else:
+                value = dict.get(key, 1.0)
+            tb.SetValue(str(value))
             event = wx.PyCommandEvent(wx.EVT_TEXT_ENTER.typeId, tb.GetId())
             event.SetEventObject(tb)
-            event.SetString(str(dict[key]))
+            event.SetString(str(value))
             wx.PostEvent(tb.GetEventHandler(), event)

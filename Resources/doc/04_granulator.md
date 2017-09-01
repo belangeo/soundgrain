@@ -33,7 +33,23 @@ With no start time deviation (0), grain streams are syncronous. That means each
 grain will start at a fixed intervall of _1 / density_, in second. The start
 time deviation allows to do asynchronous granulation by adding a random amount
 of time to the starting intervall of each grain, breaking the rhythm.
-  
+
+##### Grains Filter Frequency #####
+
+Cutoff or center freqency of the second-order IIR filter applied independently on
+each grain. The frequency of the filter is sampled at the beginning of the grain.
+
+##### Grains Filter Q #####
+
+Q (amount of resonance) of the second-order IIR filter applied independently on
+each grain. The Q of the filter is sampled at the beginning of the grain.
+
+##### Grains Filter Type (lp - hp - bp - bs - ap) #####
+
+Type of the second-order IIR filter applied independently on
+each grain. The type of the filter is sampled at the beginning of the grain.
+Types are: 0 = lowpass, 1 = highpass, 2 = bandpass, 3 = bandstop, 4 = allpass.
+
 ##### Grains Density Random #####
 
 Adds some random to the grain density.
@@ -54,11 +70,27 @@ Adds some random to the position of each grain in the file.
 
 Adds some random to the panning of each grain individually.
 
-##### Random Transposition per Grain #####
+##### Grains Filter Freq Random #####
+
+Adds some random to the filter's cutoff or center frequency of each grain
+individually.
+
+##### Grains Filter Q Random #####
+
+Adds some random to the filter's Q of each grain individually.
+
+##### Random Transpo per Grain (list of ratios) #####
 
 Transpose each grain individually by an amount randomly picked up from a
 user-defined list (comma separated). A value of 1 does no transposition, 
 0.5 is an octave below, 2 is an octave above and so on...
+
+##### Random Filter Freq per Grain (list of ratios) #####
+
+Transpose the filter's cutoff or center frequency of each grain individually
+by an amount randomly picked up from a user-defined list (comma separated).
+A value of 1 does no transposition, 0.5 is an octave below, 2 is an octave 
+above and so on...
 
 ______________________________________________________________________________
 
@@ -95,6 +127,16 @@ trajectory.
 Multiply the grain amplitudes of the granulator by the position of the reading
 head scaled inside _min_ and _max_.
 
+##### Grains Filter Freq Multiplier #####
+
+Multiply the grain filter's cutoff or center frequency of the granulator by the
+position of the reading head scaled inside _min_ and _max_.
+
+##### Grains Filter Q Multiplier #####
+
+Multiply the grain filter's Q of the granulator by the position of the reading
+head scaled inside _min_ and _max_.
+
 ##### Grains Transposition Random #####
 
 Add some random to the transposition of each grain for the given trajectory.
@@ -112,6 +154,17 @@ inside _min_ and _max_.
 Add some random to the position of each grain in the file for the given trajectory.
 The amount of random is controlled by the position of the reading head scaled
 inside _min_ and _max_. 
+
+##### Grains Filter Freq Random #####
+
+Add some random to the filter's cutoff or center frequency of each grain for the
+given trajectory. The amount of random is controlled by the position of the reading
+head scaled inside _min_ and _max_. 
+
+##### Grains Filter Q Random #####
+
+Add some random to the filter's Q of each grain for the given trajectory. The amount
+of random is controlled by the position of the reading head scaled inside _min_ and _max_. 
 
 ##### Grains Panning #####
 

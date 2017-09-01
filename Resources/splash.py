@@ -74,7 +74,7 @@ class SoundGrainSplashScreen(wx.Frame):
         font.SetFaceName("Monospace")
         font.SetWeight(wx.FONTWEIGHT_BOLD)
         dc.SetFont(font)
-        dc.DrawLabel("%s v. %s" % (NAME, SG_VERSION), 
+        dc.DrawLabel("%s %s" % (NAME, SG_VERSION),
                      wx.Rect(0, 305, 400, 15), wx.ALIGN_CENTER)
         dc.DrawLabel(u"Olivier Bélanger", 
                      wx.Rect(0, 322, 400, 15), wx.ALIGN_CENTER)

@@ -74,7 +74,8 @@ class Fx:
         self.pan = SPan(self.process, outs=chnls, pan=0.5).out()
 
 class Granulator_Stream:
-    def __init__(self, order, env, dens_noise, trans_noise, dur_noise, pit_noise, dev_noise, pan_noise, clock_func, chnls):
+    def __init__(self, order, env, dens_noise, trans_noise, dur_noise, pit_noise, dev_noise,
+                 pan_noise, ff_noise, fq_noise, ftype, clock_func, chnls):
         self.order = order
         self.env = env
         self.dens_noise = dens_noise
@@ -83,6 +84,9 @@ class Granulator_Stream:
         self.dur_noise = dur_noise
         self.dev_noise = dev_noise
         self.pan_noise = pan_noise
+        self.ff_noise = ff_noise
+        self.fq_noise = fq_noise
+        self.ftype = ftype
         self.clock_func = clock_func
         self.chnls = chnls
         self.granulator = None
@@ -97,10 +101,14 @@ class Granulator_Stream:
         self.y_dev = SigTo(value=1, time=0.01)
         self.y_amp = SigTo(value=1, time=0.01)
         self.y_pan = SigTo(value=0.5, time=0.01, mul=2, add=-1)
+        self.y_fif = SigTo(value=1, time=0.01)
+        self.y_fiq = SigTo(value=1, time=0.01)
         # one global noise for every voices ?
         self.y_trs = Randh(min=-1, max=1, freq=231, mul=0, add=1).stop()
         self.y_dur = Randh(min=-1, max=1, freq=201, mul=0, add=1).stop()
         self.y_pos = Randh(min=-1, max=1, freq=202, mul=0).stop()
+        self.y_ffr = Randh(min=-1, max=1, freq=677, mul=0, add=1).stop()
+        self.y_fqr = Randh(min=-1, max=1, freq=547, mul=0, add=1).stop()
         self.fader = SigTo(value=0, mul=0.15)
         self.trigger = TrigFunc(self.metro, self.clock_func, self.order)
 
@@ -114,7 +122,7 @@ class Granulator_Stream:
             self.v_pan = 0.5
         else:
             self.v_pan = [i / float(nchnls - 1) for i in range(nchnls)]
-        self.granulator = Particle( table=self.table, 
+        self.granulator = Particle2( table=self.table, 
                                     env=self.env, 
                                     dens=self.dens_noise*self.y_dns,
                                     pitch=self.base_pitch*self.transpo*self.pit_noise*self.trans_noise*self.y_pit*self.y_trs,
@@ -122,6 +130,9 @@ class Granulator_Stream:
                                     dur=self.dur_noise*self.y_len*self.y_dur,
                                     dev=self.dev_noise+self.y_dev,
                                     pan=Clip(self.y_pan+self.pan_noise+self.v_pan, 0, 1),
+                                    filterfreq=self.ff_noise*self.y_fif*self.y_ffr,
+                                    filterq=self.fq_noise*self.y_fiq*self.y_fqr,
+                                    filtertype=self.ftype,
                                     chnls=self.chnls,
                                     mul=self.fader*self.y_amp*self.traj_amp,
                                     ).stop()
@@ -142,6 +153,8 @@ class Granulator_Stream:
             self.y_trs.play()
             self.y_dur.play()
             self.y_pos.play()
+            self.y_ffr.play()
+            self.y_fqr.play()
             self.granulator.out()
             self.fader.value = 1
         else:
@@ -149,6 +162,8 @@ class Granulator_Stream:
             self.y_trs.stop()
             self.y_dur.stop()
             self.y_pos.stop()
+            self.y_ffr.stop()
+            self.y_fqr.stop()
             self.granulator.stop()
             self.fader.value = 0
 
@@ -170,11 +185,14 @@ class SG_Audio:
         self.server = Server(sr=self.samplingRate, buffersize=256, duplex=0)
         self.check_dict = {"y_dns_check": 0, "y_pit_check": 1, "y_len_check": 0, 
                            "y_dev_check": 0, "y_amp_check": 0, "y_trs_check": 0,
-                           "y_dur_check": 0, "y_pos_check": 0, "y_pan_check": 0}
+                           "y_dur_check": 0, "y_pos_check": 0, "y_pan_check": 0,
+                           "y_fif_check": 0, "y_fiq_check": 0, "y_ffr_check": 0,
+                           "y_fqr_check": 0}
         self.map_dict = {"y_dns_map": [0, 1, 2], "y_pit_map": [0, 1, 1], "y_len_map": [0, 1, 1], 
                          "y_dev_map": [0, 1, 1], "y_amp_map": [0, 1, 1], "y_trs_map": [0, 1, 3], 
-                           "y_dur_map": [0, 1, 4], "y_pos_map": [0, 1, 4], 
-                           "y_pan_map": [0, 1, 1]}
+                         "y_dur_map": [0, 1, 4], "y_pos_map": [0, 1, 4], "y_pan_map": [0, 1, 1],
+                         "y_fif_map": [0, 1, 2], "y_fiq_map": [0, 1, 2], "y_ffr_map": [0, 1, 1],
+                         "y_fqr_map": [0, 1, 1]}
 
     def boot(self, driver, chnls, samplingRate, midiInterface):
         global USE_MIDI
@@ -206,12 +224,20 @@ class SG_Audio:
         self.dur_noise = Randh(min=0, max=0, freq=198, mul=0.2, add=0.2)
         self.dev_noise = Sig(0)
         self.pan_noise = Randh(min=-1, max=1, freq=303, mul=0)
-        self.trans_noise = Choice([1], freq=500)
+        self.trans_noise = Choice([1], freq=777)
+        self.ffr_noise = Noise(mul=0, add=1)
+        self.ffr_noise.setType(1)
+        self.ff_noise = Choice(choice=[1.0], freq=999, mul=15000)
+        self.fqr_noise = Noise(0.0, add=1.0)
+        self.fqr_noise.setType(1)
+        self.filterq = SigTo(0.7, time=0.05, init=0.7, mul=self.fqr_noise)
+        self.filtert = SigTo(0.0, time=0.05, init=0.0)
 
         self.streams = {}
         for i in range(MAX_STREAMS):
             self.streams[i] = Granulator_Stream(i, self.env, self.dens_noise, self.trans_noise, self.dur_noise,
-                                                self.pit_noise, self.dev_noise, self.pan_noise, self.clock, chnls)
+                                                self.pit_noise, self.dev_noise, self.pan_noise, self.ff_noise*self.ffr_noise,
+                                                self.filterq, self.filtert, self.clock, chnls)
 
     def shutdown(self):
         if hasattr(self, "table"):
@@ -232,6 +258,10 @@ class SG_Audio:
         del self.dev_noise
         del self.pan_noise
         del self.trans_noise
+        del self.ffr_noise
+        del self.ff_noise
+        del self.filterq
+        del self.filtert
         del self.mixer
         if USE_MIDI:
             del self.notein
@@ -323,6 +353,15 @@ class SG_Audio:
     def setGrainDev(self, x):
         self.dev_noise.value = x
 
+    def setFilterFreq(self, x):
+        self.ff_noise.mul = x
+
+    def setFilterQ(self, x):
+        self.filterq.value = x
+
+    def setFilterType(self, x):
+        self.filtert.value = x
+
     def setRandPos(self, x):
         x = floatmap(x, min=0, max=0.5, exp=2)
         self.pos_noise.mul = x
@@ -333,9 +372,18 @@ class SG_Audio:
 
     def setRandPan(self, x):
         self.pan_noise.mul = x
+
+    def setRandFilterFreq(self, x):
+        self.ffr_noise.mul = x
+
+    def setRandFilterQ(self, x):
+        self.fqr_noise.mul = x
  
     def setDiscreteTrans(self, lst):
         self.trans_noise.choice = lst
+
+    def setDiscreteFilterTrans(self, lst):
+        self.ff_noise.choice = lst
 
     def setMetroTime(self, which, x):
         self.streams[which].metro.time = x
@@ -413,6 +461,30 @@ class SG_Audio:
             self.streams[which].y_pan.value = val
         else:
             self.streams[which].y_pan.value = 0.5
+        if self.check_dict["y_fif_check"]:
+            rng = self.map_dict["y_fif_map"]
+            val = floatmap(x, rng[0], rng[1], rng[2])
+            self.streams[which].y_fif.value = val
+        else:
+            self.streams[which].y_fif.value = 1.0
+        if self.check_dict["y_fiq_check"]:
+            rng = self.map_dict["y_fiq_map"]
+            val = floatmap(x, rng[0], rng[1], rng[2])
+            self.streams[which].y_fiq.value = val
+        else:
+            self.streams[which].y_fiq.value = 1.0
+        if self.check_dict["y_ffr_check"]:
+            rng = self.map_dict["y_ffr_map"]
+            val = floatmap(x, rng[0], rng[1], rng[2])
+            self.streams[which].y_ffr.mul = val
+        else:
+            self.streams[which].y_ffr.mul = 0.0
+        if self.check_dict["y_fqr_check"]:
+            rng = self.map_dict["y_fqr_map"]
+            val = floatmap(x, rng[0], rng[1], rng[2])
+            self.streams[which].y_fqr.mul = val
+        else:
+            self.streams[which].y_fqr.mul = 0.0
 
     def setActive(self, which, val):
         try:
