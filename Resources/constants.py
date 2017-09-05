@@ -48,14 +48,14 @@ DOCUMENTATION_PATH = os.path.join(RESOURCES_PATH, "doc")
 IMAGES_PATH = os.path.join(RESOURCES_PATH, 'images')
 SPLASH_FILE = os.path.join(RESOURCES_PATH, "SoundGrainSplash.png")
 
-preffile = os.path.join(os.path.expanduser("~"), ".soundgrain-init")
-if os.path.isfile(preffile):
-    with open(preffile, "r") as f:
+PREFFILE = os.path.join(os.path.expanduser("~"), ".soundgrain-init")
+if os.path.isfile(PREFFILE):
+    with open(PREFFILE, "r") as f:
         lines = f.readlines()
         if len(lines) > 2:
             SAMPLE_PRECISION = lines[2].split("=")[1].replace("\n", "")
         else:
-            SAMPLE_PRECISION = "32-bit"
+            SAMPLE_PRECISION = "32-bit" 
 else:
     SAMPLE_PRECISION = "32-bit"
 

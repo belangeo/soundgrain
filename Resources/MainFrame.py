@@ -182,15 +182,24 @@ class MainFrame(wx.Frame):
 
         self.SetMenuBar(self.menuBar)
 
-        preffile = os.path.join(os.path.expanduser("~"), ".soundgrain-init")
-        if os.path.isfile(preffile):
-            with open(preffile, "r") as f:
+        if os.path.isfile(PREFFILE):
+            with open(PREFFILE, "r") as f:
                 lines = f.readlines()
                 auDriver = ensureNFD(lines[0].split("=")[1].replace("\n", ""))
                 miDriver = ensureNFD(lines[1].split("=")[1].replace("\n", ""))
+                if len(lines) > 3:
+                    self.lastFilePath = lines[3].split("=")[1].replace("\n", "")
+                else:
+                    self.lastFilePath = os.path.expanduser("~")
+                if len(lines) > 4:
+                    self.lastAudioPath = lines[4].split("=")[1].replace("\n", "")
+                else:
+                    self.lastAudioPath = os.path.expanduser("~")
         else:
             auDriver = None
             miDriver = None
+            self.lastFilePath = os.path.expanduser("~")
+            self.lastAudioPath = os.path.expanduser("~")
 
         mainBox = wx.BoxSizer(wx.HORIZONTAL)
         self.panel = DrawingSurface(self)
@@ -403,16 +412,18 @@ class MainFrame(wx.Frame):
 
     def handleOpen(self, evt):
         dlg = wx.FileDialog(self, message="Open SoundGrain file...",
-                            defaultDir=os.path.expanduser("~"),
+                            defaultDir=self.lastFilePath,
                             defaultFile="",
                             wildcard="SoundGrain file (*.sg)|*.sg",
                             style=wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
             self.loadFile(ensureNFD(path))
+            self.lastFilePath = os.path.split(path)[0]
         dlg.Destroy()
 
     def handleLoad(self, evt):
+        print(self.lastAudioPath)
         self.controls.handleLoad()
 
     def handleInsert(self, evt):
@@ -426,7 +437,7 @@ class MainFrame(wx.Frame):
 
     def handleSaveAs(self, evt):
         dlg = wx.FileDialog(self, message="Save file as ...",
-                            defaultDir=os.path.expanduser("~"),
+                            defaultDir=self.lastFilePath,
                             defaultFile="Granulator.sg",
                             style=wx.FD_SAVE)
         if dlg.ShowModal() == wx.ID_OK:
@@ -438,6 +449,7 @@ class MainFrame(wx.Frame):
                 if dlg2.ShowModal() == wx.ID_OK:
                     dlg2.Destroy()
                     self.saveFile(path)
+                    self.lastFilePath = os.path.split(path)[0]
                     dlg.Destroy()
                 else:
                     dlg2.Destroy()
@@ -445,6 +457,7 @@ class MainFrame(wx.Frame):
                     self.handleSaveAs(None)
             else:
                 self.saveFile(path)
+                self.lastFilePath = os.path.split(path)[0]
                 dlg.Destroy()
 
     def getState(self):
@@ -719,10 +732,12 @@ class MainFrame(wx.Frame):
             dlg.Destroy()
         auDriver = self.driversList[self.driverIndexes.index(self.audioDriver)]
         miDriver = self.midiSettings.getInterface()
-        with open(os.path.join(os.path.expanduser("~"), ".soundgrain-init"), "w") as f:
+        with open(PREFFILE, "w") as f:
             f.write("audioDriver=%s\n" % toSysEncoding(auDriver))
             f.write("midiDriver=%s\n" % toSysEncoding(miDriver))
             f.write("samplePrecision=%s\n" % self.sample_precision)
+            f.write("lastFilePath=%s\n" % self.lastFilePath)
+            f.write("lastAudioPath=%s\n" % self.lastAudioPath)
         if self.granulatorControls.IsShown():
             self.granulatorControls.Hide()
         self.controls.meter.OnClose(evt)

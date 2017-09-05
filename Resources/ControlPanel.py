@@ -351,19 +351,23 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def handleLoad(self):
         dlg = wx.FileDialog(self, message="Choose a sound file",
+                            defaultDir=self.parent.lastAudioPath,
                             wildcard=AUDIO_WILDCARD, style=wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             sndPath = dlg.GetPath()
             self.loadSound(ensureNFD(sndPath))
+            self.parent.lastAudioPath = os.path.split(sndPath)[0]
         dlg.Destroy()
 
     def handleInsert(self):
         ok = False
         dlg = wx.FileDialog(self, message="Choose a sound file to insert",
+                            defaultDir=self.parent.lastAudioPath,
                             wildcard=AUDIO_WILDCARD, style=wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             ok = True
             sndPath = dlg.GetPath()
+            self.parent.lastAudioPath = os.path.split(sndPath)[0]
         dlg.Destroy()
         if ok:
             self.insertSound(ensureNFD(sndPath), True)
