@@ -1,5 +1,5 @@
 """
-Copyright 2015 Olivier Belanger
+Copyright 2009-2017 Olivier Belanger
 
 This file is part of SoundGrain.
 

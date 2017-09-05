@@ -1,6 +1,6 @@
 # encoding: utf-8
 """
-Copyright 2009 Olivier Belanger
+Copyright 2009-2017 Olivier Belanger
 
 This file is part of SoundGrain.
 
