@@ -188,11 +188,12 @@ class SG_Audio:
                            "y_dur_check": 0, "y_pos_check": 0, "y_pan_check": 0,
                            "y_fif_check": 0, "y_fiq_check": 0, "y_ffr_check": 0,
                            "y_fqr_check": 0}
-        self.map_dict = {"y_dns_map": [0, 1, 2], "y_pit_map": [0, 1, 1], "y_len_map": [0, 1, 1], 
-                         "y_dev_map": [0, 1, 1], "y_amp_map": [0, 1, 1], "y_trs_map": [0, 1, 3], 
-                         "y_dur_map": [0, 1, 4], "y_pos_map": [0, 1, 4], "y_pan_map": [0, 1, 1],
-                         "y_fif_map": [0, 1, 2], "y_fiq_map": [0, 1, 2], "y_ffr_map": [0, 1, 1],
-                         "y_fqr_map": [0, 1, 1]}
+        # map_dict: [min, max, exp, mid(optional)]
+        self.map_dict = {"y_dns_map": [0, 1, 2, None], "y_pit_map": [0, 1, 1, None], "y_len_map": [0, 1, 1, None],
+                         "y_dev_map": [0, 1, 1, None], "y_amp_map": [0, 1, 1, None], "y_trs_map": [0, 1, 3, None],
+                         "y_dur_map": [0, 1, 4, None], "y_pos_map": [0, 1, 4, None], "y_pan_map": [0, 1, 1, None],
+                         "y_fif_map": [0, 1, 2, None], "y_fiq_map": [0, 1, 2, None], "y_ffr_map": [0, 1, 1, None],
+                         "y_fqr_map": [0, 1, 1, None]}
 
     def boot(self, driver, chnls, samplingRate, midiInterface):
         global USE_MIDI
@@ -403,88 +404,31 @@ class SG_Audio:
     def setMapMax(self, which, value):
         self.map_dict[which][1] = value
 
+    def setMapMid(self, which, value):
+        self.map_dict[which][3] = value
+
     def setXposition(self, which, x):
         self.streams[which].position.value = x
 
     def setYposition(self, which, x):
-        if self.check_dict["y_dns_check"]:
-            rng = self.map_dict["y_dns_map"]
-            val = floatmap(x, rng[0], rng[1], rng[2])
-            self.streams[which].y_dns.value = val
-        else:
-            self.streams[which].y_dns.value = 1
-        if self.check_dict["y_pit_check"]:
-            rng = self.map_dict["y_pit_map"]
-            val = floatmap(x, rng[0], rng[1], rng[2])
-            self.streams[which].y_pit.value = val
-        else:
-            self.streams[which].y_pit.value = 1
-        if self.check_dict["y_len_check"]:
-            rng = self.map_dict["y_len_map"]
-            val = floatmap(x, rng[0], rng[1], rng[2])
-            self.streams[which].y_len.value = val
-        else:
-            self.streams[which].y_len.value = 1
-        if self.check_dict["y_dev_check"]:
-            rng = self.map_dict["y_dev_map"]
-            val = floatmap(x, rng[0], rng[1], rng[2])
-            self.streams[which].y_dev.value = val
-        else:
-            self.streams[which].y_dev.value = 0
-        if self.check_dict["y_trs_check"]:
-            rng = self.map_dict["y_trs_map"]
-            val = floatmap(x, rng[0], rng[1], rng[2])
-            self.streams[which].y_trs.mul = val
-        else:
-            self.streams[which].y_trs.mul = 0
-        if self.check_dict["y_dur_check"]:
-            rng = self.map_dict["y_dur_map"]
-            val = floatmap(x, rng[0], rng[1], rng[2])
-            self.streams[which].y_dur.mul = val
-        else:
-            self.streams[which].y_dur.mul = 0
-        if self.check_dict["y_pos_check"]:
-            rng = self.map_dict["y_pos_map"]
-            val = floatmap(x, rng[0], rng[1], rng[2])
-            self.streams[which].y_pos.mul = val
-        else:
-            self.streams[which].y_pos.mul = 0
-        if self.check_dict["y_amp_check"]:
-            rng = self.map_dict["y_amp_map"]
-            val = floatmap(x, rng[0], rng[1], rng[2])
-            self.streams[which].y_amp.value = val
-        else:
-            self.streams[which].y_amp.value = 1
-        if self.check_dict["y_pan_check"]:
-            rng = self.map_dict["y_pan_map"]
-            val = floatmap(x, rng[0], rng[1], rng[2])
-            self.streams[which].y_pan.value = val
-        else:
-            self.streams[which].y_pan.value = 0.5
-        if self.check_dict["y_fif_check"]:
-            rng = self.map_dict["y_fif_map"]
-            val = floatmap(x, rng[0], rng[1], rng[2])
-            self.streams[which].y_fif.value = val
-        else:
-            self.streams[which].y_fif.value = 1.0
-        if self.check_dict["y_fiq_check"]:
-            rng = self.map_dict["y_fiq_map"]
-            val = floatmap(x, rng[0], rng[1], rng[2])
-            self.streams[which].y_fiq.value = val
-        else:
-            self.streams[which].y_fiq.value = 1.0
-        if self.check_dict["y_ffr_check"]:
-            rng = self.map_dict["y_ffr_map"]
-            val = floatmap(x, rng[0], rng[1], rng[2])
-            self.streams[which].y_ffr.mul = val
-        else:
-            self.streams[which].y_ffr.mul = 0.0
-        if self.check_dict["y_fqr_check"]:
-            rng = self.map_dict["y_fqr_map"]
-            val = floatmap(x, rng[0], rng[1], rng[2])
-            self.streams[which].y_fqr.mul = val
-        else:
-            self.streams[which].y_fqr.mul = 0.0
+        params = [("y_dns", 1.0), ("y_pit", 1.0), ("y_len", 1.0), ("y_dev", 0.0),
+                  ("y_pos", 0.0), ("y_trs", 0.0), ("y_dur", 0.0), ("y_amp", 1.0),
+                  ("y_pan", 0.5), ("y_fif", 1.0), ("y_fiq", 1.0), ("y_ffr", 0.0),
+                  ("y_fqr", 0.0)]
+        for param, defval in params:
+            if self.check_dict["%s_check" % param]:
+                rng = self.map_dict["%s_map" % param]
+                if rng[3] is None:
+                    val = floatmap(x, rng[0], rng[1], rng[2])
+                else:
+                    if x < 0.5:
+                        val = floatmap(x*2.0, rng[0], rng[3], rng[2])
+                    else:
+                        val = floatmap((x-0.5)*2.0, rng[3], rng[1], rng[2])
+                getattr(self.streams[which], param).value = val
+            else:
+                getattr(self.streams[which], param).value = defval
+        return
 
     def setActive(self, which, val):
         try:

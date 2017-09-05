@@ -99,8 +99,16 @@ Y Axis
 
 In the second tab of the window, the user can decide which parameter(s) will
 be linked to the position of the trajectory's reading head in the Y axis of 
-the surface. The numerical range can also be adjusted (_min_ is the bottom
-of the surface and _max_ is the top).
+the surface. The numerical range can also be adjusted.
+
+Turn on the check box of every parameter you want to link to the vertical position.
+
+_min_ is the value when the trajectory is at the bottom of the surface.
+
+_mid_ is the value when the trajectory is in the middle of the surface. Leave it 
+empty to get a straight line from bottom to top (old behaviour).
+
+_max_ is the value when the trajectory is at the top of the surface.
  
 ##### Density of Grains Multiplier #####
 
