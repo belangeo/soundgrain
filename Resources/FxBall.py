@@ -74,7 +74,7 @@ class FxBallControls(wx.Frame):
         self.box.Add(self.slider4, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 10)
 
         self.panel.SetSizerAndFit(self.box)
-# 887-0862
+
         if PLATFORM == "win32":
             X, Y = self.GetSize()[0], self.GetSize()[1] + 50
         elif PLATFORM.startswith("linux"):
