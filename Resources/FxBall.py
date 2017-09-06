@@ -156,7 +156,7 @@ def GetRoundMaskBitmap(w, h, radius):
     dc.SetBrush(wx.Brush(maskColor))
     dc.DrawRectangle(0,0,w,h)
     dc.SetPen(wx.Pen(shownColor, 1, style=wx.TRANSPARENT))
-    dc.SetBrush(wx.Brush(shownColor, wx.CROSSDIAG_HATCH))
+    dc.SetBrush(wx.Brush(shownColor, wx.SOLID)) # wx.CROSSDIAG_HATCH
     dc.DrawRoundedRectangle(0,0,w,h,radius)
     dc.SelectObject(wx.NullBitmap)
     b.SetMaskColour(shownColor)
