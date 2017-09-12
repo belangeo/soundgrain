@@ -29,14 +29,14 @@ class SoundGrainApp(wx.App):
         wx.App.__init__(self, *args, **kwargs)
         sysx = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X)
         sysy = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
-        if sysx < 900:
+        if sysx < 1200:
             sizex = sysx - 40
         else:
-            sizex = 900
-        if sysy < 720:
+            sizex = 1200
+        if sysy < 900:
             sizey = sysy - 40
         else:
-            sizey = 720
+            sizey = 900
         self.frame = MainFrame(None, -1, pos=(0, 20), size=(sizex, sizey),
                                screen_size=(sysx, sysy))
 

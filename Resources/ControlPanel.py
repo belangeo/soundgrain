@@ -20,6 +20,7 @@ import os, math, random, wx
 import  wx.lib.scrolledpanel as scrolled
 from Resources.constants import *
 from Resources.audio import soundInfo
+from Resources.widgets import ControlKnob
 from pyolib._wxwidgets import ControlSlider, VuMeter, BACKGROUND_COLOUR
 
 class ControlPanel(scrolled.ScrolledPanel):
@@ -69,6 +70,55 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.notebook.AddPage(self.playback, "Playback")
         box.Add(self.notebook, 0, wx.ALL, 5)
 
+        # EQ
+        eqTitle = wx.StaticText(self, id=-1, label="4 Bands Equalizer")
+        box.Add(eqTitle, 0, wx.CENTER)
+
+        eqFreqBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.knobEqF1 = ControlKnob(self, 40, 250, 100, label='Freq 1', outFunction=self.changeEqF1)
+        eqFreqBox.Add(self.knobEqF1, 0, wx.LEFT | wx.RIGHT, 20)
+        self.knobEqF1.setFloatPrecision(2)
+        self.knobEqF2 = ControlKnob(self, 300, 1000, 500, label='Freq 2', outFunction=self.changeEqF2)
+        eqFreqBox.Add(self.knobEqF2, 0, wx.LEFT | wx.RIGHT, 4)
+        self.knobEqF2.setFloatPrecision(2)
+        self.knobEqF3 = ControlKnob(self, 1200, 5000, 2000, label='Freq 3', outFunction=self.changeEqF3)
+        eqFreqBox.Add(self.knobEqF3, 0, wx.LEFT | wx.RIGHT, 20)
+        self.knobEqF3.setFloatPrecision(2)
+
+        box.Add(eqFreqBox)
+
+        eqGainBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.knobEqA1 = ControlKnob(self, -40, 18, 0, label='B1 gain', outFunction=self.changeEqA1)
+        eqGainBox.Add(self.knobEqA1, 0, wx.LEFT | wx.RIGHT, 5)
+        self.knobEqA2 = ControlKnob(self, -40, 18, 0, label='B2 gain', outFunction=self.changeEqA2)
+        eqGainBox.Add(self.knobEqA2, 0, wx.LEFT | wx.RIGHT, 5)
+        self.knobEqA3 = ControlKnob(self, -40, 18, 0, label='B3 gain', outFunction=self.changeEqA3)
+        eqGainBox.Add(self.knobEqA3, 0, wx.LEFT | wx.RIGHT, 5)
+        self.knobEqA4 = ControlKnob(self, -40, 18, 0, label='B4 gain', outFunction=self.changeEqA4)
+        eqGainBox.Add(self.knobEqA4, 0, wx.LEFT | wx.RIGHT, 5)
+
+        box.Add(eqGainBox)
+
+        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
+
+        #Compress
+        compTitle = wx.StaticText(self, id=-1, label="Dynamic Compressor")
+        box.Add(compTitle, 0, wx.CENTER)
+
+        cpKnobBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.knobComp1 = ControlKnob(self, -60, 0, -3, label='Thresh', outFunction=self.changeComp1)
+        cpKnobBox.Add(self.knobComp1, 0, wx.LEFT | wx.RIGHT, 5)
+        self.knobComp2 = ControlKnob(self, 1, 10, 2, label='Ratio', outFunction=self.changeComp2)
+        cpKnobBox.Add(self.knobComp2, 0, wx.LEFT | wx.RIGHT, 5)
+        self.knobComp3 = ControlKnob(self, 0.001, 0.5, 0.01, label='Rise', outFunction=self.changeComp3)
+        cpKnobBox.Add(self.knobComp3, 0, wx.LEFT | wx.RIGHT, 5)
+        self.knobComp4 = ControlKnob(self, 0.01, 1, .1, label='Fall', outFunction=self.changeComp4)
+        cpKnobBox.Add(self.knobComp4, 0, wx.LEFT | wx.RIGHT, 5)
+
+        box.Add(cpKnobBox)
+
+        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
+
         box.Add(wx.StaticText(self, -1, "Global amplitude (dB)"), 0, wx.LEFT | wx.TOP, 10)
         ampBox = wx.BoxSizer(wx.HORIZONTAL)
         self.sl_amp = ControlSlider(self, -60, 18, 0, size=(200, 16), outFunction=self.handleAmp)
@@ -86,16 +136,16 @@ class ControlPanel(scrolled.ScrolledPanel):
 
         projSettingsBox = wx.BoxSizer(wx.HORIZONTAL)
         srBox = wx.BoxSizer(wx.VERTICAL)
-        srText = wx.StaticText(self, -1, "Sample Rate")
+        srText = wx.StaticText(self, -1, "Rate")
         srBox.Add(srText, 0, wx.CENTER | wx.LEFT | wx.RIGHT, 5)
         self.pop_sr = wx.Choice(self, -1, choices = ['44100', '48000', '96000'], size=(80,-1))
         self.pop_sr.SetSelection(0)
         self.pop_sr.Bind(wx.EVT_CHOICE, self.handleSamplingRate)
         srBox.Add(self.pop_sr, 0, wx.LEFT | wx.RIGHT, 5)
         chnlsBox = wx.BoxSizer(wx.VERTICAL)
-        chnlsText = wx.StaticText(self, -1, "Channels")
+        chnlsText = wx.StaticText(self, -1, "Chnls")
         chnlsBox.Add(chnlsText, 0, wx.CENTER  | wx.LEFT | wx.RIGHT, 5)
-        self.tx_chnls = wx.TextCtrl(self, -1, "2", size=(80, -1), style=wx.TE_PROCESS_ENTER)
+        self.tx_chnls = wx.TextCtrl(self, -1, "2", size=(60, -1), style=wx.TE_PROCESS_ENTER)
         self.tx_chnls.Bind(wx.EVT_TEXT_ENTER, self.handleNchnls)
         chnlsBox.Add(self.tx_chnls, 0, wx.LEFT | wx.RIGHT, 5)
         projSettingsBox.Add(srBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
@@ -117,14 +167,14 @@ class ControlPanel(scrolled.ScrolledPanel):
 
         recSettingsBox = wx.BoxSizer(wx.HORIZONTAL)
         fileformatBox = wx.BoxSizer(wx.VERTICAL)
-        fileformatText = wx.StaticText(self, -1, "File Format")
+        fileformatText = wx.StaticText(self, -1, "Format")
         fileformatBox.Add(fileformatText, 0, wx.CENTER | wx.LEFT | wx.RIGHT, 5)
         self.pop_fileformat = wx.Choice(self, -1, choices=EXPORT_FORMATS, size=(80,-1))
         self.pop_fileformat.SetSelection(0)
         self.pop_fileformat.Bind(wx.EVT_CHOICE, self.handleFileFormat)
         fileformatBox.Add(self.pop_fileformat, 0, wx.LEFT | wx.RIGHT, 5)
         sampletypeBox = wx.BoxSizer(wx.VERTICAL)
-        sampletypeText = wx.StaticText(self, -1, "Sample Type")
+        sampletypeText = wx.StaticText(self, -1, "Type")
         sampletypeBox.Add(sampletypeText, 0, wx.CENTER  | wx.LEFT | wx.RIGHT, 5)
         self.pop_sampletype = wx.Choice(self, -1, choices=EXPORT_TYPES)
         self.pop_sampletype.SetSelection(0)
@@ -149,7 +199,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.tog_record = wx.ToggleButton(self, -1, "Start Rec", size=(65,-1))
         self.tog_record.SetFont(font)
         rec2Box.Add(self.tog_record, 1, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND | wx.RIGHT, 10)
-        
+
         box.Add(wx.StaticText(self, -1, "Destination"), 0, wx.LEFT | wx.RIGHT, 17)
         box.Add(rec1Box, 0, wx.EXPAND | wx.BOTTOM  | wx.LEFT | wx.RIGHT, 5)
         box.Add(wx.StaticText(self, -1, "Filename"), 0, wx.LEFT | wx.RIGHT, 17)
@@ -167,6 +217,67 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.SetAutoLayout(True)
         self.SetSizerAndFit(box)
         self.SetupScrolling(scroll_x = False)
+
+    def changeEqF1(self, x):
+        self.parent.sg_audio.setEqFreq(0, x)
+
+    def changeEqF2(self, x):
+        self.parent.sg_audio.setEqFreq(1, x)
+
+    def changeEqF3(self, x):
+        self.parent.sg_audio.setEqFreq(2, x)
+
+    def getEqFreqs(self):
+        return [self.knobEqF1.GetValue(), self.knobEqF2.GetValue(), self.knobEqF3.GetValue()]
+
+    def setEqFreqs(self, freqs):
+        self.knobEqF1.SetValue(freqs[0])
+        self.knobEqF2.SetValue(freqs[1])
+        self.knobEqF3.SetValue(freqs[2])
+
+    def changeEqA1(self, x):
+        self.parent.sg_audio.setEqGain(0, math.pow(10.0, x * 0.05))
+
+    def changeEqA2(self, x):
+        self.parent.sg_audio.setEqGain(1, math.pow(10.0, x * 0.05))
+
+    def changeEqA3(self, x):
+        self.parent.sg_audio.setEqGain(2, math.pow(10.0, x * 0.05))
+
+    def changeEqA4(self, x):
+        self.parent.sg_audio.setEqGain(3, math.pow(10.0, x * 0.05))
+
+    def getEqAmps(self):
+        return [self.knobEqA1.GetValue(), self.knobEqA2.GetValue(),
+                self.knobEqA3.GetValue(), self.knobEqA4.GetValue()]
+
+    def setEqAmps(self, amps):
+        self.knobEqA1.SetValue(amps[0])
+        self.knobEqA2.SetValue(amps[1])
+        self.knobEqA3.SetValue(amps[2])
+        self.knobEqA4.SetValue(amps[3])
+
+    def changeComp1(self, x):
+        self.parent.sg_audio.setCompParam("thresh", x)
+
+    def changeComp2(self, x):
+        self.parent.sg_audio.setCompParam("ratio", x)
+
+    def changeComp3(self, x):
+        self.parent.sg_audio.setCompParam("risetime", x)
+
+    def changeComp4(self, x):
+        self.parent.sg_audio.setCompParam("falltime", x)
+
+    def getCompValues(self):
+        return [self.knobComp1.GetValue(), self.knobComp2.GetValue(),
+                self.knobComp3.GetValue(), self.knobComp4.GetValue()]
+
+    def setCompValues(self, vals):
+        self.knobComp1.SetValue(vals[0])
+        self.knobComp2.SetValue(vals[1])
+        self.knobComp3.SetValue(vals[2])
+        self.knobComp4.SetValue(vals[3])
 
     def checkEnableWidgets(self):
         if self.type == 0:
@@ -598,7 +709,7 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.tx_rec_folder.SetValue(ensureNFD(path))
         dlg.Destroy()
         self.but_folder.SetValue(0)
-        
+
     def logSndInfo(self):
         self.parent.log(self.sndInfoStr)
 
@@ -661,13 +772,14 @@ class PlaybackParameters(wx.Panel):
         self.parent = parent
         box = wx.BoxSizer(wx.VERTICAL)
 
-        seltrajText = wx.StaticText(self, -1, "Selected trajectory")
+        trajBox = wx.BoxSizer(wx.HORIZONTAL)
+        seltrajText = wx.StaticText(self, -1, "Selected Traj:")
         font, psize = seltrajText.GetFont(), seltrajText.GetFont().GetPointSize()
         if sys.platform == "win32":
             font.SetPointSize(psize-1)
         else:
             font.SetPointSize(psize-2)
-        box.Add(seltrajText, 0, wx.CENTER | wx.TOP | wx.BOTTOM, 2)
+        trajBox.Add(seltrajText, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
 
         trajChoices = [str(i+1) for i in range(MAX_STREAMS)]
         trajChoices.append("all")
@@ -675,7 +787,8 @@ class PlaybackParameters(wx.Panel):
         self.tog_traj.SetSelection(0)
         self.tog_traj.Bind(wx.EVT_CHOICE, self.parent.GetParent().handleSelected)
         self.tog_traj.Bind(wx.EVT_LEFT_DOWN, self.parent.GetParent().handlePopupFocus)
-        box.Add(self.tog_traj, 0, wx.CENTER, 5)
+        trajBox.Add(self.tog_traj, 0, wx.LEFT, 5)
+        box.Add(trajBox, 0, wx.TOP, 2)
         box.AddSpacer(5)
 
         spdText = wx.StaticText(self, -1, "Timer speed", size=(195,15))
@@ -706,7 +819,7 @@ class PlaybackParameters(wx.Panel):
 
         self.SetAutoLayout(True)
         self.SetSizer(box)
-        
+
 class InsertDialog(wx.Dialog):
     def __init__(self, parent, id, title, actual_dur, snd_dur):
         wx.Dialog.__init__(self, parent, id, title)
@@ -768,4 +881,3 @@ class InsertDialog(wx.Dialog):
     def getValues(self):
         return (self.startSlider.GetValue(), self.endSlider.GetValue(),
                 self.insertSlider.GetValue(), self.crossfadeSlider.GetValue())
-

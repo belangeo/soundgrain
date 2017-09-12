@@ -390,6 +390,13 @@ class MainFrame(wx.Frame):
 
     def handleNew(self, evt):
         cancel = False
+        newpath = False
+        if self.controls.sndPath != "":
+            status, path = self.checkForMixedSound()
+            if "Mixed sound" in self.controls.sndPath:
+                self.controls.sndPath = path
+                if path != "":
+                    newpath = True
         if self.is_unsaved or newpath:
             if self.currentFile == None:
                 curfile = "Granulator.sg"
@@ -485,6 +492,9 @@ class MainFrame(wx.Frame):
         saveDict['ControlPanel']['q'] = self.controls.getQ()
         saveDict['ControlPanel']['period'] = self.controls.getPeriod()
         saveDict['ControlPanel']['scaling'] = self.controls.getScaling()
+        saveDict['ControlPanel']['eqfreqs'] = self.controls.getEqFreqs()
+        saveDict['ControlPanel']['eqamps'] = self.controls.getEqAmps()
+        saveDict['ControlPanel']['compress'] = self.controls.getCompValues()
         saveDict['ControlPanel']['globalamp'] = self.controls.getAmp()
         saveDict['ControlPanel']['nchnls'] = self.controls.getNchnls()
         saveDict['ControlPanel']['sr'] = self.controls.getSamplingRate()
@@ -573,6 +583,9 @@ class MainFrame(wx.Frame):
         self.controls.setQ(dict['ControlPanel']['q'])
         self.controls.setPeriod(dict['ControlPanel']['period'])
         self.controls.setScaling(dict['ControlPanel']['scaling'])
+        self.controls.setEqFreqs(dict['ControlPanel'].get('eqfreqs', [100, 500, 2000]))
+        self.controls.setEqAmps(dict['ControlPanel'].get('eqamps', [0, 0, 0, 0]))
+        self.controls.setCompValues(dict['ControlPanel'].get('compress', [-3, 2, 0.01, 0.1]))
         self.controls.setAmp(dict['ControlPanel']['globalamp'])
         self.controls.setNchnls(dict['ControlPanel'].get('nchnls', "2"))
         self.controls.setSamplingRate(dict['ControlPanel'].get('sr', 44100))

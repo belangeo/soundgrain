@@ -65,7 +65,7 @@ BACKGROUND_COLOUR = "#ECE6EA"
 
 ALLOWED_EXTENSIONS = ["wav","wave","aif","aiff","aifc","au","","sd2","flac","caf","ogg"]
 EXPORT_FORMATS = ['WAV', 'AIFF', 'AU', 'RAW', 'SD2', 'FLAC', 'CAF', 'OGG']
-EXPORT_TYPES = ['16 int', '24 int', '32 int', '32 float', '64 float']
+EXPORT_TYPES = ['16 int', '24 int', '32 int', '32 flt', '64 flt']
 RECORD_EXTENSIONS = [".wav",".aif",".au","",".sd2",".flac",".caf",".ogg"]
 AUDIO_WILDCARD = "All Files |*.*|" \
                  "Wave file |*.wav;*.wave;*.WAV;*.WAVE;*.Wav;*.Wave|" \

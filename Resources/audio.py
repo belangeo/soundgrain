@@ -122,8 +122,8 @@ class Granulator_Stream:
             self.v_pan = 0.5
         else:
             self.v_pan = [i / float(nchnls - 1) for i in range(nchnls)]
-        self.granulator = Particle2( table=self.table, 
-                                    env=self.env, 
+        self.granulator = Particle2( table=self.table,
+                                    env=self.env,
                                     dens=self.dens_noise*self.y_dns,
                                     pitch=self.base_pitch*self.transpo*self.pit_noise*self.trans_noise*self.y_pit*self.y_trs,
                                     pos=self.position+self.pos_rnd+self.y_pos_rnd,
@@ -155,7 +155,7 @@ class Granulator_Stream:
             self.y_pos.play()
             self.y_ffr.play()
             self.y_fqr.play()
-            self.granulator.out()
+            self.granulator.play()
             self.fader.value = 1
         else:
             self.metro.stop()
@@ -183,7 +183,7 @@ class SG_Audio:
         self.midiTriggerMethod = 0
         self.midiPitches = []
         self.server = Server(sr=self.samplingRate, buffersize=256, duplex=0)
-        self.check_dict = {"y_dns_check": 0, "y_pit_check": 1, "y_len_check": 0, 
+        self.check_dict = {"y_dns_check": 0, "y_pit_check": 1, "y_len_check": 0,
                            "y_dev_check": 0, "y_amp_check": 0, "y_trs_check": 0,
                            "y_dur_check": 0, "y_pos_check": 0, "y_pan_check": 0,
                            "y_fif_check": 0, "y_fiq_check": 0, "y_ffr_check": 0,
@@ -240,13 +240,26 @@ class SG_Audio:
                                                 self.pit_noise, self.dev_noise, self.pan_noise, self.ff_noise*self.ffr_noise,
                                                 self.filterq, self.filtert, self.clock, chnls)
 
+        self.stream_sum = Sig([0] * self.chnls)
+        self.eqFreq = [100, 500, 2000]
+        self.eqGain = [1, 1, 1, 1]
+
+        self.fbEqAmps = SigTo(self.eqGain, time=.1, init=self.eqGain)
+        self.fbEq = FourBand(self.stream_sum, freq1=self.eqFreq[0],
+                            freq2=self.eqFreq[1], freq3=self.eqFreq[2], mul=self.fbEqAmps)
+        self.outEq = Mix(self.fbEq, voices=self.chnls)
+
+        self.compLevel = Compress(self.outEq, thresh=-3, ratio=2, risetime=.01,
+                                    falltime=.1, lookahead=0, knee=0.5, outputAmp=True)
+        self.compDelay = Delay(self.outEq, delay=0.005)
+        self.outComp = self.compDelay * self.compLevel
+        self.outComp.out()
+
     def shutdown(self):
         if hasattr(self, "table"):
             del self.table
         if hasattr(self, "pos_rnd"):
             del self.pos_rnd
-        #for i in range(MAX_STREAMS):
-        #    del self.streams[i].trigger
         self.streams = {}
         self.fxs = {}
         del self.env
@@ -264,6 +277,12 @@ class SG_Audio:
         del self.filterq
         del self.filtert
         del self.mixer
+        del self.fbEqAmps
+        del self.fbEq
+        del self.outEq
+        del self.compLevel
+        del self.compDelay
+        del self.outComp
         if USE_MIDI:
             del self.notein
             del self.noteinpitch
@@ -277,7 +296,7 @@ class SG_Audio:
         filename, ext = os.path.splitext(filename)
         if fileformat >= 0 and fileformat < 8:
             ext = RECORD_EXTENSIONS[fileformat]
-        else: 
+        else:
             ext = ".wav"
         date = time.strftime('_%d_%b_%Y_%Hh%M')
         complete_filename = toSysEncoding(filename + date + ext)
@@ -285,6 +304,29 @@ class SG_Audio:
 
     def recStop(self):
         self.server.recstop()
+
+    def setEqFreq(self, which, freq):
+        self.eqFreq[which] = freq
+        if which == 0:
+            self.fbEq.freq1 = freq
+        elif which == 1:
+            self.fbEq.freq2 = freq
+        elif which == 2:
+            self.fbEq.freq3 = freq
+
+    def setEqGain(self, which, gain):
+        self.eqGain[which] = gain
+        self.fbEqAmps.value = self.eqGain
+
+    def setCompParam(self, param, value):
+        if param == "thresh":
+            self.compLevel.thresh = value
+        elif param == "ratio":
+            self.compLevel.ratio = value
+        elif param == "risetime":
+            self.compLevel.risetime = value
+        elif param == "falltime":
+            self.compLevel.falltime = value
 
     def getTableDuration(self):
         return self.table.getDur(False)
@@ -297,6 +339,7 @@ class SG_Audio:
         for gr in self.streams.values():
             gr.create_granulator(self.table, self.pos_rnd)
             gr.ajustLength()
+        self.stream_sum.value = Mix([st.granulator for st in self.streams.values()], voices=self.chnls)
         if self.server.getIsStarted():
             for which in self.activeStreams:
                 self.streams[which].setActive(1)
@@ -379,7 +422,7 @@ class SG_Audio:
 
     def setRandFilterQ(self, x):
         self.fqr_noise.mul = x
- 
+
     def setDiscreteTrans(self, lst):
         self.trans_noise.choice = lst
 
