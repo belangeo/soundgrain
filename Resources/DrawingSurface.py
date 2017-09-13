@@ -750,13 +750,19 @@ class DrawingSurface(wx.Panel):
                 self.selected = t
                 gc.SetPen(wx.Pen("#EEEEEE", width=2, style=wx.SOLID))
             if t.getFirstPoint() != None:
-                gc.SetBrush(t.getBrush())
-                gc.DrawRoundedRectangle(t.getFirstPoint()[0]-s2, t.getFirstPoint()[1]-s2, recsize, recsize, 2)
-                dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0]-s2,t.getFirstPoint()[1]-s2, recsize, recsize), wx.ALIGN_CENTER)
-                if t.getType() in ['circle', 'oscil']:
-                    gc.SetBrush(self.losaBrush)
-                    gc.SetPen(self.losaPen)
-                    gc.DrawRoundedRectangle(t.getLosangePoint()[0]-5, t.getLosangePoint()[1]-5, 10, 10, 2)
+                # With midi triggering, it's possible to delete a trajectory in the
+                # middle of this block. That raises an error: NoneType (t.circlePos)
+                # object is not subscriptable.
+                try:
+                    gc.SetBrush(t.getBrush())
+                    gc.DrawRoundedRectangle(t.getFirstPoint()[0]-s2, t.getFirstPoint()[1]-s2, recsize, recsize, 2)
+                    dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0]-s2,t.getFirstPoint()[1]-s2, recsize, recsize), wx.ALIGN_CENTER)
+                    if t.getType() in ['circle', 'oscil']:
+                        gc.SetBrush(self.losaBrush)
+                        gc.SetPen(self.losaPen)
+                        gc.DrawRoundedRectangle(t.getLosangePoint()[0]-5, t.getLosangePoint()[1]-5, 10, 10, 2)
+                except:
+                    pass
 
     def drawBackBitmap(self):
         w,h = self.currentSize

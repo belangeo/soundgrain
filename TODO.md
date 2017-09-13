@@ -13,9 +13,9 @@ Soundgrain todo
 
 - Add global 4 bands EQ and Compressor. **done**
 
-- Review fx balls.
+- Review fx balls. **done**
 
-- Review MIDI features.
+- Review MIDI features. **done**
 
 - slider's midi control.
 

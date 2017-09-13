@@ -213,7 +213,7 @@ class SG_Audio:
             self.noteinpitch = Sig(self.notein["pitch"])
             self.noteinvelocity = Sig(self.notein["velocity"])
             self.noteonFunc = TrigFunc(self.notein["trigon"], self.noteon, list(range(16)))
-            self.noteoffFunc = TrigFunc(self.notein["trigoff"], self.noteoff, list(range(16)))
+            self.noteoffFunc = TrigFunc(SDelay(self.notein["trigoff"], delay=0.005), self.noteoff, list(range(16)))
         self.env = CosTable([(0,0),(2440,1),(5751,1),(8191,0)])
         self.envFrame.setEnv(self.env)
         self.refresh_met = Metro(0.066666666666666666)
