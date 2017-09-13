@@ -403,7 +403,7 @@ class Trajectory:
             return False
 
     def getCenter(self):
-        return self.center
+        return tuple(self.center)
 
     def setCenter(self, c):
         self.center = c

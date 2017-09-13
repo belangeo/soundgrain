@@ -166,7 +166,7 @@ class DrawingSurface(wx.Panel):
             self.Refresh()
 
     def removeAllFxBalls(self):
-        for key in self.fxballs.keys():
+        for key in list(self.fxballs.keys()):
             self.fxballs[key].hideControls()
             del self.fxballs[key]
             self.parent.sg_audio.removeFx(key)
@@ -543,7 +543,7 @@ class DrawingSurface(wx.Panel):
                 self.traj.setEditionLevel(self.parent.editionLevel)
                 if self.traj.getType() == 'free':
                     self.traj.addPoint(self.clipPos(self.downPos))
-                else:
+                elif self.traj.getType() in ['circle', 'oscil']:
                     self.traj.setCenter(self.downPos)
                     self.traj.setRadius(0)
                 self.CaptureMouse()
@@ -781,12 +781,18 @@ class DrawingSurface(wx.Panel):
         if not self.useMario:
             for t in activeTrajs:
                 if t.circlePos != None:
-                    gc.SetPen(t.getPen())
-                    gc.SetBrush(t.getBrush())
-                    gc.DrawEllipse(t.circlePos[0]-5, t.circlePos[1]-5, 10, 10)
-                    gc.SetPen(t.getBorderPen())
-                    gc.SetBrush(t.getBorderBrush())
-                    gc.DrawEllipse(t.circlePos[0]-2, t.circlePos[1]-2, 4, 4)
+                    # With midi triggering, it's possible to delete a trajectory in the
+                    # middle of this block. That raises an error: NoneType (t.circlePos)
+                    # object is not subscriptable.
+                    try:
+                        gc.SetPen(t.getPen())
+                        gc.SetBrush(t.getBrush())
+                        gc.DrawEllipse(t.circlePos[0]-5, t.circlePos[1]-5, 10, 10)
+                        gc.SetPen(t.getBorderPen())
+                        gc.SetBrush(t.getBorderBrush())
+                        gc.DrawEllipse(t.circlePos[0]-2, t.circlePos[1]-2, 4, 4)
+                    except:
+                        pass
         else:
             for t in activeTrajs:
                 if t.lastCirclePos[0] < t.circlePos[0]: marioff = 0

@@ -78,7 +78,7 @@ class FxBallControls(wx.Frame):
         if PLATFORM == "win32":
             X, Y = self.GetSize()[0], self.GetSize()[1] + 50
         elif PLATFORM.startswith("linux"):
-            X, Y = self.GetSize()[0], self.GetSize()[1] + 30
+            X, Y = self.GetSize()[0], self.GetSize()[1] + 40
         else:
             X, Y = self.GetSize()[0], self.GetSize()[1] + 20
         self.SetMinSize((X, Y))

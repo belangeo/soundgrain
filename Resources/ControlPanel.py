@@ -491,7 +491,7 @@ class ControlPanel(scrolled.ScrolledPanel):
                 chnls, samprate, dur = soundInfo(toSysEncoding(self.sndPath))
                 self.sndDur = dur
                 self.chnls = chnls
-                self.sndInfoStr = u'Loaded sound: %s,    Sr: %s Hz,    Channels: %s,    Duration: %s sec' % (self.sndPath, samprate, chnls, dur)
+                self.sndInfoStr = u'Loaded sound: %s,  Sr: %i Hz,  Channels: %s,  Duration: %.3f sec' % (self.sndPath, int(samprate), chnls, dur)
                 if self.parent.draw:
                     if not self.sndPath in self.surface.bitmapDict.keys() or force:
                         self.parent.log("Drawing waveform...")

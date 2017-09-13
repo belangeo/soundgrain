@@ -46,7 +46,7 @@ def checkForMidiDrivers():
 
 class Fx:
     def __init__(self, input, fx=0, chnls=2):
-        self.input = input
+        self.input = Denorm(DCBlock(input))
         self.fx = fx
         if fx == 0:
             self.process = WGVerb(self.input, feedback=.95, cutoff=5000, bal=1, mul=.7)
@@ -71,7 +71,7 @@ class Fx:
             self.process = self.input + self.flange
         elif fx == 9:
             self.process = AllpassWG(self.input, freq=100, feed=0.999, detune=0.5, mul=.3)
-        self.pan = SPan(self.process, outs=chnls, pan=0.5).out()
+        self.pan = SPan(self.process, outs=chnls, pan=0.5)
 
 class Granulator_Stream:
     def __init__(self, order, env, dens_noise, trans_noise, dur_noise, pit_noise, dev_noise,
@@ -212,8 +212,8 @@ class SG_Audio:
             self.notein = Notein(poly=16)
             self.noteinpitch = Sig(self.notein["pitch"])
             self.noteinvelocity = Sig(self.notein["velocity"])
-            self.noteonFunc = TrigFunc(self.notein["trigon"], self.noteon, range(10))
-            self.noteoffFunc = TrigFunc(self.notein["trigoff"], self.noteoff, range(10))
+            self.noteonFunc = TrigFunc(self.notein["trigon"], self.noteon, list(range(16)))
+            self.noteoffFunc = TrigFunc(self.notein["trigoff"], self.noteoff, list(range(16)))
         self.env = CosTable([(0,0),(2440,1),(5751,1),(8191,0)])
         self.envFrame.setEnv(self.env)
         self.refresh_met = Metro(0.066666666666666666)
@@ -339,7 +339,8 @@ class SG_Audio:
         for gr in self.streams.values():
             gr.create_granulator(self.table, self.pos_rnd)
             gr.ajustLength()
-        self.stream_sum.value = Mix([st.granulator for st in self.streams.values()], voices=self.chnls)
+        self.stream_sum.value = Mix([st.granulator for st in self.streams.values()] + \
+                                    [f.pan for f in self.fxs.values()], voices=self.chnls)
         if self.server.getIsStarted():
             for which in self.activeStreams:
                 self.streams[which].setActive(1)
@@ -492,9 +493,13 @@ class SG_Audio:
 
     def addFx(self, fx, key):
         self.fxs[key] = Fx(self.mixer[key], fx, self.chnls)
+        self.stream_sum.value = Mix([st.granulator for st in self.streams.values()] + \
+                                    [f.pan for f in self.fxs.values()], voices=self.chnls)
 
     def removeFx(self, key):
         del self.fxs[key]
+        self.stream_sum.value = Mix([st.granulator for st in self.streams.values()] + \
+                                    [f.pan for f in self.fxs.values()], voices=self.chnls)
 
     def setMixerChannelAmp(self, vin, vout, val):
         self.mixer.setAmp(vin, vout, val)

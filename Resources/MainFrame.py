@@ -430,7 +430,6 @@ class MainFrame(wx.Frame):
         dlg.Destroy()
 
     def handleLoad(self, evt):
-        print(self.lastAudioPath)
         self.controls.handleLoad()
 
     def handleInsert(self, evt):

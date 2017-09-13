@@ -44,10 +44,9 @@ class MidiSettings(wx.Frame):
         self.panel = wx.Panel(self, -1)
         self.panel.SetBackgroundColour(BACKGROUND_COLOUR)
 
-        mainBox = wx.BoxSizer(wx.VERTICAL)
         box = wx.BoxSizer(wx.VERTICAL)
 
-        box.Add(wx.StaticText(self.panel, id=-1, label="Midi Interface"), 0, wx.CENTER|wx.ALL, 2)
+        box.Add(wx.StaticText(self.panel, id=-1, label="Midi Interface"), 0, wx.LEFT|wx.TOP|wx.RIGHT, 5)
         self.interfaceList, self.interfaceIndexes, selected = checkForMidiDrivers()
         self.interfaceList = [ensureNFD(driver) for driver in self.interfaceList]
         if self.interfaceList != []:
@@ -60,26 +59,28 @@ class MidiSettings(wx.Frame):
                     self.selectedInterface = self.interfaceIndexes[self.interfaceList.index(miDriver)]
                 else:
                     self.selectedInterface = selected
-            self.popupInterface = wx.Choice(self.panel, id=-1, size=(200, -1), choices=self.interfaceList)
+            self.popupInterface = wx.Choice(self.panel, id=-1, size=(250, -1), choices=self.interfaceList)
             if self.selectedInterface:
                 self.popupInterface.SetSelection(self.interfaceIndexes.index(self.selectedInterface))
             self.popupInterface.Bind(wx.EVT_CHOICE, self.changeInterface)
             self.parent.controls.midiInterface = self.selectedInterface
         else:
             self.selectedInterface = None
-            self.popupInterface = wx.Choice(self.panel, id=-1, size=(200, -1), choices=["No interface"])
+            self.popupInterface = wx.Choice(self.panel, id=-1, size=(250, -1), choices=["No interface"])
             self.popupInterface.SetSelection(0)
-        box.Add(self.popupInterface, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
+        box.Add(self.popupInterface, 0, wx.ALL|wx.EXPAND, 3)
 
-        box.Add(wx.StaticText(self.panel, id=-1, label="Add / Remove Method"), 0, wx.CENTER|wx.ALL, 2)
-        self.popupMethod = wx.Choice(self.panel, id=-1, size=(200, -1), choices=["Noteon / Noteoff", "Noteon / Noteon"])
+        box.Add(wx.StaticLine(self.panel, size=(240, 1)), 0, wx.ALL, 5)
+
+        box.Add(wx.StaticText(self.panel, id=-1, label="Add / Remove Method"), 0, wx.LEFT|wx.TOP|wx.RIGHT, 5)
+        self.popupMethod = wx.Choice(self.panel, id=-1, size=(250, -1), choices=["Noteon / Noteoff", "Noteon / Noteon"])
         self.popupMethod.SetSelection(0)
         self.popupMethod.Bind(wx.EVT_CHOICE, self.handleMethod)
-        box.Add(self.popupMethod, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
+        box.Add(self.popupMethod, 0, wx.EXPAND|wx.ALL, 3)
 
-        box.Add(wx.StaticLine(self.panel, size=(200, 1)), 0, wx.ALL, 5)
+        box.Add(wx.StaticLine(self.panel, size=(240, 1)), 0, wx.ALL, 5)
 
-        box.Add(wx.StaticText(self.panel, id=-1, label="Pitch Mapping"), 0, wx.CENTER|wx.ALL, 5)
+        box.Add(wx.StaticText(self.panel, id=-1, label="Pitch Mapping"), 0, wx.LEFT|wx.TOP|wx.RIGHT, 5)
 
         self.xTranspo = wx.CheckBox(self.panel, label="Transposition")
         self.xTranspo.SetValue(True)
@@ -90,15 +91,17 @@ class MidiSettings(wx.Frame):
         self.xPosition.Bind(wx.EVT_CHECKBOX, self.handlePosition)
         box.Add(self.xPosition, 0, wx.ALL, 5)
 
-        box.Add(wx.StaticText(self.panel, id=-1, label="X Position Octave Spread"), 0, wx.CENTER|wx.ALL, 2)
-        self.octaveSpread = ControlSlider(self.panel, 1, 4, 2, size=(200, 16), outFunction=self.handleSpread)
+        box.Add(wx.StaticText(self.panel, id=-1, label="X Pos Octave Spread"), 0, wx.LEFT|wx.TOP|wx.RIGHT, 5)
+        self.octaveSpread = ControlSlider(self.panel, 1, 4, 2, size=(250, 16), outFunction=self.handleSpread)
         self.enableOctaveSpread(self.xPosition.GetValue())
-        box.Add(self.octaveSpread, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
+        box.Add(self.octaveSpread, 0, wx.ALL|wx.EXPAND, 3)
 
-        mainBox.Add(box, 0, wx.ALL, 10)
-        self.panel.SetSizerAndFit(mainBox)
+        box.Add(wx.StaticLine(self.panel, size=(240, 1)), 0, wx.ALL, 5)
 
-        size = (230, 300)
+        self.panel.SetSizerAndFit(box)
+
+        size = self.GetBestSize() #(230, 500)
+        size = (size[0], size[1]+30)
         self.SetMinSize(size)
         self.SetMaxSize(size)
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))

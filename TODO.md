@@ -11,9 +11,11 @@ Soundgrain todo
 
 - 2009-2017 in license text. **done**
 
-- Review MIDI features.
+- Add global 4 bands EQ and Compressor. **done**
 
 - Review fx balls.
+
+- Review MIDI features.
 
 - slider's midi control.
 
