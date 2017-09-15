@@ -17,7 +17,7 @@ Soundgrain todo
 
 - Review MIDI features. **done**
 
-- slider's midi control.
+- slider's midi control. **done**
 
 - FxBall control window to small.
     - ok on linux
