@@ -18,9 +18,56 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import wx
+from pyo import rescale
 from pyolib._wxwidgets import ControlSlider
 from .constants import BACKGROUND_COLOUR, PLATFORM
 
+class SGControlSlider(ControlSlider):
+    def __init__(self, parent, minvalue, maxvalue, init=None, pos=(0,0), size=(200,16), log=False,
+                 outFunction=None, integer=False, powoftwo=False, backColour=None, orient=wx.HORIZONTAL,
+                 ctrllabel=""):
+        ControlSlider.__init__(self, parent, minvalue, maxvalue, init, pos, size, log,
+                 outFunction, integer, powoftwo, backColour, orient, ctrllabel)
+        self.sg_audio = self.GetParent().GetParent().GetParent().GetParent().sg_audio
+        self.output_callback = outFunction
+        self.midilearn = False
+        self.normal_colour = self.backgroundColour
+        self.Bind(wx.EVT_RIGHT_DOWN, self.MouseRightDown)
+
+    def MouseRightDown(self, evt):
+        if self.midilearn:
+            self.midilearn = False
+            self.setBackgroundColour(self.normal_colour)
+            self.sg_audio.ctlscan(None)
+        else:
+            self.midilearn = True
+            if self.midictl is not None:
+                self.sg_audio.unbind(self.midictl, self.midi)
+            self.setBackgroundColour("#000000")
+            self.sg_audio.ctlscan(self.getMidiScan)
+
+    def getMidiScan(self, ctlnum, midichnl):
+        self.assignMidiCtl(ctlnum)
+        self.midilearn = False
+        self.setBackgroundColour(self.normal_colour)
+
+    def assignMidiCtl(self, ctlnum):
+        self.setMidiCtl(ctlnum)
+        self.sg_audio.bind(ctlnum, self.midi)
+
+    def midi(self, value):
+        v = rescale(value, 0, 127, self.getMinValue(), self.getMaxValue(), ylog=self.log)
+        self.SetValue(v, True)
+        if not self.IsShownOnScreen():
+            self.output_callback(v)
+
+    def getMidiBinding(self):
+        return self.midictl
+
+    def setMidiBinding(self, ctlnum):
+        if ctlnum is not None:
+            self.assignMidiCtl(ctlnum)
+        
 class Module(wx.Frame):
     def __init__(self, parent, sg_audio):
         wx.Frame.__init__(self, parent, -1, "Controls")
@@ -70,7 +117,7 @@ class Module(wx.Frame):
         staticLabel.SetFont(font)
         box.Add(staticLabel, 0, wx.LEFT, 10)
         sliderBox = wx.BoxSizer(wx.HORIZONTAL)
-        slider = ControlSlider(self.panel1, minval, maxval, val, size=(250, 16), 
+        slider = SGControlSlider(self.panel1, minval, maxval, val, size=(250, 16), 
                                log=log, integer=integer, outFunction=callback)
         sliderBox.Add(slider, 1, wx.LEFT | wx.RIGHT, 5)
         box.Add(sliderBox, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
@@ -361,7 +408,7 @@ class GranulatorFrame(Module):
         self.sl_rndfqr = self.makeSliderBox(self.box1, "Grains Filter Q Random", 0, 1, self.rndfqr, False, False, self.handleRandFilterQ)
         self.makeTransBox(self.box1)
         self.makeFilterTransBox(self.box1)
-        self.panel1.SetSizer(self.box1)
+        self.panel1.SetSizerAndFit(self.box1)
         self.notebook.AddPage(self.panel1, "Granulator")
 
         self.tx_ydns_ch, self.tx_dns_ymin, self.tx_dns_ymax, self.tx_dns_ymid = self.makeYaxisBox(self.box2, "Density of Grains Multiplier", 0, "0.", "1.", "", "dns")
@@ -377,15 +424,14 @@ class GranulatorFrame(Module):
         self.tx_yffr_ch, self.tx_ffr_ymin, self.tx_ffr_ymax, self.tx_ffr_ymid = self.makeYaxisBox(self.box2, "Grains Filter Freq Random", 0, "0.", "1.0", "", "ffr")
         self.tx_yfqr_ch, self.tx_fqr_ymin, self.tx_fqr_ymax, self.tx_fqr_ymid = self.makeYaxisBox(self.box2, "Grains Filter Q Random", 0, "0.", "1.0", "", "fqr")
         self.tx_ypan_ch, self.tx_pan_ymin, self.tx_pan_ymax, self.tx_pan_ymid = self.makeYaxisBox(self.box2, "Grains Panning", 0, "0.", "1.", "", "pan")
-        self.panel2.SetSizer(self.box2)
+        self.panel2.SetSizerAndFit(self.box2)
         self.notebook.AddPage(self.panel2, "Y Axis")
 
         box.Add(self.notebook, 1, wx.ALL, 5)
         self.panel.SetSizerAndFit(box)
 
         self.Fit()
-        X = self.GetSize()[0]
-        Y = self.GetSize()[1] + self.tx_trans.GetSize()[1]
+        X, Y = self.GetSize()
         self.SetMinSize((X,Y))
         self.SetMaxSize((X,Y))
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
@@ -408,6 +454,20 @@ class GranulatorFrame(Module):
                 'rndfqr': self.rndfqr,
                 'trans': self.getTrans(),
                 'ftrans': self.getFilterTrans(),
+                'sl_dens_m': self.sl_dens.getMidiBinding(),
+                'sl_pit_m': self.sl_pit.getMidiBinding(),
+                'sl_dur_m': self.sl_dur.getMidiBinding(),
+                'sl_dev_m': self.sl_dev.getMidiBinding(),
+                'sl_filtf_m': self.sl_filtf.getMidiBinding(),
+                'sl_filtq_m': self.sl_filtq.getMidiBinding(),
+                'sl_filtt_m': self.sl_filtt.getMidiBinding(),
+                'sl_rnddens_m': self.sl_rnddens.getMidiBinding(),
+                'sl_rndpit_m': self.sl_rndpit.getMidiBinding(),
+                'sl_rnddur_m': self.sl_rnddur.getMidiBinding(),
+                'sl_rndpos_m': self.sl_rndpos.getMidiBinding(),
+                'sl_rndpan_m': self.sl_rndpan.getMidiBinding(),
+                'sl_rndffr_m': self.sl_rndffr.getMidiBinding(),
+                'sl_rndfqr_m': self.sl_rndfqr.getMidiBinding(),
                 'dnsCheck': self.tx_ydns_ch.GetValue(),
                 'dnsYmin': float(self.tx_dns_ymin.GetValue()),
                 'dnsYmax': float(self.tx_dns_ymax.GetValue()),
@@ -476,6 +536,20 @@ class GranulatorFrame(Module):
         self.handleRandPan(dict['rndpan'], fromSlider=False)
         self.handleRandFilterFreq(dict.get('rndffr', 0.0), fromSlider=False)
         self.handleRandFilterQ(dict.get('rndfqr', 0.0), fromSlider=False)
+        self.sl_dens.setMidiBinding(dict.get('sl_dens_m', None))
+        self.sl_pit.setMidiBinding(dict.get('sl_pit_m', None))
+        self.sl_dur.setMidiBinding(dict.get('sl_dur_m', None))
+        self.sl_dev.setMidiBinding(dict.get('sl_dev_m', None))
+        self.sl_filtf.setMidiBinding(dict.get('sl_filtf_m', None))
+        self.sl_filtq.setMidiBinding(dict.get('sl_filtq_m', None))
+        self.sl_filtt.setMidiBinding(dict.get('sl_filtt_m', None))
+        self.sl_rnddens.setMidiBinding(dict.get('sl_rnddens_m', None))
+        self.sl_rndpit.setMidiBinding(dict.get('sl_rndpit_m', None))
+        self.sl_rnddur.setMidiBinding(dict.get('sl_rnddur_m', None))
+        self.sl_rndpos.setMidiBinding(dict.get('sl_rndpos_m', None))
+        self.sl_rndpan.setMidiBinding(dict.get('sl_rndpan_m', None))
+        self.sl_rndffr.setMidiBinding(dict.get('sl_rndffr_m', None))
+        self.sl_rndfqr.setMidiBinding(dict.get('sl_rndfqr_m', None))
         self.setTrans(dict['trans'])
         self.setFilterTrans(dict.get('ftrans', [1.0]))
                      

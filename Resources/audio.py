@@ -182,6 +182,8 @@ class SG_Audio:
         self.globalAmplitude = 1.0
         self.midiTriggerMethod = 0
         self.midiPitches = []
+        self.ctlscan_callback = None
+        self.bindings = {}
         self.server = Server(sr=self.samplingRate, buffersize=256, duplex=0)
         self.check_dict = {"y_dns_check": 0, "y_pit_check": 1, "y_len_check": 0,
                            "y_dev_check": 0, "y_amp_check": 0, "y_trs_check": 0,
@@ -206,6 +208,7 @@ class SG_Audio:
             self.server.setMidiInputDevice(midiInterface)
         self.server._server.setAmpCallable(self.controls.meter)
         self.server.boot()
+        self.rawmidi = RawMidi(self.midirecv)
         self.mixer = Mixer(outs=10, chnls=chnls)
         if midiInterface != None:
             USE_MIDI = True
@@ -276,6 +279,7 @@ class SG_Audio:
         del self.ff_noise
         del self.filterq
         del self.filtert
+        del self.rawmidi
         del self.mixer
         del self.fbEqAmps
         del self.fbEq
@@ -595,3 +599,30 @@ class SG_Audio:
     def noteoff(self, voice):
         if self.midiTriggerMethod == 0:
             self.deleteTraj(voice)
+
+    # handling of cc scan and bindings
+    def midirecv(self, status, data1, data2):
+        if status & 0xF0 == 0xB0: # control change
+            midichnl = status - 0xB0 + 1
+            if self.ctlscan_callback is not None:
+                self.ctlscan_callback(data1, midichnl)
+                self.ctlscan_callback = None
+            if data1 in self.bindings:
+                for callback in self.bindings[data1]:
+                    callback(data2)
+
+    def ctlscan(self, callback):
+        self.ctlscan_callback = callback
+
+    def bind(self, x, callback):
+        if x in self.bindings:
+            self.bindings[x].append(callback)
+        else:
+            self.bindings[x] = [callback]
+
+    def unbind(self, x, callback):
+        if x in self.bindings:
+            if callback in self.bindings[x]:
+                self.bindings[x].remove(callback)
+                if not self.bindings[x]:
+                    del self.bindings[x]
