@@ -37,7 +37,6 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.amplitude = 1
         self.nchnls = 2
         self.samplingRate = 44100
-        self.midiInterface = None
         self.fileformat = 0
         self.sampletype = 0
         self.tempState = None
@@ -628,7 +627,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.sampletype = event.GetInt()
 
     def bootServer(self):
-        self.parent.sg_audio.boot(self.parent.audioDriver, self.nchnls, self.samplingRate, self.midiInterface)
+        self.parent.sg_audio.boot(self.parent.audioDriver, self.nchnls, self.samplingRate)
         self.tog_audio.Enable()
         if self.sndPath != "" and self.tempState == None:
             self.loadSound(self.sndPath)
@@ -653,7 +652,6 @@ class ControlPanel(scrolled.ScrolledPanel):
                 self.tx_chnls.SetBackgroundColour("#EEEEEE")
                 self.pop_sr.Disable()
                 self.parent.enableDrivers(False)
-                self.parent.midiSettings.popupInterface.Disable()
                 self.tog_audio.SetLabel('Stop')
                 self.tog_audio.SetValue(1)
                 self.parent.menu.Check(7, True)
@@ -666,7 +664,6 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.tx_chnls.SetBackgroundColour("#FFFFFF")
             self.pop_sr.Enable()
             self.parent.enableDrivers(True)
-            self.parent.midiSettings.popupInterface.Enable()
             self.tog_audio.SetLabel('Start')
             self.tog_audio.SetValue(0)
             self.parent.menu.Check(7, False)

@@ -63,7 +63,7 @@ class MidiSettings(wx.Frame):
             if self.selectedInterface:
                 self.popupInterface.SetSelection(self.interfaceIndexes.index(self.selectedInterface))
             self.popupInterface.Bind(wx.EVT_CHOICE, self.changeInterface)
-            self.parent.controls.midiInterface = self.selectedInterface
+            self.sg_audio.setMidiListener(self.selectedInterface)
         else:
             self.selectedInterface = None
             self.popupInterface = wx.Choice(self.panel, id=-1, size=(250, -1), choices=["No interface"])
@@ -121,23 +121,9 @@ class MidiSettings(wx.Frame):
             return self.interfaceList[self.interfaceIndexes.index(self.selectedInterface)]
 
     def changeInterface(self, evt):
-        status, path = self.parent.checkForMixedSound()
-        if not status:
-            for i, driver in enumerate(self.interfaceList):
-                if driver == self.interfaceList[self.interfaceIndexes.index(self.selectedInterface)]:
-                    self.popupInterface.SetSelection(i)
-            return
-        if "Mixed sound" in self.parent.controls.sndPath:
-            self.parent.controls.sndPath = path
-            if path == "":
-                self.parent.panel.sndBitmap = None
-                self.parent.panel.needBitmap = True
-                wx.CallAfter(self.parent.panel.Refresh)
         selectedInterface = self.popupInterface.GetStringSelection()
         self.selectedInterface = self.interfaceIndexes[self.interfaceList.index(selectedInterface)]
-        self.parent.controls.midiInterface = self.selectedInterface
-        self.parent.controls.shutdownServer()
-        self.parent.controls.bootServer()
+        self.sg_audio.setMidiListener(self.selectedInterface)
 
     # TODO: replace handle, set and get method with events
     def handleMethod(self, evt):

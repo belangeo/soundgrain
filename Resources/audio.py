@@ -28,8 +28,6 @@ if SAMPLE_PRECISION == "64-bit":
 else:
     from pyo import *
 
-USE_MIDI = False
-
 def soundInfo(sndfile):
     num_frames, dur, samprate, chans, fformat, stype = sndinfo(sndfile)
     return (chans, samprate, dur)
@@ -182,9 +180,11 @@ class SG_Audio:
         self.globalAmplitude = 1.0
         self.midiTriggerMethod = 0
         self.midiPitches = []
+        self.midiVoices = {}
         self.ctlscan_callback = None
         self.bindings = {}
         self.server = Server(sr=self.samplingRate, buffersize=256, duplex=0)
+        self.server.deactivateMidi()
         self.check_dict = {"y_dns_check": 0, "y_pit_check": 1, "y_len_check": 0,
                            "y_dev_check": 0, "y_amp_check": 0, "y_trs_check": 0,
                            "y_dur_check": 0, "y_pos_check": 0, "y_pan_check": 0,
@@ -197,26 +197,21 @@ class SG_Audio:
                          "y_fif_map": [0, 1, 2, None], "y_fiq_map": [0, 1, 2, None], "y_ffr_map": [0, 1, 1, None],
                          "y_fqr_map": [0, 1, 1, None]}
 
-    def boot(self, driver, chnls, samplingRate, midiInterface):
-        global USE_MIDI
+    def setMidiListener(self, device):
+        if hasattr(self, "listen"):
+            self.listen.stop()
+        self.listen = MidiListener(self.midirecv, device)
+        self.listen.start()
+
+    def boot(self, driver, chnls, samplingRate):
         self.server.setOutputDevice(driver)
         self.chnls = chnls
         self.server.setNchnls(chnls)
         self.samplingRate = samplingRate
         self.server.setSamplingRate(samplingRate)
-        if midiInterface != None:
-            self.server.setMidiInputDevice(midiInterface)
         self.server._server.setAmpCallable(self.controls.meter)
         self.server.boot()
-        self.rawmidi = RawMidi(self.midirecv)
         self.mixer = Mixer(outs=10, chnls=chnls)
-        if midiInterface != None:
-            USE_MIDI = True
-            self.notein = Notein(poly=16)
-            self.noteinpitch = Sig(self.notein["pitch"])
-            self.noteinvelocity = Sig(self.notein["velocity"])
-            self.noteonFunc = TrigFunc(self.notein["trigon"], self.noteon, list(range(16)))
-            self.noteoffFunc = TrigFunc(SDelay(self.notein["trigoff"], delay=0.005), self.noteoff, list(range(16)))
         self.env = CosTable([(0,0),(2440,1),(5751,1),(8191,0)])
         self.envFrame.setEnv(self.env)
         self.refresh_met = Metro(0.066666666666666666)
@@ -279,7 +274,6 @@ class SG_Audio:
         del self.ff_noise
         del self.filterq
         del self.filtert
-        del self.rawmidi
         del self.mixer
         del self.fbEqAmps
         del self.fbEq
@@ -287,12 +281,6 @@ class SG_Audio:
         del self.compLevel
         del self.compDelay
         del self.outComp
-        if USE_MIDI:
-            del self.notein
-            del self.noteinpitch
-            del self.noteinvelocity
-            del self.noteonFunc
-            del self.noteoffFunc
         self.server.shutdown()
 
     def recStart(self, filename, fileformat=0, sampletype=0):
@@ -579,30 +567,31 @@ class SG_Audio:
     def refresh_screen(self):
         wx.CallAfter(self.refresh)
 
-    def noteon(self, voice):
-        if self.midiTriggerMethod == 0:
-            pits = self.noteinpitch.get(True)
-            vels = self.noteinvelocity.get(True)
-            pit, vel = midiToTranspo(pits[voice]), vels[voice]
-            self.createTraj(voice, pit, vel, pits[voice])
-        elif self.midiTriggerMethod == 1:
-            pits = self.noteinpitch.get(True)
-            vels = self.noteinvelocity.get(True)
-            pit, vel = pits[voice], vels[voice]
-            if pit not in self.midiPitches:
-                self.midiPitches.append(pit)
-                self.createTraj(pit, midiToTranspo(pit), vel, pits[voice])
-            else:
-                self.midiPitches.remove(pit)
-                self.deleteTraj(pit)
-
-    def noteoff(self, voice):
-        if self.midiTriggerMethod == 0:
-            self.deleteTraj(voice)
-
-    # handling of cc scan and bindings
+    # Midi events handling
     def midirecv(self, status, data1, data2):
-        if status & 0xF0 == 0xB0: # control change
+        # noteon
+        if status & 0xF0 == 0x90 and data2 != 0:
+            if self.midiVoices == {}:
+                self.midiVoices[data1] = 0
+                self.noteon(0, data1, data2)
+            else:
+                voices = self.midiVoices.values()
+                voice = -1
+                for i in range(16):
+                    if i not in voices:
+                        voice = i
+                        break
+                if voice != -1:
+                    self.midiVoices[data1] = voice
+                    self.noteon(voice, data1, data2)
+        # noteoff
+        elif status & 0xF0 == 0x90 and data2 == 0 or status & 0xF0 == 0x80:
+            if data1 in self.midiVoices:
+                voice = self.midiVoices[data1]
+                del self.midiVoices[data1]
+            self.noteoff(voice)
+        # control change
+        if status & 0xF0 == 0xB0:
             midichnl = status - 0xB0 + 1
             if self.ctlscan_callback is not None:
                 self.ctlscan_callback(data1, midichnl)
@@ -626,3 +615,20 @@ class SG_Audio:
                 self.bindings[x].remove(callback)
                 if not self.bindings[x]:
                     del self.bindings[x]
+
+    def noteon(self, voice, pit, vel):
+        if self.midiTriggerMethod == 0:
+            hz, vel = midiToTranspo(pit), vel / 127.0
+            self.createTraj(voice, hz, vel, pit)
+        elif self.midiTriggerMethod == 1:
+            vel = vel / 127.0
+            if pit not in self.midiPitches:
+                self.midiPitches.append(pit)
+                self.createTraj(pit, midiToTranspo(pit), vel, pit)
+            else:
+                self.midiPitches.remove(pit)
+                self.deleteTraj(pit)
+
+    def noteoff(self, voice):
+        if self.midiTriggerMethod == 0:
+            self.deleteTraj(voice)
