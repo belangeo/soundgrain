@@ -1,17 +1,16 @@
-import os, shutil, sys
+import os
 
-version = sys.version_info[:2]
+flags = "--clean -F -c"
+hidden = "--hidden-import wx.adv --hidden-import wx.html --hidden-import wx.xml"
+icon = "--icon=Resources\SoundGrain.ico"
+os.system('pyinstaller %s %s %s "SoundGrain.py"' % (flags, hidden, icon))
 
-os.system('C:\Python%d%d\Scripts\pyi-makespec -F -c --icon=Resources\SoundGrain.ico "SoundGrain.py"' % version)
-os.system('C:\Python%d%d\Scripts\pyi-build "SoundGrain.spec"' % version)
-
-#os.system("python ..\pyinstaller\Configure.py")
-#os.system('python ..\pyinstaller\Makespec.py -F -c --icon=Resources\SoundGrain.ico "SoundGrain.py"')
-
-os.system("svn export . SoundGrain_Win")
+os.system("git checkout-index -a -f --prefix=SoundGrain_Win/")
 os.system("copy dist\SoundGrain.exe SoundGrain_Win /Y")
 os.system("rmdir /Q /S SoundGrain_Win\scripts")
 os.remove("SoundGrain_Win/SoundGrain.py")
+os.remove("SoundGrain_Win/.gitignore")
+os.remove("SoundGrain_Win/setup.py")
 os.remove("SoundGrain_Win/Resources/SoundGrain.icns")
 os.remove("SoundGrain_Win/Resources/SoundGrainDocIcon.icns")
 os.remove("SoundGrain.spec")

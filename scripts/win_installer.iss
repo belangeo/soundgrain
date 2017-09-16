@@ -8,7 +8,7 @@
 AppId={{40AF40BB-C73D-46DF-A2F9-A19CCDEEF1DD}
 AppName=SoundGrain
 AppVersion=6.0.0
-AppPublisher=iACT.umontreal.ca
+AppPublisher=ajaxsoundstudio.com
 AppPublisherURL=http://ajaxsoundstudio.com/software/soundgrain
 AppSupportURL=http://ajaxsoundstudio.com/software/soundgrain
 AppUpdatesURL=http://ajaxsoundstudio.com/software/soundgrain
