@@ -114,6 +114,7 @@ class Module(wx.Frame):
             font.SetPointSize(psize-1)
         else:
             font.SetPointSize(psize-2)
+        box.AddSpacer(5)
         staticLabel.SetFont(font)
         box.Add(staticLabel, 0, wx.LEFT, 10)
         sliderBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -215,6 +216,7 @@ class Module(wx.Frame):
         else:
             font.SetPointSize(psize-2)
         staticLabel1.SetFont(font)
+        box.AddSpacer(10)
         box.Add(staticLabel1, 0, wx.CENTER|wx.TOP, 5)
         transBox = wx.BoxSizer(wx.HORIZONTAL)
         self.tx_trans = wx.TextCtrl(self.panel1, -1, "1, ", size=(250, -1), 
@@ -292,12 +294,12 @@ class Module(wx.Frame):
         tx_check = wx.CheckBox(self.panel2, -1, "", name="y_%s_check" % name)
         tx_check.SetValue(checked)
         tx_check.Bind(wx.EVT_CHECKBOX, self.handleCheck)
-        textBox.Add(tx_check, 0, wx.LEFT | wx.RIGHT, 10)
+        textBox.Add(tx_check, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 10)
 
         minLabel = wx.StaticText(self.panel2, -1, "Min: ")
         font.SetWeight(wx.FONTWEIGHT_NORMAL)
         minLabel.SetFont(font)
-        textBox.Add(minLabel, 0, wx.TOP, 4)
+        textBox.Add(minLabel, 0, wx.ALIGN_CENTER_VERTICAL, 0)
         tx_min = wx.TextCtrl(self.panel2, -1, minval, size=(50, -1), 
                              style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, 
                              name="y_%s_map" % name)
@@ -309,7 +311,7 @@ class Module(wx.Frame):
         midLabel = wx.StaticText(self.panel2, -1, "Mid: ")
         font.SetWeight(wx.FONTWEIGHT_NORMAL)
         midLabel.SetFont(font)
-        textBox.Add(midLabel, 0, wx.TOP, 4)
+        textBox.Add(midLabel, 0, wx.ALIGN_CENTER_VERTICAL, 0)
         tx_mid = wx.TextCtrl(self.panel2, -1, midval, size=(50, -1),
                              style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB,
                              name="y_%s_map" % name)
@@ -320,7 +322,7 @@ class Module(wx.Frame):
 
         maxLabel = wx.StaticText(self.panel2, -1, "Max: ")
         maxLabel.SetFont(font)
-        textBox.Add(maxLabel, 0, wx.TOP, 4)
+        textBox.Add(maxLabel, 0, wx.ALIGN_CENTER_VERTICAL, 0)
         tx_max = wx.TextCtrl(self.panel2, -1, maxval, size=(50, -1), 
                              style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, 
                              name="y_%s_map" % name)
