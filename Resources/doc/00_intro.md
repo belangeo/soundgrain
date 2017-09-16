@@ -1,14 +1,14 @@
 Introduction
 ============
 
-Welcome to the SoundGrain 5.0.1 documentation.
+Welcome to the SoundGrain 6.0.0 documentation.
 ----------------------------------------------
 
 Soundgrain is a graphical interface where users can draw and edit 
 trajectories to control granular sound synthesis. Soundgrain is 
 written with Python and WxPython and uses Pyo as its audio engine. 
 
-GNU GPL v3 (c) Olivier Belanger 2015
+GNU GPL v3 (c) Olivier Belanger 2009-2017
 
 ### SoundGrain and Pyo on the web: ###
 

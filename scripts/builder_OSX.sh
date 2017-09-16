@@ -1,9 +1,9 @@
 rm -rf build dist
 
-export DMG_DIR="SoundGrain 5.0.1"
-export DMG_NAME="SoundGrain_5.0.1.dmg"
-export SRC_DIR="SoundGrain_5.0.1-src"
-export SRC_TAR="SoundGrain_5.0.1-src.tar.bz2"
+export DMG_DIR="SoundGrain 6.0.0"
+export DMG_NAME="SoundGrain_6.0.0.dmg"
+export SRC_DIR="SoundGrain_6.0.0-src"
+export SRC_TAR="SoundGrain_6.0.0-src.tar.bz2"
 
 py2applet --make-setup --argv-emulation=0 SoundGrain.py Resources/*
 python setup.py py2app --plist=scripts/Info.plist

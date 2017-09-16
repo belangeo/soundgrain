@@ -7,7 +7,7 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{40AF40BB-C73D-46DF-A2F9-A19CCDEEF1DD}
 AppName=SoundGrain
-AppVersion=5.0.1
+AppVersion=6.0.0
 AppPublisher=iACT.umontreal.ca
 AppPublisherURL=http://ajaxsoundstudio.com/software/soundgrain
 AppSupportURL=http://ajaxsoundstudio.com/software/soundgrain
@@ -16,7 +16,7 @@ DefaultDirName={pf}\SoundGrain
 DisableDirPage=yes
 DefaultGroupName=SoundGrain
 AllowNoIcons=yes
-OutputBaseFilename=SoundGrain_5.0.1_setup
+OutputBaseFilename=SoundGrain_6.0.0_setup
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
