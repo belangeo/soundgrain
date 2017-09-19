@@ -33,10 +33,10 @@ class SoundGrainApp(wx.App):
             sizex = sysx - 40
         else:
             sizex = 1200
-        if sysy < 900:
+        if sysy < 800:
             sizey = sysy - 40
         else:
-            sizey = 900
+            sizey = 800
         self.frame = MainFrame(None, -1, pos=(0, 20), size=(sizex, sizey),
                                screen_size=(sysx, sysy))
 

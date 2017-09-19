@@ -103,7 +103,7 @@
 <name>size</name>
 <value><array><data>
 <value><int>1200</int></value>
-<value><int>900</int></value>
+<value><int>800</int></value>
 </data></array></value>
 </member>
 <member>
