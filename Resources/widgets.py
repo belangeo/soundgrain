@@ -823,7 +823,7 @@ class ControlKnob(wx.Panel):
         if self.selected:
             dc.SetBrush(wx.Brush('#FFFFFF', wx.SOLID))
             dc.SetPen(wx.Pen('#FFFFFF', width=self.borderWidth, style=wx.SOLID))
-            dc.DrawRoundedRectangleRect(recval, 3)
+            dc.DrawRoundedRectangle(recval, 3)
 
         dc.DrawBitmap(self.knobBitmap, 2, 13, True)
         r = 0.17320508075688773 # math.sqrt(.03)

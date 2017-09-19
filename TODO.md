@@ -19,5 +19,7 @@ Soundgrain todo
 
 - slider's midi control. **done**
 
+- Documentation for the 4 bands EQ and the compressor. **done**
+
 - FxBall control window to small.
     - ok on linux

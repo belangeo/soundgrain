@@ -172,8 +172,8 @@
 <value><array><data>
 <value><double>-3.0</double></value>
 <value><double>2.0</double></value>
-<value><double>0.010000000000000002</double></value>
-<value><double>0.1</double></value>
+<value><double>0.05</double></value>
+<value><double>0.2</double></value>
 </data></array></value>
 </member>
 <member>

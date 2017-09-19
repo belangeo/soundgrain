@@ -247,8 +247,9 @@ class SG_Audio:
                             freq2=self.eqFreq[1], freq3=self.eqFreq[2], mul=self.fbEqAmps)
         self.outEq = Mix(self.fbEq, voices=self.chnls)
 
-        self.compLevel = Compress(self.outEq, thresh=-3, ratio=2, risetime=.01,
-                                    falltime=.1, lookahead=0, knee=0.5, outputAmp=True)
+        self.compLevel = Compress(self.outEq, thresh=-3, ratio=2, risetime=.05,
+                                    falltime=.2, lookahead=5.0, knee=0.5, outputAmp=True)
+        print(len(self.compLevel))
         self.compDelay = Delay(self.outEq, delay=0.005)
         self.outComp = self.compDelay * self.compLevel
         self.outComp.out()

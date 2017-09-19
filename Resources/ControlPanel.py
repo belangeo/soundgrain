@@ -109,9 +109,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         cpKnobBox.Add(self.knobComp1, 0, wx.LEFT | wx.RIGHT, 5)
         self.knobComp2 = ControlKnob(self, 1, 10, 2, label='Ratio', outFunction=self.changeComp2)
         cpKnobBox.Add(self.knobComp2, 0, wx.LEFT | wx.RIGHT, 5)
-        self.knobComp3 = ControlKnob(self, 0.001, 0.5, 0.01, label='Rise', outFunction=self.changeComp3)
+        self.knobComp3 = ControlKnob(self, 0.001, 0.5, 0.05, label='Rise', outFunction=self.changeComp3)
         cpKnobBox.Add(self.knobComp3, 0, wx.LEFT | wx.RIGHT, 5)
-        self.knobComp4 = ControlKnob(self, 0.01, 1, .1, label='Fall', outFunction=self.changeComp4)
+        self.knobComp4 = ControlKnob(self, 0.01, 1, .2, label='Fall', outFunction=self.changeComp4)
         cpKnobBox.Add(self.knobComp4, 0, wx.LEFT | wx.RIGHT, 5)
 
         box.Add(cpKnobBox)
