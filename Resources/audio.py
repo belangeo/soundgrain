@@ -107,7 +107,7 @@ class Granulator_Stream:
         self.y_pos = Randh(min=-1, max=1, freq=202, mul=0).stop()
         self.y_ffr = Randh(min=-1, max=1, freq=677, mul=0, add=1).stop()
         self.y_fqr = Randh(min=-1, max=1, freq=547, mul=0, add=1).stop()
-        self.fader = SigTo(value=0, mul=0.15)
+        self.fader = SigTo(value=0, mul=0.05)
         self.trigger = TrigFunc(self.metro, self.clock_func, self.order)
 
     def create_granulator(self, table, pos_rnd):
@@ -156,6 +156,10 @@ class Granulator_Stream:
             self.granulator.play()
             self.fader.value = 1
         else:
+            self.fader.value = 0
+            self.latecall = CallAfter(self.real_stop, 0.075)
+
+    def real_stop(self):
             self.metro.stop()
             self.y_trs.stop()
             self.y_dur.stop()
@@ -163,7 +167,6 @@ class Granulator_Stream:
             self.y_ffr.stop()
             self.y_fqr.stop()
             self.granulator.stop()
-            self.fader.value = 0
 
 class SG_Audio:
     def __init__(self, clock, refresh, controls, createTraj, deleteTraj, envFrame):
@@ -183,7 +186,7 @@ class SG_Audio:
         self.midiVoices = {}
         self.ctlscan_callback = None
         self.bindings = {}
-        self.server = Server(sr=self.samplingRate, buffersize=256, duplex=0)
+        self.server = Server(sr=self.samplingRate, buffersize=512, duplex=0)
         self.server.deactivateMidi()
         self.check_dict = {"y_dns_check": 0, "y_pit_check": 1, "y_len_check": 0,
                            "y_dev_check": 0, "y_amp_check": 0, "y_trs_check": 0,
@@ -216,6 +219,7 @@ class SG_Audio:
         self.envFrame.setEnv(self.env)
         self.refresh_met = Metro(0.066666666666666666)
         self.refresh_func = TrigFunc(self.refresh_met, self.refresh_screen)
+        self.latecalls = [None for i in range(MAX_STREAMS)]
 
         self.dens_noise = Randh(min=0, max=0, freq=25, mul=32, add=32)
         self.pit_noise = Randh(min=-1, max=1, freq=397, mul=0, add=1)
@@ -249,7 +253,6 @@ class SG_Audio:
 
         self.compLevel = Compress(self.outEq, thresh=-3, ratio=2, risetime=.05,
                                     falltime=.2, lookahead=5.0, knee=0.5, outputAmp=True)
-        print(len(self.compLevel))
         self.compDelay = Delay(self.outEq, delay=0.005)
         self.outComp = self.compDelay * self.compLevel
         self.outComp.out()
@@ -481,8 +484,11 @@ class SG_Audio:
                 self.mixer.addInput(which, self.streams[which].granulator)
         else:
             if which in self.activeStreams:
-                self.activeStreams.remove(which)
-                self.mixer.delInput(which)
+                self.latecalls[which] = CallAfter(self.stopStream, 0.075, which)
+
+    def stopStream(self, which):
+        self.activeStreams.remove(which)
+        self.mixer.delInput(which)
 
     def addFx(self, fx, key):
         self.fxs[key] = Fx(self.mixer[key], fx, self.chnls)
