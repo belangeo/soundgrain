@@ -92,11 +92,11 @@ class SoundGrainSplashScreen(wx.Frame):
         font.SetWeight(wx.FONTWEIGHT_BOLD)
         dc.SetFont(font)
         dc.DrawLabel("%s %s" % (NAME, SG_VERSION),
-                     wx.Rect(0, 305, 400, 15), wx.ALIGN_CENTER)
+                     wx.Rect(0, 298, 400, 15), wx.ALIGN_CENTER)
         dc.DrawLabel(u"Olivier Bélanger", 
-                     wx.Rect(0, 322, 400, 15), wx.ALIGN_CENTER)
+                     wx.Rect(0, 314, 400, 15), wx.ALIGN_CENTER)
         dc.DrawLabel("AjaxSoundStudio.com, %s" % SG_YEAR, 
-                     wx.Rect(0, 339, 400, 15), wx.ALIGN_CENTER)
+                     wx.Rect(0, 330, 400, 15), wx.ALIGN_CENTER)
 
     def OnClose(self):
         if self.mainframe:
