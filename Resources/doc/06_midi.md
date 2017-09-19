@@ -4,8 +4,11 @@ Midi Controls
 This section provides documentation about how to setup the MIDI controls in
 Soundgrain. 
 
-The MIDI keyboard can be used to trigger a memorized trajectory at different
+1. The MIDI keyboard can be used to trigger a memorized trajectory at different
 position on the surface and/or with different transposition factors.
+
+2. MIDI controllers can be assigned to sliders in the granulator controls
+window. See last section about how to use the midilearn function for a slider. 
  
 ______________________________________________________________________________
 
@@ -30,6 +33,7 @@ corresponding noteoff removes it.
 - __Noteon / Noteon__: With this mode, a noteon adds a new trajectory on the 
 surface (if no trajectory is already associated with the pitch of the note) 
 and a second hit on the same midi note will remove the corresponding trajectory.
+
 ______________________________________________________________________________
 
 Pitch Mapping
@@ -54,4 +58,20 @@ Velocity Mapping
 
 The velocity of the MIDI note gives the position of the trajectory on the Y axis.
 Velocity 0 is the bottom of the surface and velocity 127 is the top.
+
+______________________________________________________________________________
+
+How to assign a midi controller to a slider (MIDI learn)
+--------------------------------------------------------
+
+In the granulator controls window, right-click on a slider to activate its
+midilearn function. While the borders of the slider are black, the first
+controller to change on the connected interface will be assigned to the slider.
+
+To remove a binding for a slider right-click on it to activate the midilearn
+function and right-click again to deactivate it. This will remove the previous
+binding if any.
+
+MIDI bindings are saved in the .sg file.
+
  

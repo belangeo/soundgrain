@@ -69,6 +69,38 @@ This allow the user to adjust the volume of the trajectories relative to each ot
 
 ______________________________________________________________________________
 
+4 Bands Equalizer
+-----------------
+
+This is a four bands equalizer that you can use to adjust the spectrum of the 
+output sound. All trajectories and fx balls are mixed before passing through the
+EQ.
+
+The controls are the three frequencies, in Hz, delimiting the four bands and the
+four dB gains adjusting the amplitude of each band. 
+
+______________________________________________________________________________
+
+Dynamic Compressor
+------------------
+
+This is a dynamic compressor taking as input the output of the EQ, compressing the
+signal and sending its output to the final "Global Amplitude" control.
+
+The controls are:
+
+__Thresh__: Level, expressed in dB, above which the signal is reduced. Reference 
+level is 0dB.
+
+__Ratio__: Determines the input/output ratio for signals above the threshold.
+
+__Rise__: Used in the compressor's amplitude follower, time to reach upward value 
+in seconds.
+
+__Fall__: Used in the compressor's amplitude follower, time to reach downward value
+in seconds.
+______________________________________________________________________________
+
 Global Amplitude
 ----------------
 
