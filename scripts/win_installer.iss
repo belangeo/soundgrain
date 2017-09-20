@@ -28,8 +28,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\olipet\svn\soundgrain\SoundGrain_Win\SoundGrain.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\olipet\svn\soundgrain\SoundGrain_Win\Resources\*"; DestDir: "{app}\Resources"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\olivier\git\soundgrain\SoundGrain_Win\SoundGrain.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\olivier\git\soundgrain\SoundGrain_Win\Resources\*"; DestDir: "{app}\Resources"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]
