@@ -193,21 +193,21 @@ class MainFrame(wx.Frame):
         if os.path.isfile(PREFFILE):
             with open(PREFFILE, "r") as f:
                 lines = f.readlines()
-                if len(lines) > 0:
+                try:
                     auDriver = ensureNFD(lines[0].split("=")[1].replace("\n", ""))
-                else:
+                except:
                     auDriver = None
-                if len(lines) > 1:
+                try:
                     miDriver = ensureNFD(lines[1].split("=")[1].replace("\n", ""))
-                else:
+                except:
                     miDriver = None
-                if len(lines) > 3:
+                try:
                     self.lastFilePath = lines[3].split("=")[1].replace("\n", "")
-                else:
+                except:
                     self.lastFilePath = os.path.expanduser("~")
-                if len(lines) > 4:
+                try:
                     self.lastAudioPath = lines[4].split("=")[1].replace("\n", "")
-                else:
+                except:
                     self.lastAudioPath = os.path.expanduser("~")
         else:
             auDriver = None
@@ -798,5 +798,5 @@ class MainFrame(wx.Frame):
         info.SetName(NAME)
         info.SetVersion('%s' % SG_VERSION)
         info.SetDescription(description)
-        info.SetCopyright(u'(C) %s Olivier Bélanger' % SG_YEAR)
+        info.SetCopyright(u'(C) %s Olivier Belanger' % SG_YEAR)
         AboutBox(info)
