@@ -300,7 +300,7 @@ class SG_Audio:
         else:
             ext = ".wav"
         date = time.strftime('_%d_%b_%Y_%Hh%M')
-        complete_filename = toSysEncoding(filename + date + ext)
+        complete_filename = filename + date + ext
         self.server.recstart(complete_filename)
 
     def recStop(self):
