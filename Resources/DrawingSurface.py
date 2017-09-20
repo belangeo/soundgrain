@@ -372,7 +372,8 @@ class DrawingSurface(wx.Panel):
             evt.StopPropagation()
             return
 
-        off = {wx.WXK_UP: [0,1], wx.WXK_DOWN: [0,-1], wx.WXK_LEFT: [1,0], wx.WXK_RIGHT: [-1,0]}.get(evt.GetKeyCode(), [0,0])
+        level = self.parent.arrowSpeedLevel
+        off = {wx.WXK_UP: [0,level], wx.WXK_DOWN: [0,-level], wx.WXK_LEFT: [level,0], wx.WXK_RIGHT: [-level,0]}.get(evt.GetKeyCode(), [0,0])
         # Move selected trajectory
         if evt.ShiftDown() and off != [0,0]:
             traj = self.trajectories[self.parent.controls.getSelected()]

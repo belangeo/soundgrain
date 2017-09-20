@@ -73,7 +73,8 @@ class Fx:
 
 class Granulator_Stream:
     def __init__(self, order, env, dens_noise, trans_noise, dur_noise, pit_noise, dev_noise,
-                 pan_noise, ff_noise, fq_noise, ftype, clock_func, chnls):
+                 pan_noise, ff_noise, fq_noise, ftype, clock_func, chnls, sg_audio):
+        self.sg_audio = sg_audio
         self.order = order
         self.env = env
         self.dens_noise = dens_noise
@@ -157,19 +158,23 @@ class Granulator_Stream:
             self.fader.value = 1
         else:
             self.fader.value = 0
-            self.latecall = CallAfter(self.real_stop, 0.075)
+            if self.sg_audio.started:
+                self.latecall = CallAfter(self.real_stop, 0.075)
+            else:
+                self.real_stop()
 
     def real_stop(self):
-            self.metro.stop()
-            self.y_trs.stop()
-            self.y_dur.stop()
-            self.y_pos.stop()
-            self.y_ffr.stop()
-            self.y_fqr.stop()
-            self.granulator.stop()
+        self.metro.stop()
+        self.y_trs.stop()
+        self.y_dur.stop()
+        self.y_pos.stop()
+        self.y_ffr.stop()
+        self.y_fqr.stop()
+        self.granulator.stop()
 
 class SG_Audio:
     def __init__(self, clock, refresh, controls, createTraj, deleteTraj, envFrame):
+        self.started = False
         self.clock = clock
         self.refresh = refresh
         self.controls = controls
@@ -240,7 +245,7 @@ class SG_Audio:
         for i in range(MAX_STREAMS):
             self.streams[i] = Granulator_Stream(i, self.env, self.dens_noise, self.trans_noise, self.dur_noise,
                                                 self.pit_noise, self.dev_noise, self.pan_noise, self.ff_noise*self.ffr_noise,
-                                                self.filterq, self.filtert, self.clock, chnls)
+                                                self.filterq, self.filtert, self.clock, chnls, self)
 
         self.stream_sum = Sig([0] * self.chnls)
         self.eqFreq = [100, 500, 2000]
@@ -566,9 +571,11 @@ class SG_Audio:
         self.refresh_met.play()
         self.server.start()
         self.server.amp = self.globalAmplitude
+        self.started = True
 
     def stop(self):
         self.refresh_met.stop()
+        self.started = False
         wx.CallAfter(self.server.stop)
 
     def refresh_screen(self):

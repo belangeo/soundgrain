@@ -86,6 +86,8 @@ class MainFrame(wx.Frame):
         self.fillPoints = True
         self.editionLevels = [2, 4, 8, 12, 16, 24, 32, 50]
         self.editionLevel = 2
+        self.arrowSpeedLevels = [1, 2, 4, 8, 16, 32]
+        self.arrowSpeedLevel = 1
         self.audioDriver = None
         self.recall = self.undos = 0
         self.sample_precision = SAMPLE_PRECISION
@@ -143,7 +145,13 @@ class MainFrame(wx.Frame):
             self.submenu1.Append(menuId, str(level), "", wx.ITEM_RADIO)
             self.Bind(wx.EVT_MENU, self.handlesEditionLevels, id=menuId)
         self.menu1.AppendSubMenu(self.submenu1, "Edition levels")
-        self.menu1.InsertSeparator(7)
+        self.submenu2 = wx.Menu()
+        for i, level in enumerate(self.arrowSpeedLevels):
+            menuId = 12000 + i
+            self.submenu2.Append(menuId, str(level), "", wx.ITEM_RADIO)
+            self.Bind(wx.EVT_MENU, self.handlesArrowSpeedLevels, id=menuId)
+        self.menu1.AppendSubMenu(self.submenu2, "Arrow Moves Speed levels")
+        self.menu1.InsertSeparator(8)
         self.menu1.Append(103, "Reinit counters\tCtrl+T", "")
         self.Bind(wx.EVT_MENU, self.handleReinit, id=103)
         self.menuBar.Append(self.menu1, "&Drawing")
@@ -327,6 +335,10 @@ class MainFrame(wx.Frame):
         menuId = evt.GetId()
         self.editionLevel = self.editionLevels[menuId - 1000]
         self.pushEditionLevel()
+
+    def handlesArrowSpeedLevels(self, evt):
+        menuId = evt.GetId()
+        self.arrowSpeedLevel = self.arrowSpeedLevels[menuId - 12000]
 
     def setEditionLevel(self, level):
         self.submenu1.Check(self.editionLevels.index(level)+1000, True)
