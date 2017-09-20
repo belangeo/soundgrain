@@ -86,6 +86,11 @@ trajectories.
 Set the modification spread of a trajectory when edited with the mouse (higher 
 values mean narrower transformations).
 
+##### Arrow Moves Speed levels  #####
+
+This value controls how many pixels the trajectory(ies) will move when an arrow 
+key is pressed with the focus is on the drawing surface.
+
 ##### Reinit counters  (*Ctrl+T*) #####
 
 Re-sync the trajectories's counters (automatically done when audio is started).

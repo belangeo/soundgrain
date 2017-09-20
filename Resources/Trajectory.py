@@ -412,7 +412,10 @@ class Trajectory:
         self.center = c
 
     def getRadius(self):
-        return self.radius
+        if self.radius is None:
+            return None
+        else:
+            return self.radius
 
     def setRadius(self, r):
         self.radius = r
