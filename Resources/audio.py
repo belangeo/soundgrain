@@ -497,13 +497,15 @@ class SG_Audio:
 
     def addFx(self, fx, key):
         self.fxs[key] = Fx(self.mixer[key], fx, self.chnls)
-        self.stream_sum.value = Mix([st.granulator for st in self.streams.values()] + \
-                                    [f.pan for f in self.fxs.values()], voices=self.chnls)
+        if self.server.getIsStarted():
+            self.stream_sum.value = Mix([st.granulator for st in self.streams.values()] + \
+                                        [f.pan for f in self.fxs.values()], voices=self.chnls)
 
     def removeFx(self, key):
         del self.fxs[key]
-        self.stream_sum.value = Mix([st.granulator for st in self.streams.values()] + \
-                                    [f.pan for f in self.fxs.values()], voices=self.chnls)
+        if self.server.getIsStarted():
+            self.stream_sum.value = Mix([st.granulator for st in self.streams.values()] + \
+                                        [f.pan for f in self.fxs.values()], voices=self.chnls)
 
     def setMixerChannelAmp(self, vin, vout, val):
         self.mixer.setAmp(vin, vout, val)
