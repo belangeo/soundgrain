@@ -24,6 +24,10 @@ if sys.version_info[0] < 3:
 else:
     unicode_t = str
 
+if sys.platform == "win32":
+    FILE_ENCODING = "mbcs"
+else:
+    FILE_ENCODING = "utf-8"
 DEFAULT_ENCODING = sys.getdefaultencoding()
 SYSTEM_ENCODING = sys.getfilesystemencoding()
 
@@ -34,6 +38,7 @@ PLATFORM = sys.platform
 MAX_STREAMS = 16
 
 if '/SoundGrain.app' in os.getcwd():
+    os.environ["LANG"] = "en_CA.UTF-8"
     RESOURCES_PATH = os.getcwd()
     currentw = os.getcwd()
     spindex = currentw.index('/SoundGrain.app')
@@ -50,7 +55,7 @@ SPLASH_FILE = os.path.join(RESOURCES_PATH, "SoundGrainSplash.png")
 
 PREFFILE = os.path.join(os.path.expanduser("~"), ".soundgrain-init")
 if os.path.isfile(PREFFILE):
-    with open(PREFFILE, "r") as f:
+    with open(PREFFILE, "r", encoding=FILE_ENCODING) as f:
         lines = f.readlines()
         if len(lines) > 2:
             SAMPLE_PRECISION = lines[2].split("=")[1].replace("\n", "")

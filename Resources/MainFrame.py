@@ -191,7 +191,7 @@ class MainFrame(wx.Frame):
         self.SetMenuBar(self.menuBar)
 
         if os.path.isfile(PREFFILE):
-            with open(PREFFILE, "r") as f:
+            with open(PREFFILE, "r", encoding=FILE_ENCODING) as f:
                 lines = f.readlines()
                 try:
                     auDriver = ensureNFD(lines[0].split("=")[1].replace("\n", ""))
@@ -762,7 +762,7 @@ class MainFrame(wx.Frame):
             dlg.Destroy()
         auDriver = self.driversList[self.driverIndexes.index(self.audioDriver)]
         miDriver = self.midiSettings.getInterface()
-        with open(PREFFILE, "w") as f:
+        with open(PREFFILE, "w", encoding=FILE_ENCODING) as f:
             f.write("audioDriver=%s\n" % toSysEncoding(auDriver))
             f.write("midiDriver=%s\n" % toSysEncoding(miDriver))
             f.write("samplePrecision=%s\n" % self.sample_precision)
