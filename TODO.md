@@ -24,6 +24,4 @@ Soundgrain todo
 - FxBall control window to small.
     - ok on linux
 
-- Envelope window should send the envelope only on mouse up.
-
 - Can't put an FxBall if the audio is off. **done**
