@@ -486,8 +486,8 @@ class ControlPanel(scrolled.ScrolledPanel):
         if sndPath:
             if os.path.isfile(sndPath):
                 self.sndPath = sndPath
-                self.parent.sg_audio.loadSnd(toSysEncoding(self.sndPath))
-                chnls, samprate, dur = soundInfo(toSysEncoding(self.sndPath))
+                self.parent.sg_audio.loadSnd(self.sndPath)
+                chnls, samprate, dur = soundInfo(self.sndPath)
                 self.sndDur = dur
                 self.chnls = chnls
                 self.sndInfoStr = u'Loaded sound: %s,  Sr: %i Hz,  Channels: %s,  Duration: %.3f sec' % (self.sndPath, int(samprate), chnls, dur)
@@ -516,7 +516,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         if sndPath:
             if os.path.isfile(sndPath):
                 self.sndPath = "Mixed sound " + str(random.randint(0, 10000))
-                chnls, samprate, dur = soundInfo(toSysEncoding(sndPath))
+                chnls, samprate, dur = soundInfo(sndPath)
                 dlg = InsertDialog(self, -1, 'Insert sound settings', actual_dur=self.sndDur, snd_dur=dur)
                 refpos = self.surface.GetPosition()
                 refsize = self.surface.GetSize()
@@ -532,7 +532,7 @@ class ControlPanel(scrolled.ScrolledPanel):
                 dlg.Destroy()
                 if not ok:
                     return
-                self.parent.sg_audio.insertSnd(toSysEncoding(sndPath), start, end, point, cross)
+                self.parent.sg_audio.insertSnd(sndPath, start, end, point, cross)
                 self.sndDur = self.parent.sg_audio.getTableDuration()
                 self.sndInfoStr = u'Loaded sound: %s,    Sr: %s Hz,    Channels: %s,    Duration: %s sec' % (self.sndPath, samprate, self.chnls, self.sndDur)
                 if self.parent.draw:

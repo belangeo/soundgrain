@@ -137,13 +137,3 @@ def ensureNFD(unistr):
         return unistr
     else:
         return unicodedata.normalize(format, decstr)
-
-def toSysEncoding(unistr):
-    try:
-        if PLATFORM == "win32":
-            unistr = unistr.encode(SYSTEM_ENCODING)
-        else:
-            unistr = unicode(unistr)
-    except:
-        pass
-    return unistr

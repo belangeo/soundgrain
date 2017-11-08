@@ -763,8 +763,8 @@ class MainFrame(wx.Frame):
         auDriver = self.driversList[self.driverIndexes.index(self.audioDriver)]
         miDriver = self.midiSettings.getInterface()
         with open(PREFFILE, "w", encoding=FILE_ENCODING) as f:
-            f.write("audioDriver=%s\n" % toSysEncoding(auDriver))
-            f.write("midiDriver=%s\n" % toSysEncoding(miDriver))
+            f.write("audioDriver=%s\n" % auDriver)
+            f.write("midiDriver=%s\n" % miDriver)
             f.write("samplePrecision=%s\n" % self.sample_precision)
             f.write("lastFilePath=%s\n" % self.lastFilePath)
             f.write("lastAudioPath=%s\n" % self.lastAudioPath)
