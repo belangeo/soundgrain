@@ -5,7 +5,7 @@
 # 2. Execute from soundgrain folder : ./scripts/release_src.sh
 #
 
-version=6.0.0
+version=6.0.1
 replace=XXX
 
 src_rep=SoundGrain_XXX-src
