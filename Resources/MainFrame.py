@@ -21,7 +21,7 @@ import os, wx, time
 from Resources.constants import *
 from Resources.audio import *
 from Resources.Modules import *
-from pyolib._wxwidgets import Grapher, BACKGROUND_COLOUR
+from pyo.lib._wxwidgets import Grapher, BACKGROUND_COLOUR
 from Resources.Trajectory import Trajectory
 from Resources.MidiSettings import MidiSettings
 from Resources.CommandFrame import CommandFrame

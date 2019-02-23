@@ -19,7 +19,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx
 from pyo import rescale
-from pyolib._wxwidgets import ControlSlider
+from pyo.lib._wxwidgets import ControlSlider
 from .constants import BACKGROUND_COLOUR, PLATFORM
 
 class SGControlSlider(ControlSlider):

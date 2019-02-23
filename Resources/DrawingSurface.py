@@ -20,7 +20,7 @@ import wx, os, math
 from Resources.constants import *
 from Resources.FxBall import FxBall
 from Resources.Trajectory import Trajectory
-from pyolib._wxwidgets import BACKGROUND_COLOUR
+from pyo.lib._wxwidgets import BACKGROUND_COLOUR
 
 class MyFileDropTarget(wx.FileDropTarget):
     def __init__(self, window):

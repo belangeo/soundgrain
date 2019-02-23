@@ -131,7 +131,7 @@ class Trajectory:
         self.filterCut = dict['filterCut']
         self.setPoints(dict['points'], xfac=xfac, yfac=yfac)
         self.type = dict['type']
-        if self.getType() in ['circle', 'oscil']:
+        if self.getType() in ['circle', 'oscil'] and type(dict['center']) in [list, tuple]:
             self.center = [dict['center'][0]*xfac, dict['center'][1]*yfac]
             self.setRadius(self.center[0] - self.getFirstPoint()[0])
         else:

@@ -1,6 +1,6 @@
 import math, wx
 from wx.lib.embeddedimage import PyEmbeddedImage
-from pyolib._wxwidgets import BACKGROUND_COLOUR
+from pyo.lib._wxwidgets import BACKGROUND_COLOUR
 from Resources.constants import *
 
 KNOB = PyEmbeddedImage(

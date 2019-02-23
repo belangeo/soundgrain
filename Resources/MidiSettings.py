@@ -19,7 +19,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import wx, sys
-from pyolib._wxwidgets import ControlSlider
+from pyo.lib._wxwidgets import ControlSlider
 from .constants import BACKGROUND_COLOUR, ensureNFD
 from Resources.audio import checkForMidiDrivers
 
@@ -100,7 +100,7 @@ class MidiSettings(wx.Frame):
 
         self.panel.SetSizerAndFit(box)
 
-        size = self.GetBestSize() #(230, 500)
+        size = self.GetBestSize()
         size = (size[0], size[1]+30)
         self.SetMinSize(size)
         self.SetMaxSize(size)
@@ -125,7 +125,6 @@ class MidiSettings(wx.Frame):
         self.selectedInterface = self.interfaceIndexes[self.interfaceList.index(selectedInterface)]
         self.sg_audio.setMidiListener(self.selectedInterface)
 
-    # TODO: replace handle, set and get method with events
     def handleMethod(self, evt):
         self.sg_audio.setMidiMethod(self.popupMethod.GetSelection())
 

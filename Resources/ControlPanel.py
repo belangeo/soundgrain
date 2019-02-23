@@ -21,7 +21,7 @@ import  wx.lib.scrolledpanel as scrolled
 from Resources.constants import *
 from Resources.audio import soundInfo
 from Resources.widgets import ControlKnob
-from pyolib._wxwidgets import ControlSlider, VuMeter, BACKGROUND_COLOUR
+from pyo.lib._wxwidgets import ControlSlider, VuMeter, BACKGROUND_COLOUR
 
 class ControlPanel(scrolled.ScrolledPanel):
     def __init__(self, parent, surface):
@@ -54,10 +54,11 @@ class ControlPanel(scrolled.ScrolledPanel):
 
         # TODO: Check the size of this button on Windows and OSX
         self.closedToggle = wx.ToggleButton(self, -1, 'Closed', size=self.trajType.GetSize())
+        # If this is no more needed, remove the next three lines...
         font = self.closedToggle.GetFont()
-        if PLATFORM.startswith('linux') or PLATFORM == 'win32':
+        if PLATFORM == 'win32':
             font = wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
-        self.closedToggle.SetFont(font)
+        self.closedToggle.SetFont(font) # ... and all related calls in this method.
         typeBox.Add(self.closedToggle, wx.CENTER|wx.RIGHT, 5 )
         box.Add(typeBox, 0, wx.CENTER|wx.ALL, 5)
 
@@ -137,7 +138,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         srBox = wx.BoxSizer(wx.VERTICAL)
         srText = wx.StaticText(self, -1, "Rate")
         srBox.Add(srText, 0, wx.CENTER | wx.LEFT | wx.RIGHT, 5)
-        self.pop_sr = wx.Choice(self, -1, choices = ['44100', '48000', '96000'], size=(80,-1))
+        self.pop_sr = wx.Choice(self, -1, choices = ['44100', '48000', '96000'], size=(90,-1))
         self.pop_sr.SetSelection(0)
         self.pop_sr.Bind(wx.EVT_CHOICE, self.handleSamplingRate)
         srBox.Add(self.pop_sr, 0, wx.LEFT | wx.RIGHT, 5)
@@ -195,7 +196,7 @@ class ControlPanel(scrolled.ScrolledPanel):
 
         self.tx_output = wx.TextCtrl( self, -1, "snd", size=(120, -1))
         rec2Box.Add(self.tx_output, 0, wx.LEFT | wx.RIGHT, 10)
-        self.tog_record = wx.ToggleButton(self, -1, "Start Rec", size=(65,-1))
+        self.tog_record = wx.ToggleButton(self, -1, "Start", size=(65,-1))
         self.tog_record.SetFont(font)
         rec2Box.Add(self.tog_record, 1, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND | wx.RIGHT, 10)
 
@@ -290,7 +291,6 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.drawing.sl_period.Disable()
             self.drawing.sl_scaling.Disable()
 
-    # TODO: replace all these handle, get, set, with single event
     def handleType(self, event):
         self.processType(event.GetInt())
 
@@ -668,7 +668,7 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.tog_audio.SetValue(0)
             self.parent.menu.Check(7, False)
             self.tog_record.SetValue(0)
-            self.tog_record.SetLabel('Start Rec')
+            self.tog_record.SetLabel('Start')
             self.parent.sg_audio.stop()
 
     def handleOutput(self, event):
@@ -693,9 +693,9 @@ class ControlPanel(scrolled.ScrolledPanel):
             else:
                 filename = os.path.join(os.path.expanduser('~'), "Desktop", self.tx_output.GetValue())
             self.parent.sg_audio.recStart(filename, self.fileformat, self.sampletype)
-            self.tog_record.SetLabel('Stop Rec')
+            self.tog_record.SetLabel('Stop')
         else:
-            self.tog_record.SetLabel('Start Rec')
+            self.tog_record.SetLabel('Start')
             self.parent.sg_audio.recStop()
 
     def chooseRecFolder(self, evt):

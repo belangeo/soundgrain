@@ -18,7 +18,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 import wx, math
 from .constants import *
-from pyolib._wxwidgets import ControlSlider
+from pyo.lib._wxwidgets import ControlSlider
 
 class FxBallControls(wx.Frame):
     def __init__(self, parent, fxball, sg_audio, size=(270, 200)):
