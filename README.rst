@@ -12,25 +12,28 @@ modules.
 Official web site
 -----------------
 
-To download the latest stable version of Soundgrain, go to 
-`the official web site! <http://ajaxsoundstudio.com/software/soundgrain/>`_
+For source code and releases, visit
+`SoundGrain on GitHub <https://github.com/belangeo/soundgrain>`_.
 
 Requirements
 ------------
 
-**Minimum versions (for running Soundgrain from sources):**
+**Dependencies for running SoundGrain from source:**
 
-* `Python 3.5 <https://www.python.org/downloads/release/python-354/>`_ or
-  `Python 3.6 <https://www.python.org/downloads/release/python-364/>`_ (prefered).
-The programming language used to code the application.
+* `Python <https://www.python.org/downloads/>`_
+
+  The programming language used to code the application.
 
 
-* `WxPython 4.0.1 (Phoenix) <https://wxpython.org/pages/downloads/>`_
-The toolkit used to create the graphical interface. (install with `pip install wxPython`)
+* `wxPython <https://wxpython.org/pages/downloads/>`_
 
-* `pyo 0.9.0 <http://ajaxsoundstudio.com/software/pyo/>`_
-The audio engine which gives his power to Soundgrain.
+  The toolkit used to create the graphical interface. Install with ``pip install wxPython``.
 
-* `python-markdown 2.6.11 <https://pypi.python.org/pypi/Markdown>`_
-The markdown package used to format the builtin documentation.
+* `pyo <https://github.com/belangeo/pyo>`_
+
+  The audio engine that powers SoundGrain.
+
+* `Markdown <https://pypi.org/project/Markdown/>`_
+
+  The Markdown package used to format the built-in documentation.
 

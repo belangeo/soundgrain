@@ -117,6 +117,7 @@ class FxBallControls(wx.Frame):
         self.handlePan(self.slider4.GetValue())
 
 def getColors(col, gradient):
+    gradient = int(gradient)
     if col == 0:
         firstColor = wx.Colour(255,30,255)
         secondColor = wx.Colour(gradient,30,gradient)
@@ -140,16 +141,17 @@ def getColors(col, gradient):
         secondColor = wx.Colour(gradient,gradient,gradient)
     elif col == 7:
         firstColor = wx.Colour(255,127,30)
-        secondColor = wx.Colour(gradient,gradient/2,30)
+        secondColor = wx.Colour(gradient,gradient//2,30)
     elif col == 8:
         firstColor = wx.Colour(255,30,127)
-        secondColor = wx.Colour(gradient,30,gradient/2)
+        secondColor = wx.Colour(gradient,30,gradient//2)
     elif col == 9:
         firstColor = wx.Colour(127,30,255)
-        secondColor = wx.Colour(gradient/2,30,gradient)
+        secondColor = wx.Colour(gradient//2,30,gradient)
     return firstColor, secondColor
 
 def GetRoundMaskBitmap(w, h, radius):
+    w, h = int(round(w)), int(round(h))
     maskColor = wx.Colour(30,30,30)
     shownColor = wx.Colour(29,29,29)
     b = wx.EmptyBitmap(w,h)
@@ -165,6 +167,7 @@ def GetRoundMaskBitmap(w, h, radius):
     return b
 
 def GetRoundBitmap(w, h, mask, col, gradient):
+    w, h = int(round(w)), int(round(h))
     firstColor, secondColor = getColors(col, gradient)
     maskColor = wx.Colour(30,30,30)
     b = wx.EmptyBitmap(w,h)
@@ -173,7 +176,7 @@ def GetRoundBitmap(w, h, mask, col, gradient):
     dc.SetBrush(wx.Brush(maskColor))
     dc.Clear()
     rec = wx.Rect(0, 0, w, h)
-    dc.GradientFillConcentric(rec, firstColor, secondColor, (w/2,h/2))
+    dc.GradientFillConcentric(rec, firstColor, secondColor, (w//2,h//2))
     dc.DrawBitmap(mask, rec[0], rec[1], True)
     dc.SelectObject(wx.NullBitmap)
     b.SetMaskColour(maskColor)

@@ -734,7 +734,7 @@ class DrawingSurface(wx.Panel):
         else:
             dc.DrawBitmap(self.sndBitmap,0,0)
 
-        [dc.DrawBitmap(fx.bit, fx.pos[0], fx.pos[1], True) for fx in self.fxballValues]
+        [dc.DrawBitmap(fx.bit, int(round(fx.pos[0])), int(round(fx.pos[1])), True) for fx in self.fxballValues]
 
         selectedTraj = self.parent.controls.getSelected()
         activeTrajs = [t for t in self.getActiveTrajectories() if len(t.getPoints()) > 1]
@@ -744,7 +744,7 @@ class DrawingSurface(wx.Panel):
             gc.SetBrush(t.getBrush(trans=True))
             gc.SetPen(t.getPen(big=True))
             if len(t.getPoints()) >= 2:
-                gc.DrawLines(t.getPoints())
+                gc.StrokeLines(t.getPoints())
             if t.getId() == selectedTraj:
                 recsize = 14
                 s2 = recsize / 2
@@ -912,7 +912,7 @@ class DrawingSurface(wx.Panel):
         memory.DrawRectangle(0,0,size[0],size[1])
         for samples in self.list:
             if len(samples):
-                gc.DrawLines(samples)
+                gc.StrokeLines(samples)
         memory.SelectObject(wx.NullBitmap)
         self.needBitmap = True
         self.Refresh()

@@ -12,10 +12,8 @@ GNU GPL v3 (c) Olivier Belanger 2009-2017
 
 ### SoundGrain and Pyo on the web: ###
 
-__Soundgrain__ official web site: __http://ajaxsoundstudio.com/software/soundgrain__  
 Soundgrain source code: __https://github.com/belangeo/soundgrain__
 
-__Pyo__ official web site: __http://ajaxsoundstudio.com/software/pyo__  
 Pyo source code: __https://github.com/belangeo/pyo__
 
 

@@ -29,7 +29,7 @@ def GetRoundBitmap(w, h, r=10):
     dc.DrawRectangle(0,0,w,h)
     dc.SetBrush(wx.Brush(shownColour))
     dc.SetPen(wx.Pen(shownColour))
-    dc.DrawCircle(w/2,h/2,w/2)
+    dc.DrawCircle(w//2,h//2,w//2)
     dc.SelectObject(wx.NullBitmap)
     b.SetMaskColour(maskColour)
     return b
@@ -45,7 +45,7 @@ class SoundGrainSplashScreen(wx.Frame):
         display = wx.Display(0)
         size = display.GetGeometry()[2:]
         style = wx.FRAME_SHAPED|wx.SIMPLE_BORDER|wx.FRAME_NO_TASKBAR|wx.STAY_ON_TOP
-        wx.Frame.__init__(self, parent, -1, "", pos=(-1, size[1]/6), style=style)
+        wx.Frame.__init__(self, parent, -1, "", pos=(-1, size[1]//6), style=style)
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
@@ -95,8 +95,6 @@ class SoundGrainSplashScreen(wx.Frame):
                      wx.Rect(0, 298, 400, 15), wx.ALIGN_CENTER)
         dc.DrawLabel("Olivier Belanger", 
                      wx.Rect(0, 314, 400, 15), wx.ALIGN_CENTER)
-        dc.DrawLabel("AjaxSoundStudio.com, %s" % SG_YEAR, 
-                     wx.Rect(0, 330, 400, 15), wx.ALIGN_CENTER)
 
     def OnClose(self):
         if self.mainframe:
