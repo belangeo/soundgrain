@@ -20,7 +20,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx, sys
 from pyo.lib._wxwidgets import ControlSlider
-from .constants import BACKGROUND_COLOUR, ensureNFD
+from .constants import ensureNFD
 from Resources.audio import checkForMidiDrivers
 
 class MidiSettings(wx.Frame):
@@ -42,7 +42,6 @@ class MidiSettings(wx.Frame):
         self.sg_audio = sg_audio
 
         self.panel = wx.Panel(self, -1)
-        self.panel.SetBackgroundColour(BACKGROUND_COLOUR)
 
         box = wx.BoxSizer(wx.VERTICAL)
 

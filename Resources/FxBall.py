@@ -37,7 +37,6 @@ class FxBallControls(wx.Frame):
         self.Bind(wx.EVT_MENU, self.handleClose, id=200)
 
         self.panel = wx.Panel(self, -1)
-        self.panel.SetBackgroundColour(BACKGROUND_COLOUR)
         self.box = wx.BoxSizer(wx.VERTICAL)
 
         sl1values = FX_BALL_SLIDER_1_INIT[fxball.getFx()]

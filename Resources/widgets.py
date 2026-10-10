@@ -1,6 +1,5 @@
 import math, wx
 from wx.lib.embeddedimage import PyEmbeddedImage
-from pyo.lib._wxwidgets import BACKGROUND_COLOUR
 from Resources.constants import *
 
 KNOB = PyEmbeddedImage(
@@ -623,7 +622,6 @@ class ControlKnob(wx.Panel):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY, pos=pos, size=size, style=wx.NO_BORDER | wx.WANTS_CHARS)
         self.parent = parent
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
-        self.SetBackgroundColour(BACKGROUND_COLOUR)
         self.SetMinSize(self.GetSize())
         self.knobBitmap = KNOB.GetBitmap()
         self.outFunction = outFunction
@@ -637,8 +635,7 @@ class ControlKnob(wx.Panel):
         self.midictl = None
         self.new = ''
         self.floatPrecision = '%.3f'
-        if backColour: self.backColour = backColour
-        else: self.backColour = BACKGROUND_COLOUR
+        self.backColour = backColour
         if init != None:
             self.SetValue(init)
             self.init = init
@@ -801,18 +798,21 @@ class ControlKnob(wx.Panel):
         w,h = self.GetSize()
         dc = wx.AutoBufferedPaintDC(self)
 
-        dc.SetBrush(wx.Brush(self.backColour, wx.SOLID))
+        background = self.backColour if self.backColour is not None else self.GetBackgroundColour()
+        foreground = self.GetForegroundColour()
+        dc.SetBackground(wx.Brush(background, wx.SOLID))
+        dc.SetBrush(wx.Brush(background, wx.SOLID))
         dc.Clear()
 
         # Draw background
-        dc.SetPen(wx.Pen(self.backColour, width=self.borderWidth, style=wx.SOLID))
+        dc.SetPen(wx.Pen(background, width=self.borderWidth, style=wx.SOLID))
         dc.DrawRectangle(0, 0, w, h)
 
         if sys.platform == "darwin":
             dc.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         else:
             dc.SetFont(wx.Font(7, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        dc.SetTextForeground("#000000")
+        dc.SetTextForeground(foreground)
 
         # Draw text label
         reclab = wx.Rect(0, 1, w, 9)
@@ -821,8 +821,9 @@ class ControlKnob(wx.Panel):
         recval = wx.Rect(5, 55, w-10, 13)
 
         if self.selected:
-            dc.SetBrush(wx.Brush('#FFFFFF', wx.SOLID))
-            dc.SetPen(wx.Pen('#FFFFFF', width=self.borderWidth, style=wx.SOLID))
+            selection = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
+            dc.SetBrush(wx.Brush(selection, wx.SOLID))
+            dc.SetPen(wx.Pen(selection, width=self.borderWidth, style=wx.SOLID))
             dc.DrawRoundedRectangle(recval, 3)
 
         dc.DrawBitmap(self.knobBitmap, 2, 13, True)
@@ -848,7 +849,8 @@ class ControlKnob(wx.Panel):
             width = len(val) * (dc.GetCharWidth() - 3)
         else:
             width = len(val) * dc.GetCharWidth()
-        dc.SetTextForeground('#000000')
+        dc.SetTextForeground(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
+                             if self.selected else foreground)
         dc.DrawLabel(val, recval, wx.ALIGN_CENTER)
 
         # Send value

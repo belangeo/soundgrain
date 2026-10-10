@@ -20,13 +20,11 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 import wx, os, markdown, webbrowser
 import wx.html as html
 from Resources.constants import DOCUMENTATION_PATH
-from pyo.lib._wxwidgets import BACKGROUND_COLOUR
 
 class MyHtmlWindow(html.HtmlWindow):
     def __init__(self, parent):
         html.HtmlWindow.__init__(self, parent)
         self.parent = parent
-        self.SetBackgroundColour(BACKGROUND_COLOUR)
         self.SetBorders(10)
 
     def OnLinkClicked(self, linkinfo):
