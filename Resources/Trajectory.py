@@ -339,7 +339,10 @@ class Trajectory:
             self.circlePos = self.points[(self.counter-self.step) % len(self.points)]
 
     def getInsideRect(self, point):
-        return wx.Rect(self.getFirstPoint()[0]-7, self.getFirstPoint()[1]-7, 13, 13).Contains(point)
+        first = self.getFirstPoint()
+        if first is None:
+            return False
+        return wx.Rect(int(first[0]-7), int(first[1]-7), 13, 13).Contains(point)
 
     def getFirstPoint(self):
         if self.points == []:
@@ -397,8 +400,9 @@ class Trajectory:
         return self.points[int(len(self.points)*2/3)]
 
     def getInsideLosange(self, point):
-        if self.type == 'circle' or self.type == 'oscil':
-            return wx.Rect(self.getLosangePoint()[0]-5, self.getLosangePoint()[1]-5, 10, 10).Contains(point)
+        if self.points and (self.type == 'circle' or self.type == 'oscil'):
+            losange = self.getLosangePoint()
+            return wx.Rect(int(losange[0]-5), int(losange[1]-5), 10, 10).Contains(point)
         else:
             return False
 

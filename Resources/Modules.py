@@ -20,7 +20,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 import wx
 from pyo import rescale
 from pyo.lib._wxwidgets import ControlSlider
-from .constants import BACKGROUND_COLOUR, PLATFORM
+from .constants import PLATFORM
 
 class SGControlSlider(ControlSlider):
     def __init__(self, parent, minvalue, maxvalue, init=None, pos=(0,0), size=(200,16), log=False,
@@ -88,13 +88,9 @@ class Module(wx.Frame):
         self.sg_audio = sg_audio
 
         self.panel = wx.Panel(self, -1)
-        self.panel.SetBackgroundColour(BACKGROUND_COLOUR)
         self.notebook = wx.Notebook(self.panel, -1, style=wx.BK_DEFAULT | wx.EXPAND)
-        self.notebook.SetBackgroundColour(BACKGROUND_COLOUR)
         self.panel1 = wx.Panel(self.notebook, wx.ID_ANY)
-        self.panel1.SetBackgroundColour(BACKGROUND_COLOUR)
         self.panel2 = wx.Panel(self.notebook, wx.ID_ANY)
-        self.panel2.SetBackgroundColour(BACKGROUND_COLOUR)
         self.box1 = wx.BoxSizer(wx.VERTICAL)
         self.box2 = wx.BoxSizer(wx.VERTICAL)
 

@@ -66,8 +66,6 @@ else:
 
 TRAJTYPES = {0: 'free', 1: 'circle', 2: 'oscil', 3: 'line'}
 
-BACKGROUND_COLOUR = "#ECE6EA"
-
 ALLOWED_EXTENSIONS = ["wav","wave","aif","aiff","aifc","au","","sd2","flac","caf","ogg"]
 EXPORT_FORMATS = ['WAV', 'AIFF', 'AU', 'RAW', 'SD2', 'FLAC', 'CAF', 'OGG']
 EXPORT_TYPES = ['16 int', '24 int', '32 int', '32 flt', '64 flt']

@@ -20,7 +20,6 @@ import wx, os, math
 from Resources.constants import *
 from Resources.FxBall import FxBall
 from Resources.Trajectory import Trajectory
-from pyo.lib._wxwidgets import BACKGROUND_COLOUR
 
 class MyFileDropTarget(wx.FileDropTarget):
     def __init__(self, window):
@@ -39,7 +38,6 @@ class DrawingSurface(wx.Panel):
     def __init__(self, parent, pos=(0,0), size=wx.DefaultSize):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY, pos=pos, size=size, style = wx.EXPAND)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
-        self.SetBackgroundColour(BACKGROUND_COLOUR)
         self.parent = parent
         dt = MyFileDropTarget(self)
         self.SetDropTarget(dt)
@@ -505,7 +503,7 @@ class DrawingSurface(wx.Panel):
                 return
             # Check for trajectory transformation
             for p in t.getPoints():
-                if wx.Rect(p[0]-5, p[1]-5, 10, 10).Contains(self.downPos):
+                if wx.Rect(int(p[0]-5), int(p[1]-5), 10, 10).Contains(self.downPos):
                     self.pindex = t.getPoints().index(p)
                     self.setSelected(t)
                     self.action = 'edit'
@@ -757,7 +755,7 @@ class DrawingSurface(wx.Panel):
                 try:
                     gc.SetBrush(t.getBrush())
                     gc.DrawRoundedRectangle(t.getFirstPoint()[0]-s2, t.getFirstPoint()[1]-s2, recsize, recsize, 2)
-                    dc.DrawLabel(str(t.getLabel()), wx.Rect(t.getFirstPoint()[0]-s2,t.getFirstPoint()[1]-s2, recsize, recsize), wx.ALIGN_CENTER)
+                    dc.DrawLabel(str(t.getLabel()), wx.Rect(int(t.getFirstPoint()[0]-s2), int(t.getFirstPoint()[1]-s2), recsize, recsize), wx.ALIGN_CENTER)
                     if t.getType() in ['circle', 'oscil']:
                         gc.SetBrush(self.losaBrush)
                         gc.SetPen(self.losaPen)

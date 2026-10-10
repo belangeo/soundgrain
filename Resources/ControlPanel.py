@@ -21,12 +21,11 @@ import  wx.lib.scrolledpanel as scrolled
 from Resources.constants import *
 from Resources.audio import soundInfo
 from Resources.widgets import ControlKnob
-from pyo.lib._wxwidgets import ControlSlider, VuMeter, BACKGROUND_COLOUR
+from pyo.lib._wxwidgets import ControlSlider, VuMeter
 
 class ControlPanel(scrolled.ScrolledPanel):
     def __init__(self, parent, surface):
         scrolled.ScrolledPanel.__init__(self, parent, -1)
-        self.SetBackgroundColour(BACKGROUND_COLOUR)
         self.parent = parent
         self.surface = surface
         self.type = 0
@@ -63,7 +62,6 @@ class ControlPanel(scrolled.ScrolledPanel):
         box.Add(typeBox, 0, wx.CENTER|wx.ALL, 5)
 
         self.notebook = wx.Notebook(self, -1, style=wx.BK_DEFAULT | wx.EXPAND)
-        self.notebook.SetBackgroundColour(BACKGROUND_COLOUR)
         self.drawing = DrawingParameters(self.notebook)
         self.playback = PlaybackParameters(self.notebook)
         self.notebook.AddPage(self.drawing, "Drawing")
@@ -649,7 +647,6 @@ class ControlPanel(scrolled.ScrolledPanel):
                 self.parent.menu.Check(7, False)
             else:
                 self.tx_chnls.Disable()
-                self.tx_chnls.SetBackgroundColour("#EEEEEE")
                 self.pop_sr.Disable()
                 self.parent.enableDrivers(False)
                 self.tog_audio.SetLabel('Stop')
@@ -661,7 +658,6 @@ class ControlPanel(scrolled.ScrolledPanel):
                 self.parent.sg_audio.start()
         else:
             self.tx_chnls.Enable()
-            self.tx_chnls.SetBackgroundColour("#FFFFFF")
             self.pop_sr.Enable()
             self.parent.enableDrivers(True)
             self.tog_audio.SetLabel('Start')
@@ -713,7 +709,6 @@ class ControlPanel(scrolled.ScrolledPanel):
 class DrawingParameters(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
-        self.SetBackgroundColour(BACKGROUND_COLOUR)
         self.parent = parent
         box = wx.BoxSizer(wx.VERTICAL)
 
@@ -765,7 +760,6 @@ class DrawingParameters(wx.Panel):
 class PlaybackParameters(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
-        self.SetBackgroundColour(BACKGROUND_COLOUR)
         self.parent = parent
         box = wx.BoxSizer(wx.VERTICAL)
 
@@ -820,7 +814,6 @@ class PlaybackParameters(wx.Panel):
 class InsertDialog(wx.Dialog):
     def __init__(self, parent, id, title, actual_dur, snd_dur):
         wx.Dialog.__init__(self, parent, id, title)
-        self.SetBackgroundColour(BACKGROUND_COLOUR)
         vbox = wx.BoxSizer(wx.VERTICAL)
 
         stline = wx.StaticText(self, -1, 'Starting point in seconds:')
