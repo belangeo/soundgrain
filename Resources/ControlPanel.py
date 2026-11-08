@@ -130,91 +130,102 @@ class ControlPanel(scrolled.ScrolledPanel):
 
         box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
 
-        box.Add(wx.StaticText(self, -1, "Project Settings"), 0, wx.CENTER | wx.ALL, 5)
-
-        projSettingsBox = wx.BoxSizer(wx.HORIZONTAL)
-        srBox = wx.BoxSizer(wx.VERTICAL)
-        srText = wx.StaticText(self, -1, "Rate")
-        srBox.Add(srText, 0, wx.CENTER | wx.LEFT | wx.RIGHT, 5)
-        self.pop_sr = wx.Choice(self, -1, choices = ['44100', '48000', '96000'], size=(90,-1))
-        self.pop_sr.SetSelection(0)
-        self.pop_sr.Bind(wx.EVT_CHOICE, self.handleSamplingRate)
-        srBox.Add(self.pop_sr, 0, wx.LEFT | wx.RIGHT, 5)
-        chnlsBox = wx.BoxSizer(wx.VERTICAL)
-        chnlsText = wx.StaticText(self, -1, "Chnls")
-        chnlsBox.Add(chnlsText, 0, wx.CENTER  | wx.LEFT | wx.RIGHT, 5)
-        self.tx_chnls = wx.TextCtrl(self, -1, "2", size=(60, -1), style=wx.TE_PROCESS_ENTER)
-        self.tx_chnls.Bind(wx.EVT_TEXT_ENTER, self.handleNchnls)
-        chnlsBox.Add(self.tx_chnls, 0, wx.LEFT | wx.RIGHT, 5)
-        projSettingsBox.Add(srBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
-        projSettingsBox.Add(chnlsBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
-        box.Add(projSettingsBox, 0, wx.ALIGN_CENTER, 5)
-
-        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
+        self.createSettingsWindow(font)
 
         soundBox = wx.BoxSizer(wx.HORIZONTAL)
-        self.tog_audio = wx.ToggleButton(self, -1, "Start", size=(80,-1))
+        self.tog_audio = wx.ToggleButton(self, -1, "Start", size=(90,-1))
         self.tog_audio.SetFont(font)
         self.tog_audio.Disable()
-        soundBox.Add(self.tog_audio, 0, wx.CENTER |  wx.LEFT | wx.RIGHT, 5)
-        box.Add(soundBox, 0, wx.CENTER | wx.ALL, 5)
-
-        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
-
-        box.Add(wx.StaticText(self, -1, "Record Settings"), 0, wx.CENTER | wx.ALL, 5)
-
-        recSettingsBox = wx.BoxSizer(wx.HORIZONTAL)
-        fileformatBox = wx.BoxSizer(wx.VERTICAL)
-        fileformatText = wx.StaticText(self, -1, "Format")
-        fileformatBox.Add(fileformatText, 0, wx.CENTER | wx.LEFT | wx.RIGHT, 5)
-        self.pop_fileformat = wx.Choice(self, -1, choices=EXPORT_FORMATS, size=(80,-1))
-        self.pop_fileformat.SetSelection(0)
-        self.pop_fileformat.Bind(wx.EVT_CHOICE, self.handleFileFormat)
-        fileformatBox.Add(self.pop_fileformat, 0, wx.LEFT | wx.RIGHT, 5)
-        sampletypeBox = wx.BoxSizer(wx.VERTICAL)
-        sampletypeText = wx.StaticText(self, -1, "Type")
-        sampletypeBox.Add(sampletypeText, 0, wx.CENTER  | wx.LEFT | wx.RIGHT, 5)
-        self.pop_sampletype = wx.Choice(self, -1, choices=EXPORT_TYPES)
-        self.pop_sampletype.SetSelection(0)
-        self.pop_sampletype.Bind(wx.EVT_CHOICE, self.handleSampleType)
-        sampletypeBox.Add(self.pop_sampletype, 0, wx.LEFT | wx.RIGHT, 5)
-        recSettingsBox.Add(fileformatBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
-        recSettingsBox.Add(sampletypeBox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
-        box.Add(recSettingsBox, 0, wx.ALIGN_CENTER | wx.BOTTOM, 5)
-
-        rec1Box = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.tx_rec_folder = wx.TextCtrl( self, -1, "~/Desktop", size=(120, -1))
-        rec1Box.Add(self.tx_rec_folder, 0, wx.LEFT | wx.RIGHT, 10)
-        self.but_folder = wx.ToggleButton(self, -1, "Choose", size=(65,-1))
-        self.but_folder.SetFont(font)
-        rec1Box.Add(self.but_folder, 1, wx.EXPAND | wx.RIGHT, 10)
-
-        rec2Box = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.tx_output = wx.TextCtrl( self, -1, "snd", size=(120, -1))
-        rec2Box.Add(self.tx_output, 0, wx.LEFT | wx.RIGHT, 10)
-        self.tog_record = wx.ToggleButton(self, -1, "Start", size=(65,-1))
+        soundBox.Add(self.tog_audio, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT | wx.RIGHT, 5)
+        self.tog_record = wx.ToggleButton(self, -1, "Rec Start", size=(90,-1))
         self.tog_record.SetFont(font)
-        rec2Box.Add(self.tog_record, 1, wx.EXPAND | wx.RIGHT, 10)
-
-        box.Add(wx.StaticText(self, -1, "Destination"), 0, wx.LEFT | wx.RIGHT, 17)
-        box.Add(rec1Box, 0, wx.EXPAND | wx.BOTTOM  | wx.LEFT | wx.RIGHT, 5)
-        box.Add(wx.StaticText(self, -1, "Filename"), 0, wx.LEFT | wx.RIGHT, 17)
-        box.Add(rec2Box, 0, wx.EXPAND | wx.BOTTOM  | wx.LEFT | wx.RIGHT, 5)
-
+        soundBox.Add(self.tog_record, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT | wx.RIGHT, 5)
+        box.Add(soundBox, 0, wx.CENTER | wx.ALL, 5)
 
         self.Bind(wx.EVT_CHOICE, self.handleType, self.trajType)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleClosed, self.closedToggle)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleAudio, self.tog_audio)
-        self.tx_output.Bind(wx.EVT_CHAR, self.handleOutput)
-        self.tx_rec_folder.Bind(wx.EVT_CHAR, self.handleOutput)
         self.Bind(wx.EVT_TOGGLEBUTTON, self.handleRecord, self.tog_record)
-        self.Bind(wx.EVT_TOGGLEBUTTON, self.chooseRecFolder, self.but_folder)
+        self.but_folder.Bind(wx.EVT_TOGGLEBUTTON, self.chooseRecFolder)
 
         self.SetAutoLayout(True)
         self.SetSizerAndFit(box)
         self.SetupScrolling(scroll_x = False)
+
+    def createSettingsWindow(self, font):
+        # Keep the controls alive so project loading and audio state updates also
+        # reach them while the settings window is hidden.
+        self.settingsWindow = settings = wx.Dialog(self.parent, title="Settings")
+        box = wx.BoxSizer(wx.VERTICAL)
+
+        projectBox = wx.StaticBoxSizer(wx.VERTICAL, settings, "Project Settings")
+        projectGrid = wx.FlexGridSizer(cols=4, vgap=8, hgap=10)
+        projectGrid.Add(wx.StaticText(settings, label="Sample rate"), 0, wx.ALIGN_CENTER_VERTICAL)
+        self.pop_sr = wx.Choice(settings, choices=['44100', '48000', '96000'], size=(90, -1))
+        self.pop_sr.SetSelection(0)
+        self.pop_sr.Bind(wx.EVT_CHOICE, self.handleSamplingRate)
+        projectGrid.Add(self.pop_sr, 0, wx.ALIGN_CENTER_VERTICAL)
+        projectGrid.Add(wx.StaticText(settings, label="Channels"), 0, wx.ALIGN_CENTER_VERTICAL)
+        self.tx_chnls = wx.TextCtrl(settings, value="2", size=(60, -1), style=wx.TE_PROCESS_ENTER)
+        self.tx_chnls.Bind(wx.EVT_TEXT_ENTER, self.handleNchnls)
+        projectGrid.Add(self.tx_chnls, 0, wx.ALIGN_CENTER_VERTICAL)
+        projectBox.Add(projectGrid, 0, wx.ALL, 10)
+        box.Add(projectBox, 0, wx.EXPAND | wx.ALL, 12)
+
+        recordBox = wx.StaticBoxSizer(wx.VERTICAL, settings, "Record Settings")
+        formatGrid = wx.FlexGridSizer(cols=4, vgap=8, hgap=10)
+        formatGrid.Add(wx.StaticText(settings, label="Format"), 0, wx.ALIGN_CENTER_VERTICAL)
+        self.pop_fileformat = wx.Choice(settings, choices=EXPORT_FORMATS, size=(90, -1))
+        self.pop_fileformat.SetSelection(0)
+        self.pop_fileformat.Bind(wx.EVT_CHOICE, self.handleFileFormat)
+        formatGrid.Add(self.pop_fileformat, 0, wx.ALIGN_CENTER_VERTICAL)
+        formatGrid.Add(wx.StaticText(settings, label="Sample type"), 0, wx.ALIGN_CENTER_VERTICAL)
+        self.pop_sampletype = wx.Choice(settings, choices=EXPORT_TYPES)
+        self.pop_sampletype.SetSelection(0)
+        self.pop_sampletype.Bind(wx.EVT_CHOICE, self.handleSampleType)
+        formatGrid.Add(self.pop_sampletype, 0, wx.ALIGN_CENTER_VERTICAL)
+        recordBox.Add(formatGrid, 0, wx.ALL, 10)
+
+        outputGrid = wx.FlexGridSizer(cols=3, vgap=10, hgap=10)
+        outputGrid.Add(wx.StaticText(settings, label="Destination"), 0, wx.ALIGN_CENTER_VERTICAL)
+        self.tx_rec_folder = wx.TextCtrl(settings, value="~/Desktop", size=(250, -1))
+        outputGrid.Add(self.tx_rec_folder, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.but_folder = wx.ToggleButton(settings, label="Choose")
+        self.but_folder.SetFont(font)
+        outputGrid.Add(self.but_folder, 0, wx.ALIGN_CENTER_VERTICAL)
+        outputGrid.Add(wx.StaticText(settings, label="Filename"), 0, wx.ALIGN_CENTER_VERTICAL)
+        self.tx_output = wx.TextCtrl(settings, value="snd", size=(250, -1))
+        outputGrid.Add(self.tx_output, 0, wx.ALIGN_CENTER_VERTICAL)
+        outputGrid.AddSpacer(0)
+        recordBox.Add(outputGrid, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        box.Add(recordBox, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
+
+        closeButton = wx.Button(settings, wx.ID_CLOSE, "Close")
+        closeButton.Bind(wx.EVT_BUTTON, self.closeSettings)
+        box.Add(closeButton, 0, wx.ALIGN_RIGHT | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
+        settings.SetSizerAndFit(box)
+        settings.Bind(wx.EVT_CLOSE, self.closeSettings)
+        settings.Bind(wx.EVT_CHAR_HOOK, self.handleSettingsKey)
+
+    def openSettings(self, event):
+        if not self.settingsWindow.IsShown():
+            self.settingsWindow.CentreOnParent()
+        self.settingsWindow.Show()
+        self.settingsWindow.Raise()
+
+    def closeSettings(self, event):
+        self.settingsWindow.Hide()
+        if isinstance(event, wx.CloseEvent):
+            if event.CanVeto():
+                event.Veto()
+            else:
+                event.Skip()
+
+    def handleSettingsKey(self, event):
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.closeSettings(event)
+        else:
+            event.Skip()
 
     def changeEqF1(self, x):
         self.parent.sg_audio.setEqFreq(0, x)
@@ -664,14 +675,8 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.tog_audio.SetValue(0)
             self.parent.menu.Check(7, False)
             self.tog_record.SetValue(0)
-            self.tog_record.SetLabel('Start')
+            self.tog_record.SetLabel('Rec Start')
             self.parent.sg_audio.stop()
-
-    def handleOutput(self, event):
-        key = event.GetKeyCode()
-        if key == wx.WXK_TAB or key == wx.WXK_RETURN:
-            self.surface.SetFocus()
-        event.Skip()
 
     def setRecordFolder(self, str):
         self.tx_rec_folder.SetValue(str)
@@ -689,9 +694,9 @@ class ControlPanel(scrolled.ScrolledPanel):
             else:
                 filename = os.path.join(os.path.expanduser('~'), "Desktop", self.tx_output.GetValue())
             self.parent.sg_audio.recStart(filename, self.fileformat, self.sampletype)
-            self.tog_record.SetLabel('Stop')
+            self.tog_record.SetLabel('Rec Stop')
         else:
-            self.tog_record.SetLabel('Start')
+            self.tog_record.SetLabel('Rec Start')
             self.parent.sg_audio.recStop()
 
     def chooseRecFolder(self, evt):

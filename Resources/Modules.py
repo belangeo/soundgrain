@@ -74,7 +74,6 @@ class Module(wx.Frame):
         menuBar = wx.MenuBar()
         self.menu = wx.Menu()
         self.menu.Append(200, 'Close\tCtrl+W', "")
-        self.menu.Append(200, 'Close\tCtrl+P', "")
         self.menu.AppendSeparator()
         self.menu.Append(201, "Run\tCtrl+R", "", wx.ITEM_CHECK)
         menuBar.Append(self.menu, "&File")

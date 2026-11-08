@@ -33,12 +33,18 @@ class SoundGrainApp(wx.App):
             sizex = sysx - 40
         else:
             sizex = 1200
-        if sysy < 800:
-            sizey = sysy - 40
-        else:
-            sizey = 800
-        self.frame = MainFrame(None, -1, pos=(0, 20), size=(sizex, sizey),
+        self.frame = MainFrame(None, -1, pos=(0, 20), size=(sizex, -1),
                                screen_size=(sysx, sysy))
+        # Size the content area directly: frame size conversions do not account
+        # for the space occupied by menus and the status bar on every platform.
+        controls = self.frame.controls
+        panel_height = controls.GetSizer().GetMinSize().height
+        panel_height += controls.GetSize().height - controls.GetClientSize().height
+        client_width = self.frame.GetClientSize().width
+        self.frame.SetClientSize((client_width, panel_height))
+        sizey = self.frame.GetSize().height
+        self.frame.SetSize((sizex, min(sizey, sysy - 40)))
+        self.frame.Layout()
 
     def MacOpenFiles(self, filenames):
         if type(filenames) is not list:

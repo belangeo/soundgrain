@@ -24,14 +24,14 @@ Getting sound with SoundGrain is as easy as:
     
 - Loading a soundfile on the drawing surface (Menu -> File -> Open Soundfile...).  
 - Drawing a granulator trajectory on the drawing surface with the mouse.  
-- Activating the audio by clicking on the "Run" button.
+- Activating the audio by clicking on the "Start" button.
 
 Here you should get some output sound!
 
 After that, you can explore by drawing more trajectories (of different kinds),
 playing with the granulator controls (Menu -> File -> Open Granulator Controls) 
 or with the effects balls (Menu -> FxBall). You can record the generated sound
-to the disk with the "Record Settings" section in the bottom of the control
-panel.
+to disk with the "Rec Start" button at the bottom of the control panel. Choose
+the recording format, destination and filename in File -> Open Settings (Ctrl+;).
 
 

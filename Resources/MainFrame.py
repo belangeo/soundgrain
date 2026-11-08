@@ -110,6 +110,8 @@ class MainFrame(wx.Frame):
         self.menu.Append(4, "Save as...\tShift+Ctrl+S")
         self.Bind(wx.EVT_MENU, self.handleSaveAs, id=4)
         self.menu.AppendSeparator()
+        settings_item = self.menu.Append(wx.ID_ANY, "Open Settings\tCtrl+;")
+        self.Bind(wx.EVT_MENU, lambda event: self.controls.openSettings(event), settings_item)
         self.menu.Append(6, "Open Granulator Controls\tCtrl+P")
         self.Bind(wx.EVT_MENU, self.openFxWindow, id=6)
         self.menu.Append(5, "Open Envelope Window\tCtrl+E")

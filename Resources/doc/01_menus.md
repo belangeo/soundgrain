@@ -34,6 +34,27 @@ Save the current state of the project.
 
 Save the current state of the project in a new .sg file.
 
+##### Open Settings (*Ctrl+;*) #####
+
+Opens the Settings window, which contains __Project Settings__ and
+__Record Settings__.
+
+In __Project Settings__, choose the __Sample rate__ and number of __Channels__.
+Both values must be supported by the current audio driver. These controls are
+disabled while audio playback is running.
+
+In __Record Settings__, choose the audio file __Format__ and __Sample type__.
+Enter the output folder path in __Destination__, or click __Choose__ to select
+it with a folder dialog.
+
+Enter a base name in __Filename__, without an extension. SoundGrain automatically
+appends the date, time and the extension for the selected format to avoid
+overwriting an existing file.
+
+Settings take effect immediately. Click __Close__ or press __Escape__ to close
+the window. Start and stop recording with the __Rec Start__ / __Rec Stop__ button
+at the bottom of the main window's control panel.
+
 ##### Open Granulator Controls (*Ctrl+P*) #####
 
 Open the [granulator's parameters window](04_granulator.md). This window, 

@@ -1,8 +1,9 @@
 Control Panel
 =============
 
-This panel provides general controls on drawing and playback behaviours,
-on global audio settings and on audio recording format.
+This panel provides controls for drawing, playback, global audio processing
+and starting or stopping audio and recording. Project and recording settings
+are in the Settings window (_File_ -> _Open Settings_, _Ctrl+;_).
  
 ______________________________________________________________________________
 
@@ -109,40 +110,20 @@ or drop the entirety of the generated signals.
 
 ______________________________________________________________________________
 
-Project Settings
-----------------
+Start and Rec Start
+-------------------
 
-Here the user can set the desired sampling rate and number of audio channels.
-These two values must be supported by the current audio driver.
+The __Start__ and __Rec Start__ buttons sit side by side at the bottom of the
+control panel.
 
-______________________________________________________________________________
+The __Start__ button activates the audio server, starting sound playback, and
+changes to __Stop__ while audio is running. This is the same as the menu item
+_File_ -> _Run_ (_Ctrl+R_).
 
-Start
------
+The __Rec Start__ button starts writing audio to disk and changes to __Rec Stop__
+while recording. Click __Rec Stop__ to finish the recording before using the
+file, so that it is saved as a valid audio file.
 
-The __Start__ button activates the audio server (start/stop the sound). This 
-is the same as the menu item _File_ -> _Run_.
-
-______________________________________________________________________________
-
-Record Settings
----------------
-
-In this section, the user can set record settings and start/stop writing audio 
-files on disk.
-
-The first two dropdown menus offer a selection of available audio file format 
-and sample type for the recorded file.
-
-Just below, the widget labelled __Destination__ let the user enter the complete
-path of the repository where to save the file. The button __Choose__ opens a
-standard dialog to select the folder graphically.
-
-In the text entry labelled __Filename__, the user can specify the name of the
-recorded files. Here we give only the generic name of the files, without 
-extension. Soundgrain will automatically append the date, time and the extension 
-to the filename, in order to avoid overwriting an existing file. The extension
-is chosen according to the file format dropdown menu.
-
-The __Start Rec__ button starts the recording. Don't forget to stop it before
-using the recorded file. Otherwise, the file won't be a valid audio file.  
+To change the sampling rate, channel count, recording format, sample type,
+destination folder or filename, open _File_ -> _Open Settings_ (_Ctrl+;_).
+See [Open Settings in the File menu documentation](01_menus.md) for details.
