@@ -18,6 +18,12 @@ Closes the current project (ask to save if modified) and starts a new one.
 
 Open a previously created .sg file.
 
+##### Open Recent... #####
+
+Reopen one of the last 10 opened projects. The most recently opened project is
+listed first. This list is remembered between sessions. If a project has been
+moved or deleted, selecting it displays a message and removes it from the list.
+
 ##### Open Soundfile... (*Shift+Ctrl+O*) #####
 
 Import a new sound into the drawing area.

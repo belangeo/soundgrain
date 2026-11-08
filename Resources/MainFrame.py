@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os, wx, time
+import os, wx, time, json
 from Resources.constants import *
 from Resources.audio import *
 from Resources.Modules import *
@@ -101,6 +101,12 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.handleNew, id=11)
         self.menu.Append(1, "Open...\tCtrl+O")
         self.Bind(wx.EVT_MENU, self.handleOpen, id=1)
+        self.recentProjects = []
+        self.recentProjectsMenu = wx.Menu()
+        self.menu.AppendSubMenu(self.recentProjectsMenu, "Open Recent...")
+        self.recentProjectIds = [wx.NewIdRef() for _ in range(10)]
+        for menu_id in self.recentProjectIds:
+            self.Bind(wx.EVT_MENU, self.handleOpenRecent, id=int(menu_id))
         self.menu.Append(2, "Open Soundfile...\tShift+Ctrl+O")
         self.Bind(wx.EVT_MENU, self.handleLoad, id=2)
         self.menu.Append(12, "Insert Soundfile...\tShift+Ctrl+I")
@@ -192,6 +198,7 @@ class MainFrame(wx.Frame):
 
         self.SetMenuBar(self.menuBar)
 
+        lines = []
         if os.path.isfile(PREFFILE):
             with open(PREFFILE, "r", encoding=FILE_ENCODING) as f:
                 lines = f.readlines()
@@ -216,6 +223,19 @@ class MainFrame(wx.Frame):
             miDriver = None
             self.lastFilePath = os.path.expanduser("~")
             self.lastAudioPath = os.path.expanduser("~")
+
+        for line in lines:
+            if line.startswith("recentProjects="):
+                try:
+                    paths = json.loads(line.split("=", 1)[1])
+                    if isinstance(paths, list):
+                        for path in paths:
+                            if isinstance(path, str) and path and path not in self.recentProjects:
+                                self.recentProjects.append(path)
+                        self.recentProjects = self.recentProjects[:10]
+                except (ValueError, TypeError):
+                    pass
+        self.updateRecentProjectsMenu()
 
         mainBox = wx.BoxSizer(wx.HORIZONTAL)
         self.panel = DrawingSurface(self)
@@ -449,6 +469,37 @@ class MainFrame(wx.Frame):
             self.lastFilePath = os.path.split(path)[0]
         dlg.Destroy()
 
+    def updateRecentProjectsMenu(self):
+        for item in list(self.recentProjectsMenu.GetMenuItems()):
+            self.recentProjectsMenu.DestroyItem(item)
+        if not self.recentProjects:
+            item = self.recentProjectsMenu.Append(wx.ID_ANY, "No recent projects")
+            item.Enable(False)
+        for index, path in enumerate(self.recentProjects):
+            label = path.replace("&", "&&").replace("\t", " ").replace("\n", " ")
+            self.recentProjectsMenu.Append(int(self.recentProjectIds[index]), label)
+
+    def rememberRecentProject(self, path):
+        path = os.path.abspath(path)
+        self.recentProjects = [path] + [entry for entry in self.recentProjects if entry != path]
+        self.recentProjects = self.recentProjects[:10]
+        self.updateRecentProjectsMenu()
+
+    def handleOpenRecent(self, evt):
+        index = next((i for i, menu_id in enumerate(self.recentProjectIds)
+                      if int(menu_id) == evt.GetId()), None)
+        if index is None or index >= len(self.recentProjects):
+            return
+        path = self.recentProjects[index]
+        if not os.path.isfile(path):
+            wx.MessageBox("The project file could not be found:\n%s" % path,
+                          "Open Recent", wx.OK | wx.ICON_ERROR, self)
+            self.recentProjects.remove(path)
+            self.updateRecentProjectsMenu()
+            return
+        self.loadFile(path)
+        self.lastFilePath = os.path.dirname(path)
+
     def handleLoad(self, evt):
         self.controls.handleLoad()
 
@@ -662,6 +713,8 @@ class MainFrame(wx.Frame):
         size = (x, y)
         wx.CallAfter(self.panel.Refresh)
         wx.CallLater(100, self.SetSize, size)
+        if self.currentFile is not None:
+            self.rememberRecentProject(path)
 
     def createInitTempFile(self):
         d = {}
@@ -770,6 +823,7 @@ class MainFrame(wx.Frame):
             f.write("samplePrecision=%s\n" % self.sample_precision)
             f.write("lastFilePath=%s\n" % self.lastFilePath)
             f.write("lastAudioPath=%s\n" % self.lastAudioPath)
+            f.write("recentProjects=%s\n" % json.dumps(self.recentProjects))
         if self.granulatorControls.IsShown():
             self.granulatorControls.Hide()
         self.controls.meter.OnClose(evt)
