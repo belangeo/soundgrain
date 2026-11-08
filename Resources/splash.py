@@ -23,7 +23,7 @@ from .constants import *
 def GetRoundBitmap(w, h, r=10):
     maskColour = wx.Colour(0,0,0)
     shownColour = wx.Colour(5,5,5)
-    b = wx.EmptyBitmap(w,h)
+    b = wx.Bitmap(w,h)
     dc = wx.MemoryDC(b)
     dc.SetBrush(wx.Brush(maskColour))
     dc.DrawRectangle(0,0,w,h)
@@ -44,13 +44,27 @@ class SoundGrainSplashScreen(wx.Frame):
     def __init__(self, parent, img, mainframe=None):
         display = wx.Display(0)
         size = display.GetGeometry()[2:]
-        style = wx.FRAME_SHAPED|wx.SIMPLE_BORDER|wx.FRAME_NO_TASKBAR|wx.STAY_ON_TOP
+        style = wx.FRAME_SHAPED|wx.BORDER_NONE|wx.FRAME_NO_TASKBAR|wx.STAY_ON_TOP
         wx.Frame.__init__(self, parent, -1, "", pos=(-1, size[1]//6), style=style)
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
         self.mainframe = mainframe
-        self.bmp = wx.Bitmap(os.path.join(img), wx.BITMAP_TYPE_PNG)
+        image = wx.Image(os.path.join(img), wx.BITMAP_TYPE_PNG)
+        if image.HasAlpha():
+            # The PNG edge was matted against white before alpha was added.
+            # Remove that matte to avoid a pale fringe around the black rim.
+            pixels = bytearray(image.GetData())
+            for index, alpha in enumerate(image.GetAlpha()):
+                if alpha == 0:
+                    pixels[index * 3:index * 3 + 3] = b'\x00\x00\x00'
+                elif alpha < 255:
+                    offset = index * 3
+                    for channel in range(offset, offset + 3):
+                        pixels[channel] = max(0, min(255,
+                            (pixels[channel] - (255 - alpha)) * 255 // alpha))
+            image.SetData(bytes(pixels))
+        self.bmp = wx.Bitmap(image)
         self.w, self.h = self.bmp.GetWidth(), self.bmp.GetHeight()
         self.SetClientSize((self.w, self.h))
 
@@ -59,20 +73,19 @@ class SoundGrainSplashScreen(wx.Frame):
         else:
             self.SetWindowShape()
 
-        dc = wx.ClientDC(self)
-        dc.DrawBitmap(self.bmp, 0, 0, True)
-
         self.fc = wx.CallLater(3500, self.OnClose)
 
-        self.Center(wx.HORIZONTAL)
-        if sys.platform == 'win32':
-            self.Center(wx.VERTICAL)
+        geometry = display.GetGeometry()
+        x = geometry.x + (geometry.width - self.w) // 2
+        y = geometry.y + (geometry.height - self.h) // 2 if sys.platform == 'win32' else geometry.y + geometry.height // 6
+        self.SetPosition((x, y))
 
         wx.CallAfter(self.Show)
 
     def SetWindowShape(self, *evt):
-        r = GetRoundShape(self.w, self.h)
-        self.hasShape = self.SetShape(r)
+        # Some window managers draw an unwanted outline for path shapes.
+        # Keep the window boundary separate from the bitmap's alpha smoothing.
+        self.hasShape = self.SetShape(GetRoundShape(self.w, self.h))
 
     def OnPaint(self, evt):
         w,h = self.GetSize()
@@ -80,7 +93,7 @@ class SoundGrainSplashScreen(wx.Frame):
         dc.SetPen(wx.Pen("#000000"))
         dc.SetBrush(wx.Brush("#000000"))
         dc.DrawRectangle(0,0,w,h)
-        dc.DrawBitmap(self.bmp, 0,0,True)
+        dc.DrawBitmap(self.bmp, 0, 0, True)
         dc.SetTextForeground("#FFFFFF")
         font = dc.GetFont()
         psize = font.GetPointSize()

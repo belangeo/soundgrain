@@ -150,36 +150,44 @@ def getColors(col, gradient):
     return firstColor, secondColor
 
 def GetRoundMaskBitmap(w, h, radius):
-    w, h = int(round(w)), int(round(h))
-    maskColor = wx.Colour(30,30,30)
-    shownColor = wx.Colour(29,29,29)
-    b = wx.EmptyBitmap(w,h)
-    dc = wx.MemoryDC(b)
-    dc.SetPen(wx.Pen(maskColor, 1))
-    dc.SetBrush(wx.Brush(maskColor))
-    dc.DrawRectangle(0,0,w,h)
-    dc.SetPen(wx.Pen(shownColor, 1, style=wx.TRANSPARENT))
-    dc.SetBrush(wx.Brush(shownColor, wx.SOLID)) # wx.CROSSDIAG_HATCH
-    dc.DrawRoundedRectangle(0,0,w,h,radius)
+    w, h = max(1, int(round(w))), max(1, int(round(h)))
+    # Downsample a larger coverage mask so edge pixels have partial opacity.
+    # Cache it with the ball; changing the gradient can reuse the same mask.
+    scale = 4
+    bitmap = wx.Bitmap(w * scale, h * scale)
+    dc = wx.MemoryDC(bitmap)
+    dc.SetBackground(wx.Brush(wx.BLACK))
+    dc.Clear()
+    dc.SetPen(wx.TRANSPARENT_PEN)
+    dc.SetBrush(wx.Brush(wx.WHITE))
+    dc.DrawRoundedRectangle(0, 0, w * scale, h * scale, radius * scale)
     dc.SelectObject(wx.NullBitmap)
-    b.SetMaskColour(shownColor)
-    return b
+    image = bitmap.ConvertToImage()
+    image = image.Scale(w, h, wx.IMAGE_QUALITY_HIGH)
+    return wx.Bitmap(image)
 
 def GetRoundBitmap(w, h, mask, col, gradient):
-    w, h = int(round(w)), int(round(h))
+    w, h = max(1, int(round(w))), max(1, int(round(h)))
     firstColor, secondColor = getColors(col, gradient)
-    maskColor = wx.Colour(30,30,30)
-    b = wx.EmptyBitmap(w,h)
-    dc = wx.MemoryDC(b)
-    dc.SetPen(wx.Pen(maskColor, 1))
-    dc.SetBrush(wx.Brush(maskColor))
-    dc.Clear()
-    rec = wx.Rect(0, 0, w, h)
-    dc.GradientFillConcentric(rec, firstColor, secondColor, (w//2,h//2))
-    dc.DrawBitmap(mask, rec[0], rec[1], True)
+    bitmap = wx.Bitmap(w, h)
+    dc = wx.MemoryDC(bitmap)
+    dc.GradientFillConcentric(wx.Rect(0, 0, w, h), firstColor, secondColor, (w//2, h//2))
     dc.SelectObject(wx.NullBitmap)
-    b.SetMaskColour(maskColor)
-    return b
+    image = bitmap.ConvertToImage()
+    # Express the gradient as opacity instead of shading toward black, so
+    # the waveform remains visible through the ball's outer region. Raising
+    # the gradient still makes the ball more opaque, matching its audio fader.
+    colors = image.GetData()
+    coverage = mask.ConvertToImage().GetData()[::3]
+    alpha = bytearray(w * h)
+    for index, edge_alpha in enumerate(coverage):
+        offset = index * 3
+        brightness = max(colors[offset:offset + 3])
+        opacity = max(0, min(255, (brightness - 30) * 255 // 225))
+        alpha[index] = edge_alpha * opacity // 255
+    image.SetData(bytes((firstColor.Red(), firstColor.Green(), firstColor.Blue())) * (w * h))
+    image.SetAlpha(bytes(alpha))
+    return wx.Bitmap(image)
 
 class FxBall():
     def __init__(self, fx, id, sg_audio, pos, size=64, gradient=30, fader=1., xfac=1.0, yfac=1.0):

@@ -732,7 +732,10 @@ class DrawingSurface(wx.Panel):
         else:
             dc.DrawBitmap(self.sndBitmap,0,0)
 
-        [dc.DrawBitmap(fx.bit, int(round(fx.pos[0])), int(round(fx.pos[1])), True) for fx in self.fxballValues]
+        # Use alpha compositing for the transparent background and soft edges.
+        for fx in self.fxballValues:
+            gc.DrawBitmap(fx.bit, int(round(fx.pos[0])), int(round(fx.pos[1])),
+                          fx.bit.GetWidth(), fx.bit.GetHeight())
 
         selectedTraj = self.parent.controls.getSelected()
         activeTrajs = [t for t in self.getActiveTrajectories() if len(t.getPoints()) > 1]
