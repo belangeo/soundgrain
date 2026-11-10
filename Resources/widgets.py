@@ -624,7 +624,8 @@ class ControlKnob(wx.Panel):
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.SetMinSize(self.GetSize())
         self.knobBitmap = KNOB.GetBitmap()
-        self.outFunction = outFunction
+        # Initial values are set before the audio server exists.
+        self.outFunction = None
         self.integer = integer
         self.log = log
         self.label = label
@@ -642,6 +643,7 @@ class ControlKnob(wx.Panel):
         else:
             self.SetValue(minvalue)
             self.init = minvalue
+        self.outFunction = outFunction
         self.Bind(wx.EVT_LEFT_DOWN, self.MouseDown)
         self.Bind(wx.EVT_LEFT_UP, self.MouseUp)
         self.Bind(wx.EVT_LEFT_DCLICK, self.DoubleClick)
@@ -706,6 +708,8 @@ class ControlKnob(wx.Panel):
             self.value = int(self.value)
         self.selected = False
         self.Refresh()
+        if self.outFunction:
+            self.outFunction(self.GetValue())
 
     def GetValue(self):
         if self.log:
@@ -789,6 +793,8 @@ class ControlKnob(wx.Panel):
                 self.value = clamp(self.oldValue + off, self.minvalue, self.maxvalue)
                 self.selected = False
                 self.Refresh()
+                if self.outFunction:
+                    self.outFunction(self.GetValue())
 
     def setbackColour(self, colour):
         self.backColour = colour
@@ -852,9 +858,5 @@ class ControlKnob(wx.Panel):
         dc.SetTextForeground(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
                              if self.selected else foreground)
         dc.DrawLabel(val, recval, wx.ALIGN_CENTER)
-
-        # Send value
-        if self.outFunction:
-            self.outFunction(self.GetValue())
 
         evt.Skip()
