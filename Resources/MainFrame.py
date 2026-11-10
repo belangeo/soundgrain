@@ -827,6 +827,11 @@ class MainFrame(wx.Frame):
             f.write("recentProjects=%s\n" % json.dumps(self.recentProjects))
         if self.granulatorControls.IsShown():
             self.granulatorControls.Hide()
+        # The MIDI listener owns a native PortTime callback independently of
+        # the audio server. Stop it before Python teardown, when its callback
+        # can no longer safely acquire the GIL.
+        if hasattr(self.sg_audio, "listen"):
+            self.sg_audio.listen.stop()
         self.controls.meter.OnClose(evt)
         if self.sg_audio.server.getIsStarted():
             self.sg_audio.server.stop()
@@ -834,7 +839,6 @@ class MainFrame(wx.Frame):
         self.controls.shutdownServer()
         time.sleep(0.2)
         self.Destroy()
-        sys.exit()
 
     def log(self, text):
         self.status.SetStatusText(text)
