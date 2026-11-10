@@ -280,6 +280,10 @@ class DrawingSurface(wx.Panel):
     def Memorize(self):
         w,h = self.GetSize()
         t = self.selected
+        self.memorizedTrajectory.setWidth(t.getWidth())
+        self.memorizedTrajectory.setWanderSpeed(t.getWanderSpeed())
+        self.memorizedTrajectory.setWanderPeriodicity(t.getWanderPeriodicity())
+        self.memorizedTrajectory.closed = t.closed
         self.memorizedTrajectory.setType(t.getType())
         self.memorizedTrajectory.setTimeSpeed(t.getTimeSpeed())
         self.memorizedTrajectory.setStep(t.getStep())
@@ -305,6 +309,10 @@ class DrawingSurface(wx.Panel):
                     new_t.setTranspo(pitch)
                 else:
                     new_t.setTranspo(1.0)
+                new_t.setWidth(t.getWidth())
+                new_t.setWanderSpeed(t.getWanderSpeed())
+                new_t.setWanderPeriodicity(t.getWanderPeriodicity())
+                new_t.closed = t.closed
                 new_t.setStep(t.getStep())
                 new_t.setActive(True)
                 new_t.setType(self.mode)
@@ -436,6 +444,10 @@ class DrawingSurface(wx.Panel):
                         self.selected.lpy.reinit()
                         self.selected.activateLp(self.parent.lowpass)
                         self.selected.setEditionLevel(self.parent.editionLevel)
+                        self.selected.setWidth(t.getWidth())
+                        self.selected.setWanderSpeed(t.getWanderSpeed())
+                        self.selected.setWanderPeriodicity(t.getWanderPeriodicity())
+                        self.selected.closed = t.closed
                         self.selected.setPoints(t.getPoints())
                         self.selected.setInitPoints()
                         if self.selected.getType() not in  ['free', 'line']:
@@ -477,6 +489,10 @@ class DrawingSurface(wx.Panel):
                             self.selected.lpy.reinit()
                             self.selected.activateLp(self.parent.lowpass)
                             self.selected.setEditionLevel(self.parent.editionLevel)
+                            self.selected.setWidth(t.getWidth())
+                            self.selected.setWanderSpeed(t.getWanderSpeed())
+                            self.selected.setWanderPeriodicity(t.getWanderPeriodicity())
+                            self.selected.closed = t.closed
                             self.selected.setPoints(t.getPoints())
                             self.selected.setInitPoints()
                             if self.selected.getType() not in  ['free', 'line']:
@@ -534,6 +550,11 @@ class DrawingSurface(wx.Panel):
         for t in self.trajectories:
             if not t.getActive():
                 self.traj = t
+                self.traj.setWidth(self.parent.controls.penWidth.GetValue())
+                self.traj.setWanderSpeed(self.parent.controls.wanderSpeed.GetValue())
+                self.traj.setWanderPeriodicity(self.parent.controls.wanderPeriodicity.GetValue())
+                self.traj.resetWander()
+                self.traj.closed = self.mode == 'circle' or (self.mode == 'free' and self.closed)
                 self.traj.setActive(True)
                 self.traj.setType(self.mode)
                 self.traj.lpx.reinit()
@@ -560,9 +581,9 @@ class DrawingSurface(wx.Panel):
                     self.ReleaseMouse()
                     return
                 if self.traj.getType() == 'free':
-                    self.traj.addFinalPoint(self.clipPos(evt.GetPosition()), self.closed)
+                    self.traj.addFinalPoint(self.clipPos(evt.GetPosition()), self.traj.closed)
                     if self.parent.fillPoints:
-                        self.traj.fillPoints(self.closed)
+                        self.traj.fillPoints(self.traj.closed)
                     self.traj.setInitPoints()
                 elif self.traj.getType() in ['circle', 'oscil']:
                     if self.parent.fillPoints:
@@ -720,7 +741,7 @@ class DrawingSurface(wx.Panel):
         evt.Skip()
 
     def draw(self, dc):
-        gc = wx.GraphicsContext_Create(dc)
+        gc = wx.GraphicsContext.Create(dc)
         dc.SetTextForeground("#000000")
         dc.SetFont(self.font)
         if not self.sndBitmap:
@@ -745,7 +766,9 @@ class DrawingSurface(wx.Panel):
             gc.SetBrush(t.getBrush(trans=True))
             gc.SetPen(t.getPen(big=True))
             if len(t.getPoints()) >= 2:
-                gc.StrokeLines(t.getPoints())
+                t.draw(gc)
+            # Handles keep their normal outline, independent of stroke width.
+            gc.SetPen(t.getPen())
             if t.getId() == selectedTraj:
                 recsize = 14
                 s2 = recsize / 2
@@ -769,7 +792,7 @@ class DrawingSurface(wx.Panel):
     def drawBackBitmap(self):
         w,h = self.currentSize
         if self.backBitmap == None or self.backBitmap.GetSize() != self.currentSize:
-            self.backBitmap = wx.EmptyBitmap(w,h)
+            self.backBitmap = wx.Bitmap(w,h)
         dc = wx.MemoryDC(self.backBitmap)
         self.draw(dc)
         dc.SelectObject(wx.NullBitmap)
@@ -777,7 +800,7 @@ class DrawingSurface(wx.Panel):
 
     def OnPaint(self, evt):
         dc = self.dcref(self)
-        gc = wx.GraphicsContext_Create(dc)
+        gc = wx.GraphicsContext.Create(dc)
 
         if self.onMotion or self.needBitmap:
             self.drawBackBitmap()
@@ -793,9 +816,9 @@ class DrawingSurface(wx.Panel):
                     # middle of this block. That raises an error: NoneType (t.circlePos)
                     # object is not subscriptable.
                     try:
-                        gc.SetPen(t.getPen())
-                        gc.SetBrush(t.getBrush())
-                        gc.DrawEllipse(t.circlePos[0]-5, t.circlePos[1]-5, 10, 10)
+                        gc.SetPen(wx.Pen(t.getColour().ChangeLightness(80), width=2))
+                        gc.SetBrush(wx.Brush(t.getColour().ChangeLightness(110)))
+                        gc.DrawEllipse(t.circlePos[0]-5.5, t.circlePos[1]-5.5, 11, 11)
                         gc.SetPen(t.getBorderPen())
                         gc.SetBrush(t.getBorderBrush())
                         gc.DrawEllipse(t.circlePos[0]-2, t.circlePos[1]-2, 4, 4)
@@ -903,10 +926,10 @@ class DrawingSurface(wx.Panel):
 
     def create_bitmap(self):
         size = tuple(self.GetSize())
-        self.sndBitmap = wx.EmptyBitmap(size[0], size[1])
+        self.sndBitmap = wx.Bitmap(size[0], size[1])
         memory = wx.MemoryDC()
         memory.SelectObject(self.sndBitmap)
-        gc = wx.GraphicsContext_Create(memory)
+        gc = wx.GraphicsContext.Create(memory)
         gc.SetPen(wx.Pen("#3F3F44"))
         gc.SetBrush(wx.Brush("#3F3F44", style=wx.TRANSPARENT))
         memory.SetBrush(wx.Brush(self.backgroundcolor))

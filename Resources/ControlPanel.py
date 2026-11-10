@@ -39,6 +39,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.fileformat = 0
         self.sampletype = 0
         self.tempState = None
+        self._variationWidthValue = 2
+        self._variationSpeedValue = 1.0
+        self._variationPeriodicityValue = 0.0
 
         box = wx.BoxSizer(wx.VERTICAL)
 
@@ -64,8 +67,17 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.notebook = wx.Notebook(self, -1, style=wx.BK_DEFAULT | wx.EXPAND)
         self.drawing = DrawingParameters(self.notebook)
         self.playback = PlaybackParameters(self.notebook)
-        self.notebook.AddPage(self.drawing, "Drawing")
-        self.notebook.AddPage(self.playback, "Playback")
+        self.variation = VariationParameters(self.notebook)
+        self.penWidth = self.variation.sl_width
+        self.wanderSpeed = self.variation.sl_speed
+        self.wanderPeriodicity = self.variation.sl_periodicity
+        self.notebook.AddPage(self.drawing, "Draw")
+        self.notebook.AddPage(self.variation, "Var")
+        self.notebook.AddPage(self.playback, "Play")
+        # Leave room for all three tab labels without GTK scroll arrows.
+        tab_width = sum(self.notebook.GetTextExtent(label)[0]
+                        for label in ("Draw", "Var", "Play")) + 120
+        self.notebook.SetMinSize((tab_width, -1))
         box.Add(self.notebook, 0, wx.ALL, 5)
 
         # EQ
@@ -382,21 +394,67 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.setTrajAmp(amp)
         if selToMax:
             self.selected = MAX_STREAMS
+        self.resetVariationSliders()
         self.surface.needBitmap = True
+
+    def resetVariationSliders(self):
+        index = 0 if self.selected == MAX_STREAMS else self.selected
+        trajectory = self.surface.getTrajectory(index)
+        self._variationWidthValue = trajectory.getWidth()
+        self._variationSpeedValue = trajectory.getWanderSpeed()
+        self._variationPeriodicityValue = trajectory.getWanderPeriodicity()
+        self.penWidth.SetValue(self._variationWidthValue, False)
+        self.wanderSpeed.SetValue(self._variationSpeedValue, False)
+        self.wanderPeriodicity.SetValue(self._variationPeriodicityValue, False)
+
+    def _variationTargets(self):
+        if self.selected == MAX_STREAMS:
+            return self.surface.getActiveTrajectories()
+        return [self.surface.getTrajectory(self.selected)]
+
+    def handleWidth(self, value):
+        value = int(value)
+        # pyo sliders also call outFunction on repaint. Only edits should
+        # affect trajectories; loading another selection must be read-only.
+        if value == self._variationWidthValue:
+            return
+        self._variationWidthValue = value
+        for trajectory in self._variationTargets():
+            trajectory.setWidth(value)
+        self.surface.needBitmap = True
+        self.surface.Refresh()
+        self.parent.is_unsaved = True
+
+    def handleWanderSpeed(self, value):
+        if abs(value - self._variationSpeedValue) < 1e-9:
+            return
+        self._variationSpeedValue = value
+        for trajectory in self._variationTargets():
+            trajectory.setWanderSpeed(value)
+        self.parent.is_unsaved = True
+
+    def handleWanderPeriodicity(self, value):
+        if abs(value - self._variationPeriodicityValue) < 1e-9:
+            return
+        self._variationPeriodicityValue = value
+        for trajectory in self._variationTargets():
+            trajectory.setWanderPeriodicity(value)
+        self.surface.Refresh()
+        self.parent.is_unsaved = True
 
     def handleSelected(self, event):
         if event.GetInt() != self.selected:
-            self.selected = event.GetInt()
             self.selectedOkToChange = False
-            if self.selected == MAX_STREAMS:
-                self.selectedOkToChange = False
-            self.resetPlaybackSliders()
+            self.setSelected(event.GetInt())
 
     def setSelected(self, selected):
         self.playback.tog_traj.SetSelection(selected)
+        self.variation.tog_traj.SetSelection(selected)
         self.selected = selected
-        self.surface.setSelectedById(selected)
+        if selected < MAX_STREAMS:
+            self.surface.setSelectedById(selected)
         self.resetPlaybackSliders()
+        self.surface.Refresh()
 
     def getSelected(self):
         return self.selected
@@ -760,6 +818,50 @@ class DrawingParameters(wx.Panel):
             obj.SetFont(font)
 
         self.SetAutoLayout(True)
+        self.SetSizer(box)
+
+class VariationParameters(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
+        controls = parent.GetParent()
+        box = wx.BoxSizer(wx.VERTICAL)
+        trajBox = wx.BoxSizer(wx.HORIZONTAL)
+        selectionText = wx.StaticText(self, label="Selected Traj:")
+        font = selectionText.GetFont()
+        font.SetPointSize(font.GetPointSize() - (1 if PLATFORM == "win32" else 2))
+        selectionText.SetFont(font)
+        trajBox.Add(selectionText, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
+        self.tog_traj = wx.Choice(self, choices=[str(i + 1) for i in range(MAX_STREAMS)] + ["all"])
+        self.tog_traj.SetFont(font)
+        self.tog_traj.SetSelection(0)
+        self.tog_traj.Bind(wx.EVT_CHOICE, controls.handleSelected)
+        trajBox.Add(self.tog_traj, 0, wx.LEFT, 5)
+        box.Add(trajBox, 0, wx.TOP, 2)
+        box.AddSpacer(5)
+        widthText = wx.StaticText(self, label="Width", size=(195, 15))
+        font = widthText.GetFont()
+        font.SetPointSize(font.GetPointSize() - (1 if PLATFORM == "win32" else 2))
+        widthText.SetFont(font)
+        box.Add(widthText, 0, wx.LEFT, 5)
+        self.sl_width = ControlSlider(self, 2, 500, 2, size=(195, 16), integer=True, outFunction=controls.handleWidth)
+        self.sl_width.SetToolTip("Width of the selected trajectory, or all active trajectories.")
+        box.Add(self.sl_width, 0, wx.LEFT | wx.RIGHT, 5)
+        box.AddSpacer(5)
+        speedText = wx.StaticText(self, label="Variation speed", size=(195, 15))
+        speedText.SetFont(font)
+        box.Add(speedText, 0, wx.LEFT, 5)
+        self.sl_speed = ControlSlider(self, 0.1, 10, 1, size=(195, 16), log=True, outFunction=controls.handleWanderSpeed)
+        self.sl_speed.SetToolTip("Random variation speed of the selected trajectories: 1 is normal speed.")
+        box.Add(self.sl_speed, 0, wx.LEFT | wx.RIGHT, 5)
+        box.AddSpacer(5)
+        periodicityText = wx.StaticText(self, label="Periodic <--> Random", size=(195, 15))
+        periodicityText.SetFont(font)
+        box.Add(periodicityText, 0, wx.LEFT, 5)
+        self.sl_periodicity = ControlSlider(self, 0, 1, 0, size=(195, 16),
+                                           outFunction=controls.handleWanderPeriodicity)
+        self.sl_periodicity.SetToolTip("0: sinusoidal; 1: fully random; values between blend the two.")
+        box.Add(self.sl_periodicity, 0, wx.LEFT | wx.RIGHT, 5)
+        box.AddSpacer(5)
         self.SetSizer(box)
 
 class PlaybackParameters(wx.Panel):

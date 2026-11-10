@@ -516,6 +516,7 @@ class MainFrame(wx.Frame):
         dlg = wx.FileDialog(self, message="Save file as ...",
                             defaultDir=self.lastFilePath,
                             defaultFile="Granulator.sg",
+                            wildcard="SoundGrain file (*.sg)|*.sg",
                             style=wx.FD_SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()

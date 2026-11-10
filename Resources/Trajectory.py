@@ -19,6 +19,7 @@ You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 import wx
+import random
 from math import sin, pi, sqrt, floor
 from Resources.Biquad_Filter import BiquadLP
 
@@ -92,8 +93,200 @@ class Trajectory:
         self.lpx = BiquadLP()
         self.lpy = BiquadLP()
         self.transpo = 1
+        self.width = 2
+        self.wanderSpeed = 1.0
+        self.wanderPeriodicity = 0.0
+        self.closed = False
+        self._random = random.Random()
+        self.resetWander()
+
+    def setWidth(self, width):
+        self.width = max(2, min(500, int(width)))
+        color = wx.Colour(self.colour.Red(), self.colour.Green(), self.colour.Blue(),
+                          100 if self.width > 2 else 255)
+        self.pen2 = wx.Pen(color, width=self.width, style=wx.SOLID)
+        self.pen2.SetCap(wx.CAP_BUTT)
+        self.pen2.SetJoin(wx.JOIN_ROUND)
+        if self.circlePos is not None and self.points:
+            index = (self.counter - self.step) % len(self.points)
+            self.circlePos = self._displacedPoint(index, advance=False)
+
+    def getWidth(self):
+        return self.width
+
+    def setWanderSpeed(self, speed):
+        self.wanderSpeed = max(0.1, min(10.0, float(speed)))
+
+    def getWanderSpeed(self):
+        return self.wanderSpeed
+
+    def setWanderPeriodicity(self, value):
+        self.wanderPeriodicity = max(0.0, min(1.0, float(value)))
+        if self.circlePos is not None and self.points:
+            index = (self.counter - self.step) % len(self.points)
+            self.circlePos = self._displacedPoint(index, advance=False)
+
+    def getWanderPeriodicity(self):
+        return self.wanderPeriodicity
+
+    def resetWander(self):
+        self._wanderPhase = 0.0
+        self._wanderStart = 0.0
+        self._wanderTarget = self._random.uniform(-1.0, 1.0)
+        self._wanderElapsed = 0.0
+        self._wanderDuration = self._random.uniform(0.4, 1.2)
+        self._normal = None
+
+    def _advanceWander(self):
+        # Use playback time, so freeze pauses the noise and timer changes do
+        # not turn a smooth drift into rapid jitter.
+        elapsed = self.timeSpeed * 0.001 * self.wanderSpeed
+        # One sine cycle spans two average random transitions at normal speed.
+        self._wanderPhase = (self._wanderPhase + elapsed / 1.6) % 1.0
+        self._wanderElapsed += elapsed
+        while self._wanderElapsed >= self._wanderDuration:
+            self._wanderElapsed -= self._wanderDuration
+            self._wanderStart = self._wanderTarget
+            self._wanderTarget = self._random.uniform(-1.0, 1.0)
+            self._wanderDuration = self._random.uniform(0.4, 1.2)
+        return self._wanderValue()
+
+    def _wanderValue(self):
+        phase = self._wanderElapsed / self._wanderDuration
+        blend = phase * phase * (3.0 - 2.0 * phase)
+        noise = self._wanderStart + (self._wanderTarget - self._wanderStart) * blend
+        sine = sin(2 * pi * self._wanderPhase)
+        # A convex blend stays inside [-1, 1] at every periodicity setting.
+        return sine * (1 - self.wanderPeriodicity) + noise * self.wanderPeriodicity
+
+    def _getNormal(self, index, previous=None):
+        # Average nearby segment directions, ignoring repeated points. Open
+        # endpoints use only their own side; closed paths wrap at the seam.
+        count = len(self.points)
+        dx = dy = 0.0
+        for offset in range(-3, 3):
+            a = index + offset
+            b = a + 1
+            if not self.closed and (a < 0 or b >= count):
+                continue
+            first, second = self.points[a % count], self.points[b % count]
+            sx, sy = second[0] - first[0], second[1] - first[1]
+            length = sqrt(sx * sx + sy * sy)
+            if length > 0:
+                weight = 3 - min(abs(offset), abs(offset + 1))
+                dx += sx / length * weight
+                dy += sy / length * weight
+        length = sqrt(dx * dx + dy * dy)
+        if length < 1e-9:
+            return previous or (0.0, 1.0)
+        normal = (-dy / length, dx / length)
+        # A normal and its opposite describe the same perpendicular. Keep
+        # its orientation continuous when the path doubles back.
+        if previous and sum(a * b for a, b in zip(normal, previous)) < 0:
+            normal = (-normal[0], -normal[1])
+        return normal
+
+    def draw(self, gc):
+        if self.width <= 2:
+            gc.SetPen(self.pen2)
+            gc.StrokeLines(self.points)
+            return
+
+        # Build a ribbon explicitly: wide pen caps and joins can produce
+        # wedges near sampled endpoints. Use the same local perpendiculars
+        # as playback, with small rounded corners instead of semicircle caps.
+        normals = []
+        previous = None
+        for index in range(len(self.points)):
+            previous = self._getNormal(index, previous)
+            normals.append(previous)
+        half = self.width * 0.5
+        upper = [(p[0] + n[0] * half, p[1] + n[1] * half)
+                 for p, n in zip(self.points, normals)]
+        lower = [(p[0] - n[0] * half, p[1] - n[1] * half)
+                 for p, n in zip(self.points, normals)]
+        path = gc.CreatePath()
+        if not self.closed:
+            lengths = [sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)
+                       for a, b in zip(self.points, self.points[1:])]
+            radius = min(5.0, half, sum(lengths) * 0.5)
+            last = len(self.points) - 1
+            distance = 0.0
+            while last > 0 and distance < radius:
+                distance += lengths[last - 1]
+                last -= 1
+            start, end = self.points[0], self.points[-1]
+            sn, en = normals[0], normals[-1]
+            st, et = (sn[1], -sn[0]), (en[1], -en[0])
+            def at(point, normal, tangent, side, along):
+                return (point[0] + normal[0] * side + tangent[0] * along,
+                        point[1] + normal[1] * side + tangent[1] * along)
+            # Keep the fixed seven-pixel number allowance and the small
+            # rounded end corners. Both cap subpaths have positive winding.
+            path.MoveToPoint(*at(start, sn, st, half, 0))
+            path.AddLineToPoint(*at(start, sn, st, half, -7 + radius))
+            path.AddQuadCurveToPoint(*at(start, sn, st, half, -7),
+                                     *at(start, sn, st, half - radius, -7))
+            path.AddLineToPoint(*at(start, sn, st, -half + radius, -7))
+            path.AddQuadCurveToPoint(*at(start, sn, st, -half, -7),
+                                     *at(start, sn, st, -half, -7 + radius))
+            path.AddLineToPoint(*at(start, sn, st, -half, 0))
+            path.CloseSubpath()
+            path.MoveToPoint(*at(end, en, et, -half, -radius))
+            path.AddQuadCurveToPoint(*at(end, en, et, -half, 0),
+                                     *at(end, en, et, -half + radius, 0))
+            path.AddLineToPoint(*at(end, en, et, half - radius, 0))
+            path.AddQuadCurveToPoint(*at(end, en, et, half, 0),
+                                     *at(end, en, et, half, -radius))
+            path.CloseSubpath()
+            upper = upper[:last + 1] + [at(end, en, et, half, -radius)]
+            lower = lower[:last + 1] + [at(end, en, et, -half, -radius)]
+        else:
+            upper.append(upper[0])
+            lower.append(lower[0])
+
+        # Fill the union of ribbon segments once, with consistently oriented
+        # triangles. Crossings, folds and retraced sections then add coverage
+        # instead of cancelling, while keeping the same translucent colour.
+        def triangle(a, b, c):
+            area = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+            if area < 0:
+                b, c = c, b
+            path.MoveToPoint(*a)
+            path.AddLineToPoint(*b)
+            path.AddLineToPoint(*c)
+            path.CloseSubpath()
+        for index in range(len(upper) - 1):
+            triangle(upper[index], lower[index], upper[index + 1])
+            triangle(lower[index], lower[index + 1], upper[index + 1])
+        gc.SetBrush(wx.Brush(self.pen2.GetColour()))
+        gc.FillPath(path, wx.WINDING_RULE)
+
+    def _displacedPoint(self, index, advance=True):
+        point = self.points[index]
+        if self.width <= 2:
+            return point
+        nx, ny = self._getNormal(index, self._normal)
+        self._normal = (nx, ny)
+        radius = (self.width - 2) * 0.5
+        offset = (self._advanceWander() if advance else self._wanderValue()) * radius
+        # Restrict the scalar offset, rather than clipping X/Y independently,
+        # to keep displacement perpendicular even at the canvas boundary.
+        low, high = -radius, radius
+        width, height = self.parent.GetSize()
+        for coordinate, direction, extent in ((point[0], nx, width), (point[1], ny, height)):
+            if abs(direction) > 1e-9:
+                bounds = sorted((-coordinate / direction, (extent - coordinate) / direction))
+                low, high = max(low, bounds[0]), min(high, bounds[1])
+        offset = max(low, min(high, offset)) if low <= high else 0.0
+        return (point[0] + nx * offset, point[1] + ny * offset)
 
     def clear(self):
+        self.setWidth(2)
+        self.setWanderSpeed(1)
+        self.setWanderPeriodicity(0)
+        self.resetWander()
+        self.closed = False
         self.type = None
         self.center = None
         self.radius = None
@@ -104,7 +297,11 @@ class Trajectory:
         self.setTranspo(1.)
 
     def getAttributes(self):
-        return {'activeLp': self.activeLp,
+        return {'width': self.width,
+                'wanderSpeed': self.wanderSpeed,
+                'wanderPeriodicity': self.wanderPeriodicity,
+                'closed': self.closed,
+                'activeLp': self.activeLp,
                 'editLevel': self.editLevel,
                 'timeSpeed': self.timeSpeed,
                 'amplitude': self.amplitude,
@@ -120,6 +317,10 @@ class Trajectory:
                 'points': self.getPoints()}
 
     def setAttributes(self, dict, xfac=1.0, yfac=1.0):
+        self.setWidth(dict.get('width', 2))
+        self.setWanderSpeed(dict.get('wanderSpeed', 1))
+        self.setWanderPeriodicity(dict.get('wanderPeriodicity', 0))
+        self.closed = dict.get('closed', dict.get('type') == 'circle')
         self.activeLp = dict['activeLp']
         self.editLevel = dict['editLevel']
         self.setTimeSpeed(dict['timeSpeed'])
@@ -335,8 +536,8 @@ class Trajectory:
 
     def move(self, offset):
         self.points = [(p[0]-offset[0], p[1]-offset[1]) for p in self.initPoints]
-        if self.getFreeze():
-            self.circlePos = self.points[(self.counter-self.step) % len(self.points)]
+        if self.getFreeze() and self.circlePos is not None:
+            self.circlePos = (self.circlePos[0] - offset[0], self.circlePos[1] - offset[1])
 
     def getInsideRect(self, point):
         first = self.getFirstPoint()
@@ -377,13 +578,14 @@ class Trajectory:
 
     def initCounter(self):
         self.counter = 0
+        self.resetWander()
 
     def clock(self):
         if not self.freeze:
             if self.points:
                 if self.circlePos != None:
                     self.lastCirclePos = self.circlePos
-                self.circlePos = self.points[self.counter % len(self.points)]
+                self.circlePos = self._displacedPoint(self.counter % len(self.points))
                 self.counter += self.step
                 self.mario = (self.mario+1) % 4
 

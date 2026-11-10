@@ -21,6 +21,40 @@ drawing tab.
 In free-hand style, if the __Closed__ button is activated, the last point will
 be automatically connected to the first on mouse up.
 
+The __Var__ tab between __Draw__ and __Play__ contains three sliders:
+
+- __Width__: pen width from 2 to 500 pixels, defaulting to 2.
+- __Variation speed__: the speed of the smooth sideways variation, from 0.1x
+  to 10x. The default of 1x is normal speed; lower values drift more slowly and
+  higher values drift faster. This does not change progress along the line.
+
+- __Periodic &lt;--&gt; Random__: blends between sinusoidal motion at 0 and fully random,
+  smooth motion at 1. Intermediate values gradually blend the two. The default
+  is 0 (sinusoidal motion). At 0, a full sine cycle takes
+  1.6 seconds at 1x variation speed; the speed slider scales both kinds of motion.
+
+The __Selected Traj__ popup selects which trajectory the sliders affect. It is
+synchronized with the popup in __Play__. Choose __all__ to affect all active
+trajectories. All three sliders take effect immediately, including during playback.
+Selecting a trajectory displays its own width, random speed and periodicity without changing
+other trajectories. With __all__ selected, the sliders initially display the
+first trajectory's settings; moving a slider applies that value to all active
+trajectories.
+
+Each trajectory saves its width, random speed and periodicity independently in the project.
+Copies and memorized trajectories retain all three settings. New trajectories start
+with the values currently displayed in __Var__.
+
+At the default width of 2, playback follows the centerline exactly. Wider
+trajectories appear as translucent bands. Self-crossings retain the same color
+and opacity without cutting holes in the band. Bands have small rounded corners at their
+ends. The band extends only enough to surround the trajectory number at its
+start and stops at the final point. The playback ball wanders smoothly
+from side to side, perpendicular to the local direction of the line, while
+advancing at the same pace set by __Timer speed__ and __Point step__. Its displaced
+position controls the sound and its interaction with FX balls. The marker uses lighter and darker shades of the trajectory color to keep
+the current position visible over the colored band.
+
 With _Circle_ and _Oscil_ types, a little blue diamond is located at the bottom
 right of the trajectory. Click and drag on this diamond resize the circle or
 the oscillation. If the trajectory is modified with the mouse, the diamond
@@ -31,7 +65,7 @@ ______________________________________________________________________________
 Drawing
 -------
 
-The four sliders in the _Drawing_ tab can be used to fine-tune the drawing
+The four sliders in the _Draw_ tab can be used to fine-tune the drawing
 behaviour on the surface.
 
 Sliders labelled __Lowpass cutoff__ abd __Lowpass Q__ allow the user to control
@@ -52,7 +86,7 @@ ______________________________________________________________________________
 Playback
 --------
 
-In the _Playback_ tab, the user can control independently the reading head and 
+In the _Play_ tab, the user can control independently the reading head and
 the gain of every trajectory.
 
 The dropdown menu indicates which trajectory (or "all") is selected and therefore
