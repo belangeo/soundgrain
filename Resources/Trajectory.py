@@ -21,7 +21,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 import wx
 import random
 from math import sin, pi, sqrt, floor
-from Resources.Biquad_Filter import BiquadLP
+from .Biquad_Filter import BiquadLP
 
 def chooseColour(i, numlines=24):
     def clip(x):

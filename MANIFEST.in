@@ -1,0 +1,3 @@
+include whatsnew.md
+recursive-include Resources *.py *.png *.ico *.icns *.sg *.md
+global-exclude *.py[cod] __pycache__

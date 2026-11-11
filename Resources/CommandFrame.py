@@ -19,7 +19,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx, os, markdown, webbrowser
 import wx.html as html
-from Resources.constants import DOCUMENTATION_PATH
+from .constants import DOCUMENTATION_PATH
 
 class MyHtmlWindow(html.HtmlWindow):
     def __init__(self, parent):

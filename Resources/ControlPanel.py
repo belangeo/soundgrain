@@ -18,9 +18,9 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 import os, math, random, wx
 import  wx.lib.scrolledpanel as scrolled
-from Resources.constants import *
-from Resources.audio import soundInfo
-from Resources.widgets import ControlKnob
+from .constants import *
+from .audio import soundInfo
+from .widgets import ControlKnob
 from pyo.lib._wxwidgets import ControlSlider, VuMeter
 
 class ControlPanel(scrolled.ScrolledPanel):

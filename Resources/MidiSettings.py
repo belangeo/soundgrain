@@ -21,7 +21,7 @@ along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 import wx, sys
 from pyo.lib._wxwidgets import ControlSlider
 from .constants import ensureNFD
-from Resources.audio import checkForMidiDrivers
+from .audio import checkForMidiDrivers
 
 class MidiSettings(wx.Frame):
     def __init__(self, parent, surface, sg_audio, miDriver):

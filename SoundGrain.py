@@ -18,11 +18,26 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
+import os
 import sys
 import wx
-from Resources.constants import *
-from Resources.splash import SoundGrainSplashScreen
-from Resources.MainFrame import MainFrame
+# The installed package uses a unique name so it can coexist with Cecilia,
+# which also has a source directory named Resources.
+if __name__ == '__main__' and os.path.isfile(os.path.join(os.path.dirname(__file__), 'pyproject.toml')):
+    from Resources.constants import *
+    from Resources.splash import SoundGrainSplashScreen
+    from Resources.MainFrame import MainFrame
+else:
+    try:
+        from soundgrain_resources.constants import *
+        from soundgrain_resources.splash import SoundGrainSplashScreen
+        from soundgrain_resources.MainFrame import MainFrame
+    except ModuleNotFoundError as error:
+        if error.name != "soundgrain_resources":
+            raise
+        from Resources.constants import *
+        from Resources.splash import SoundGrainSplashScreen
+        from Resources.MainFrame import MainFrame
 
 class SoundGrainApp(wx.App):
     def __init__(self, *args, **kwargs):
@@ -58,12 +73,15 @@ class SoundGrainApp(wx.App):
         except:
             pass
 
-if __name__ == '__main__':
-    sgfile = None
-    if len(sys.argv) > 1:
-        sgfile = sys.argv[1]
+def main():
+    """Launch SoundGrain, optionally opening a project supplied on the command line."""
+    sgfile = sys.argv[1] if len(sys.argv) > 1 else None
     app = SoundGrainApp(redirect=False)
     splash = SoundGrainSplashScreen(None, SPLASH_FILE, app.frame)
     if sgfile:
         wx.CallAfter(app.frame.loadFile, ensureNFD(sgfile))
     app.MainLoop()
+
+
+if __name__ == '__main__':
+    main()

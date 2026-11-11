@@ -17,9 +17,9 @@ You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 import wx, os, math
-from Resources.constants import *
-from Resources.FxBall import FxBall
-from Resources.Trajectory import Trajectory
+from .constants import *
+from .FxBall import FxBall
+from .Trajectory import Trajectory
 
 class MyFileDropTarget(wx.FileDropTarget):
     def __init__(self, window):

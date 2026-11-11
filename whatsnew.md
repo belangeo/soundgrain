@@ -2,6 +2,15 @@
 
 ## 6.1.0
 
+### Installation
+
+- Added pip installation with pyo, wxPython, and Markdown dependencies, plus a
+  `soundgrain` command for launching the application from any directory.
+- Added `soundgrain-register-desktop` to create a per-user application launcher
+  on Linux, Windows, and macOS.
+- Isolated installed resources so SoundGrain and Cecilia can share a Python
+  environment.
+
 ### Trajectories and drawing
 
 - Added a **Var** tab for controlling each trajectory's width, variation speed,

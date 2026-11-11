@@ -37,17 +37,8 @@ SG_YEAR = '2018'
 PLATFORM = sys.platform
 MAX_STREAMS = 16
 
-if '/SoundGrain.app' in os.getcwd():
-    os.environ["LANG"] = "en_CA.UTF-8"
-    RESOURCES_PATH = os.getcwd()
-    currentw = os.getcwd()
-    spindex = currentw.index('/SoundGrain.app')
-    os.chdir(currentw[:spindex])
-else:
-    RESOURCES_PATH = os.path.join(os.getcwd(), 'Resources')
-
-if not os.path.isdir(RESOURCES_PATH) and sys.platform == "win32":
-    RESOURCES_PATH = os.path.join(os.getenv("ProgramFiles"), "SoundGrain", "Resources")
+# Resolve assets from the installed package, independent of the launch folder.
+RESOURCES_PATH = os.path.dirname(os.path.abspath(__file__))
 
 DOCUMENTATION_PATH = os.path.join(RESOURCES_PATH, "doc")
 IMAGES_PATH = os.path.join(RESOURCES_PATH, 'images')

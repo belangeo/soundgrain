@@ -1,6 +1,6 @@
 import math, wx
 from wx.lib.embeddedimage import PyEmbeddedImage
-from Resources.constants import *
+from .constants import *
 
 KNOB = PyEmbeddedImage(
     "iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAABHNCSVQICAgIfAhkiAAAAAlw"

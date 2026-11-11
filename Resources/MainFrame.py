@@ -18,15 +18,15 @@ You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 import os, wx, time, json
-from Resources.constants import *
-from Resources.audio import *
-from Resources.Modules import *
+from .constants import *
+from .audio import *
+from .Modules import *
 from pyo.lib._wxwidgets import ControlSlider, Grapher
-from Resources.Trajectory import Trajectory
-from Resources.MidiSettings import MidiSettings
-from Resources.CommandFrame import CommandFrame
-from Resources.DrawingSurface import DrawingSurface
-from Resources.ControlPanel import ControlPanel
+from .Trajectory import Trajectory
+from .MidiSettings import MidiSettings
+from .CommandFrame import CommandFrame
+from .DrawingSurface import DrawingSurface
+from .ControlPanel import ControlPanel
 
 if sys.version_info[0] < 3:
     import xmlrpclib

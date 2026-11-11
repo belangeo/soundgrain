@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "soundgrain"
+dynamic = ["version"]
+description = "Graphical interface for granular sound synthesis"
+readme = "README.rst"
+requires-python = ">=3.11"
+license = "GPL-3.0-or-later"
+license-files = ["scripts/COPYING.txt"]
+dependencies = ["pyo", "wxPython", "markdown"]
+
+[project.scripts]
+soundgrain = "SoundGrain:main"
+soundgrain-register-desktop = "soundgrain_resources.desktop:main"
+
+[project.urls]
+Homepage = "https://github.com/belangeo/soundgrain"
+
+[tool.setuptools]
+packages = ["soundgrain_resources"]
+package-dir = {soundgrain_resources = "Resources"}
+py-modules = ["SoundGrain"]
+include-package-data = false
+
+[tool.setuptools.dynamic]
+version = {attr = "soundgrain_resources.constants.SG_VERSION"}
+
+[tool.setuptools.package-data]
+soundgrain_resources = ["*.png", "*.ico", "*.icns", "*.sg", "images/*.png", "doc/*.md"]
