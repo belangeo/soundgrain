@@ -71,6 +71,9 @@ class DrawingSurface(wx.Panel):
         self.oscilScaling = 1
         self.mode = TRAJTYPES[0]
         self.pointerPos = None
+        self.zoomX = 1.0
+        self.viewX = 0.0
+        self.zoomWaveform = None
         self.SetColors(outline=(255,255,255), bg=(30,30,30), fill=(184,32,32), rect=(0,255,0), losa=(0,0,255), wave=(70,70,70))
         self.currentSize = tuple(self.GetSize())
 
@@ -81,6 +84,7 @@ class DrawingSurface(wx.Panel):
         self.Bind(wx.EVT_LEFT_UP, self.MouseUp)
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
         self.Bind(wx.EVT_MOTION, self.MouseMotion)
+        self.Bind(wx.EVT_MOUSEWHEEL, self.OnWheel)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_SIZE, self.OnResize)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeave)
@@ -89,6 +93,49 @@ class DrawingSurface(wx.Panel):
             self.dcref = wx.BufferedPaintDC
         else:
             self.dcref = wx.PaintDC
+
+    def canvasToScreen(self, point):
+        return (point[0] * self.zoomX + self.viewX, point[1])
+
+    def screenToCanvas(self, point):
+        return ((point[0] - self.viewX) / self.zoomX, point[1])
+
+    def clampView(self):
+        width = self.GetClientSize().width
+        self.viewX = max(width * (1.0 - self.zoomX), min(0.0, self.viewX))
+
+    def setZoom(self, zoom, anchor):
+        if self.HasCapture():
+            return
+        x = self.screenToCanvas((anchor, 0))[0]
+        self.zoomX = max(1.0, min(256.0, zoom))
+        self.viewX = anchor - x * self.zoomX
+        self.clampView()
+        self.needBitmap = True
+        self.Refresh()
+
+    def OnWheel(self, event):
+        if self.HasCapture():
+            return
+        self.SetFocus()
+        delta = event.GetWheelDelta()
+        if not delta:
+            return
+        steps = event.GetWheelRotation() / delta
+        horizontal = event.GetWheelAxis() == wx.MOUSE_WHEEL_HORIZONTAL
+        if horizontal or event.ShiftDown():
+            direction = -1 if horizontal else 1
+            self.viewX += direction * steps * self.GetClientSize().width * 0.1
+            self.clampView()
+            self.needBitmap = True
+            self.Refresh()
+        else:
+            self.setZoom(self.zoomX * (1.25 ** steps), event.GetPosition()[0])
+
+    def hitHandle(self, canvasPoint, handlePoint, radius):
+        x, y = self.canvasToScreen(canvasPoint)
+        hx, hy = self.canvasToScreen(handlePoint)
+        return abs(x - hx) <= radius and abs(y - hy) <= radius
 
     def setCurrentSize(self, size):
         self.currentSize = size
@@ -125,13 +172,17 @@ class DrawingSurface(wx.Panel):
             yscl = center[1] / float(cY)
             fxball.setCenter((w * xscl, h * yscl))
 
+        if cX:
+            self.viewX *= w / float(cX)
         self.currentSize = (w,h)
+        self.clampView()
+        self.zoomWaveform = None
         self.needBitmap = True
         self.parent.controls.drawWaveform()
         wx.CallAfter(self.Refresh)
 
     def restoreFxBall(self, dict):
-        self.fxballs[dict["id"]] = FxBall(dict["fx"], dict["id"], self.parent.sg_audio, dict["pos"], dict["size"], dict["gradient"], dict["fader"])
+        self.fxballs[dict["id"]] = FxBall(dict["fx"], dict["id"], self.parent.sg_audio, dict["pos"], dict["size"], dict["gradient"], dict["fader"], parent=self.parent)
         self.parent.sg_audio.addFx(dict["fx"], dict["id"])
         self.fxballs[dict["id"]].load(dict["controls"])
         self.fxballValues = [fx for fx in self.fxballs.values()]
@@ -142,7 +193,7 @@ class DrawingSurface(wx.Panel):
         if dict != {}:
             for dic in dict.values():
                 self.fxballs[dic["id"]] = FxBall(dic["fx"], dic["id"], self.parent.sg_audio, dic["pos"], 
-                                            dic["size"], dic["gradient"], dic["fader"], xfac, yfac)
+                                            dic["size"], dic["gradient"], dic["fader"], xfac, yfac, parent=self.parent)
                 self.parent.sg_audio.addFx(dic["fx"], dic["id"])
                 self.fxballs[dic["id"]].load(dic["controls"])
             self.fxballValues = [fx for fx in self.fxballs.values()]
@@ -157,7 +208,7 @@ class DrawingSurface(wx.Panel):
                 key = i
                 break
         if key != -1:
-            self.fxballs[key] = FxBall(fx, key, self.parent.sg_audio, (100,100))
+            self.fxballs[key] = FxBall(fx, key, self.parent.sg_audio, (100,100), parent=self.parent)
             self.parent.sg_audio.addFx(fx, key)
             self.fxballValues = [fx for fx in self.fxballs.values()]
             self.needBitmap = True
@@ -165,7 +216,7 @@ class DrawingSurface(wx.Panel):
 
     def removeAllFxBalls(self):
         for key in list(self.fxballs.keys()):
-            self.fxballs[key].hideControls()
+            self.fxballs[key].destroyControls()
             del self.fxballs[key]
             self.parent.sg_audio.removeFx(key)
         self.fxballValues = [fx for fx in self.fxballs.values()]
@@ -173,7 +224,7 @@ class DrawingSurface(wx.Panel):
         self.Refresh()
 
     def removeFxBall(self, key):
-        self.fxballs[key].hideControls()
+        self.fxballs[key].destroyControls()
         del self.fxballs[key]
         self.parent.sg_audio.removeFx(key)
         self.fxballValues = [fx for fx in self.fxballs.values()]
@@ -253,8 +304,9 @@ class DrawingSurface(wx.Panel):
 
     def OnRightDown(self, evt):
         self.SetFocus()
+        pos = self.screenToCanvas(evt.GetPosition())
         for t in self.getActiveTrajectories():
-            if t.getInsideRect(evt.GetPosition()):
+            if t.getFirstPoint() is not None and self.hitHandle(pos, t.getFirstPoint(), 7):
                 t.clear()
                 if len(self.getActiveTrajectories()) > 0:
                     self.setSelected(self.getActiveTrajectories()[0])
@@ -266,7 +318,7 @@ class DrawingSurface(wx.Panel):
         mouseState = wx.GetMouseState()
         mousePos = (mouseState.GetX(), mouseState.GetY())
         for fxball in self.fxballs.values():
-            if fxball.getInside(evt.GetPosition(), small=True):
+            if fxball.getInside(pos, small=True):
                 fxball.openControls(mousePos)
                 return
 
@@ -368,6 +420,10 @@ class DrawingSurface(wx.Panel):
         self.Refresh()
 
     def KeyDown(self, evt):
+        if evt.GetKeyCode() == wx.WXK_ESCAPE:
+            self.setZoom(1.0, 0)
+            evt.StopPropagation()
+            return
         if evt.GetKeyCode() in [wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE]:
             if self.selected != None:
                 self.selected.clear()
@@ -431,10 +487,10 @@ class DrawingSurface(wx.Panel):
 
     def MouseDoubleClick(self, evt):
         self.SetFocus()
-        self.downPos = evt.GetPosition()
+        self.downPos = self.screenToCanvas(evt.GetPosition())
         for t in self.getActiveTrajectories():
             # Select or duplicate trajectory
-            if t.getInsideRect(self.downPos):
+            if t.getFirstPoint() is not None and self.hitHandle(self.downPos, t.getFirstPoint(), 7):
                 for new_t in self.trajectories:
                     if not new_t.getActive():
                         self.setSelected(new_t)
@@ -475,10 +531,10 @@ class DrawingSurface(wx.Panel):
 
     def MouseDown(self, evt):
         self.SetFocus()
-        self.downPos = evt.GetPosition()
+        self.downPos = self.screenToCanvas(evt.GetPosition())
         for t in self.getActiveTrajectories():
             # Select or duplicate trajectory
-            if t.getInsideRect(self.downPos):
+            if t.getFirstPoint() is not None and self.hitHandle(self.downPos, t.getFirstPoint(), 7):
                 if evt.AltDown():
                     for new_t in self.trajectories:
                         if not new_t.getActive():
@@ -505,21 +561,21 @@ class DrawingSurface(wx.Panel):
                 self.extremeXs = (min(Xs), max(Xs))
                 Ys = [p[1] for p in self.selected.getPoints()]
                 self.extremeYs = (min(Ys), max(Ys))
-                self.curCenters = [traj.getCenter() for traj in self.getActiveTrajectories()]
+                self.curCenters = {traj.getId(): traj.getCenter() for traj in self.getActiveTrajectories()}
                 self.action = 'drag'
                 if self.selected.getType() not in  ['free', 'line']:
                     self.curCenter = self.selected.getCenter()
                 self.CaptureMouse()
                 return
             # Rescale circle or oscil trajectory
-            if t.getInsideLosange(self.downPos):
+            if t.getType() in ('circle', 'oscil') and t.getPoints() and self.hitHandle(self.downPos, t.getLosangePoint(), 5):
                 self.setSelected(t)
                 self.action = 'rescale'
                 self.CaptureMouse()
                 return
             # Check for trajectory transformation
             for p in t.getPoints():
-                if wx.Rect(int(p[0]-5), int(p[1]-5), 10, 10).Contains(self.downPos):
+                if self.hitHandle(self.downPos, p, 5):
                     self.pindex = t.getPoints().index(p)
                     self.setSelected(t)
                     self.action = 'edit'
@@ -581,7 +637,7 @@ class DrawingSurface(wx.Panel):
                     self.ReleaseMouse()
                     return
                 if self.traj.getType() == 'free':
-                    self.traj.addFinalPoint(self.clipPos(evt.GetPosition()), self.traj.closed)
+                    self.traj.addFinalPoint(self.clipPos(self.screenToCanvas(evt.GetPosition())), self.traj.closed)
                     if self.parent.fillPoints:
                         self.traj.fillPoints(self.traj.closed)
                     self.traj.setInitPoints()
@@ -621,16 +677,16 @@ class DrawingSurface(wx.Panel):
         evt.Skip()
 
     def MouseMotion(self, evt):
-        self.pointerPos = evt.GetPosition()
+        self.pointerPos = pos = self.screenToCanvas(evt.GetPosition())
         if self.HasCapture() and evt.Dragging() and evt.LeftIsDown():
             if self.action == 'draw' and self.traj:
                 if self.traj.getType() == 'free':
-                    self.traj.addPoint(self.clipPos(evt.GetPosition()))
+                    self.traj.addPoint(self.clipPos(pos))
                 elif self.traj.getType() == 'line':
                     self.traj.points = []
                     self.traj.lpx.reinit()
                     self.traj.lpy.reinit()
-                    x,y = self.clipPos(evt.GetPosition())
+                    x,y = self.clipPos(pos)
 
                     x2 = abs(x-self.downPos[0])
                     y2 = abs(y-self.downPos[1])
@@ -644,12 +700,12 @@ class DrawingSurface(wx.Panel):
                     else: ydir = -1
 
                     for i in range(0, maxstep, 2):
-                        xpt = self.downPos[0] + xdir * int(x2 * i / float(maxstep))
-                        ypt = self.downPos[1] + ydir * int(y2 * i / float(maxstep))
-                        self.traj.addPoint((int(round(xpt)),int(round(ypt))))
+                        xpt = self.downPos[0] + xdir * x2 * i / float(maxstep)
+                        ypt = self.downPos[1] + ydir * y2 * i / float(maxstep)
+                        self.traj.addPoint((xpt,ypt))
                 else:
-                    Xlen = abs(self.downPos[0] - evt.GetPosition()[0])
-                    Ylen = abs(self.downPos[1] - evt.GetPosition()[1])
+                    Xlen = abs(self.downPos[0] - pos[0])
+                    Ylen = abs(self.downPos[1] - pos[1])
                     self.traj.setRadius(self.clipCirclePos(math.sqrt( Xlen**2 + Ylen**2 ), self.traj.getCenter(), self.traj.getRadius()))
                     r = self.traj.getRadius()
                     halfR = int(round(r/2.))
@@ -663,22 +719,22 @@ class DrawingSurface(wx.Panel):
                             a = i * scaleR * r
                             x = math.cos(math.pi * i * scaleR) * r
                             y = math.sin(math.pi * i * scaleR) * r
-                            self.traj.addCirclePoint((int(round(x + self.downPos[0])), int(round(y + self.downPos[1]))))
+                            self.traj.addCirclePoint((x + self.downPos[0], y + self.downPos[1]))
                     else:
                         for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling + 1)):
                             a = i * scaleR * r
                             x = math.cos(math.pi * i * scaleR) * r
                             y = math.sin(math.pi * self.oscilPeriod * i * scaleR) * r
-                            self.traj.addCirclePoint((int(round(x + self.downPos[0])), int(round(y + self.downPos[1]))))
+                            self.traj.addCirclePoint((x + self.downPos[0], y + self.downPos[1]))
 
             elif self.action == 'drag':
                 if self.selected.getType() in ['free', 'line']:
-                    x,y = evt.GetPosition()
+                    x,y = pos
                     offset = (self.downPos[0] - x, self.downPos[1] - y)
                     clipedOffset = self.clip(offset, self.extremeXs, self.extremeYs)
                     self.selected.move(clipedOffset)
                 else:
-                    x,y = self.clipPos(evt.GetPosition())
+                    x,y = self.clipPos(pos)
                     offset = (self.downPos[0] - x, self.downPos[1] - y)
                     center, clipedOffset = self.clipCircleMove(self.selected.getRadius(), self.curCenter, offset)
                     self.selected.setCenter(center)
@@ -695,8 +751,8 @@ class DrawingSurface(wx.Panel):
                                 traj.move(clipedOffset)
 
             elif self.action == 'rescale':
-                Xlen = abs(self.selected.getCenter()[0] - evt.GetPosition()[0])
-                Ylen = abs(self.selected.getCenter()[1] - evt.GetPosition()[1])
+                Xlen = abs(self.selected.getCenter()[0] - pos[0])
+                Ylen = abs(self.selected.getCenter()[1] - pos[1])
                 self.selected.setRadius(self.clipCirclePos(math.sqrt( Xlen**2 + Ylen**2 ), self.selected.getCenter(), self.selected.getRadius()))
                 r = self.selected.getRadius()
                 halfR = int(round(r/2.))
@@ -710,26 +766,24 @@ class DrawingSurface(wx.Panel):
                         a = i * scaleR * r
                         x = math.cos(math.pi * i * scaleR) * r
                         y = math.sin(math.pi * i * scaleR) * r
-                        self.selected.addCirclePoint((int(round(x + self.selected.getCenter()[0])), int(round(y + self.selected.getCenter()[1]))))
+                        self.selected.addCirclePoint((x + self.selected.getCenter()[0], y + self.selected.getCenter()[1]))
                 else:
                     for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling + 1)):
                         a = i * scaleR * r
                         x = math.cos(math.pi * i * scaleR) * r
                         y = math.sin(math.pi * self.oscilPeriod * i * scaleR) * r
-                        self.selected.addCirclePoint((int(round(x + self.selected.getCenter()[0])), int(round(y + self.selected.getCenter()[1]))))
+                        self.selected.addCirclePoint((x + self.selected.getCenter()[0], y + self.selected.getCenter()[1]))
             elif self.action == 'edit':
-                x,y = evt.GetPosition()
+                x,y = pos
                 offset = (self.downPos[0] - x, self.downPos[1] - y)
                 self.selected.editTraj(self.pindex, offset)
             elif self.action == 'drag_ball':
-                pos = evt.GetPosition()
                 if evt.ShiftDown():
                     off = (self.downPos[1] - pos[1])
                     self.fxball.setGradient(off)
                 else:
                     self.fxball.move(pos)
             elif self.action == 'rescale_ball':
-                pos = evt.GetPosition()
                 x = self.fxball.center[0] - pos[0]
                 y = self.fxball.center[1] - pos[1]
                 hyp = math.sqrt(x*x+y*y)
@@ -741,53 +795,64 @@ class DrawingSurface(wx.Panel):
         evt.Skip()
 
     def draw(self, dc):
+        width, height = self.GetClientSize()
         gc = wx.GraphicsContext.Create(dc)
         dc.SetTextForeground("#000000")
         dc.SetFont(self.font)
         if not self.sndBitmap:
-            w,h = self.GetSize()
-            dc.SetBrush(wx.Brush(self.backgroundcolor, wx.SOLID))
+            dc.SetBackground(wx.Brush(self.backgroundcolor))
             dc.Clear()
             dc.SetPen(wx.Pen(self.outlinecolor, width=1, style=wx.SOLID))
-            dc.DrawRectangle(0, 0, w, h)
+            dc.SetBrush(wx.TRANSPARENT_BRUSH)
+            dc.DrawRectangle(0, 0, width, height)
+        elif self.zoomX == 1.0:
+            dc.DrawBitmap(self.sndBitmap, 0, 0)
         else:
-            dc.DrawBitmap(self.sndBitmap,0,0)
+            dc.SetBackground(wx.Brush(self.backgroundcolor))
+            dc.Clear()
+            # Fetch only the visible time range, at viewport resolution.
+            duration = self.parent.controls.sndDur
+            key = (self.zoomX, self.viewX, width, height, duration)
+            if self.zoomWaveform is None or self.zoomWaveform[0] != key:
+                begin = -self.viewX / (self.zoomX * width) * duration
+                end = min(1.0, (width - self.viewX) / (self.zoomX * width)) * duration
+                self.zoomWaveform = (key, self.parent.sg_audio.getViewTable((width, height), begin, end))
+            gc.SetPen(wx.Pen("#3F3F44"))
+            for samples in self.zoomWaveform[1]:
+                if len(samples) > 1:
+                    gc.StrokeLines(samples)
 
-        # Use alpha compositing for the transparent background and soft edges.
+        gc.PushState()
+        gc.Translate(self.viewX, 0)
+        gc.Scale(self.zoomX, 1)
         for fx in self.fxballValues:
-            gc.DrawBitmap(fx.bit, int(round(fx.pos[0])), int(round(fx.pos[1])),
-                          fx.bit.GetWidth(), fx.bit.GetHeight())
+            gc.DrawBitmap(fx.bit, fx.pos[0], fx.pos[1], fx.bit.GetWidth(), fx.bit.GetHeight())
 
         selectedTraj = self.parent.controls.getSelected()
         activeTrajs = [t for t in self.getActiveTrajectories() if len(t.getPoints()) > 1]
         for t in activeTrajs:
-            recsize = 14
-            s2 = recsize / 2
+            if t.getId() == selectedTraj:
+                self.selected = t
             gc.SetBrush(t.getBrush(trans=True))
             gc.SetPen(t.getPen(big=True))
-            if len(t.getPoints()) >= 2:
-                t.draw(gc)
-            # Handles keep their normal outline, independent of stroke width.
-            gc.SetPen(t.getPen())
-            if t.getId() == selectedTraj:
-                recsize = 14
-                s2 = recsize / 2
-                self.selected = t
-                gc.SetPen(wx.Pen("#EEEEEE", width=2, style=wx.SOLID))
-            if t.getFirstPoint() != None:
-                # With midi triggering, it's possible to delete a trajectory in the
-                # middle of this block. That raises an error: NoneType (t.circlePos)
-                # object is not subscriptable.
-                try:
-                    gc.SetBrush(t.getBrush())
-                    gc.DrawRoundedRectangle(t.getFirstPoint()[0]-s2, t.getFirstPoint()[1]-s2, recsize, recsize, 2)
-                    dc.DrawLabel(str(t.getLabel()), wx.Rect(int(t.getFirstPoint()[0]-s2), int(t.getFirstPoint()[1]-s2), recsize, recsize), wx.ALIGN_CENTER)
-                    if t.getType() in ['circle', 'oscil']:
-                        gc.SetBrush(self.losaBrush)
-                        gc.SetPen(self.losaPen)
-                        gc.DrawRoundedRectangle(t.getLosangePoint()[0]-5, t.getLosangePoint()[1]-5, 10, 10, 2)
-                except:
-                    pass
+            t.draw(gc)
+        gc.PopState()
+
+        # Labels and handles remain a consistent size on screen.
+        for t in activeTrajs:
+            point = t.getFirstPoint()
+            if point is None:
+                continue
+            x, y = self.canvasToScreen(point)
+            gc.SetBrush(t.getBrush())
+            gc.SetPen(wx.Pen("#EEEEEE", width=2) if t.getId() == selectedTraj else t.getPen())
+            gc.DrawRoundedRectangle(x-7, y-7, 14, 14, 2)
+            dc.DrawLabel(str(t.getLabel()), wx.Rect(int(x-7), int(y-7), 14, 14), wx.ALIGN_CENTER)
+            if t.getType() in ('circle', 'oscil'):
+                x, y = self.canvasToScreen(t.getLosangePoint())
+                gc.SetBrush(self.losaBrush)
+                gc.SetPen(self.losaPen)
+                gc.DrawRoundedRectangle(x-5, y-5, 10, 10, 2)
 
     def drawBackBitmap(self):
         w,h = self.currentSize
@@ -818,10 +883,11 @@ class DrawingSurface(wx.Panel):
                     try:
                         gc.SetPen(wx.Pen(t.getColour().ChangeLightness(80), width=2))
                         gc.SetBrush(wx.Brush(t.getColour().ChangeLightness(110)))
-                        gc.DrawEllipse(t.circlePos[0]-5.5, t.circlePos[1]-5.5, 11, 11)
+                        x, y = self.canvasToScreen(t.circlePos)
+                        gc.DrawEllipse(x-5.5, y-5.5, 11, 11)
                         gc.SetPen(t.getBorderPen())
                         gc.SetBrush(t.getBorderBrush())
-                        gc.DrawEllipse(t.circlePos[0]-2, t.circlePos[1]-2, 4, 4)
+                        gc.DrawEllipse(x-2, y-2, 4, 4)
                     except:
                         pass
         else:
@@ -829,7 +895,8 @@ class DrawingSurface(wx.Panel):
                 if t.lastCirclePos[0] < t.circlePos[0]: marioff = 0
                 else: marioff = 4
                 bitmario = self.marios[t.mario + marioff]
-                dc.DrawBitmap(bitmario, t.circlePos[0]-8, t.circlePos[1]-8, True)
+                x, y = self.canvasToScreen(t.circlePos)
+                dc.DrawBitmap(bitmario, int(x-8), int(y-8), True)
 
         if self.pointerPos != None:
             w,h = self.GetSize()
@@ -925,6 +992,7 @@ class DrawingSurface(wx.Panel):
         self.create_bitmap()
 
     def create_bitmap(self):
+        self.zoomWaveform = None
         size = tuple(self.GetSize())
         self.sndBitmap = wx.Bitmap(size[0], size[1])
         memory = wx.MemoryDC()

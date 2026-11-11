@@ -435,7 +435,7 @@ class Trajectory:
             if point == self.points[-1]:
                 return
             if self.activeLp:
-                point = (int(round(self.lpx.filter(point[0]))), int(round(self.lpy.filter(point[1]))))
+                point = (self.lpx.filter(point[0]), self.lpy.filter(point[1]))
             self.points.append(point)
         else:
             self.points.append(point)
@@ -444,7 +444,7 @@ class Trajectory:
         if closed:
             self.points.append(point)
 
-            maxstep = max(abs(point[0]-self.points[0][0]), abs(point[1]-self.points[0][1]))
+            maxstep = int(max(abs(point[0]-self.points[0][0]), abs(point[1]-self.points[0][1])))
             xscale = abs(point[0]-self.points[0][0])
             yscale = abs(point[1]-self.points[0][1])
 
@@ -487,7 +487,7 @@ class Trajectory:
             else: ydir = -1
 
             if self.activeLp:
-                p = (int(round(filllpx.filter(self.points[first][0]))), int(round(filllpy.filter(self.points[first][1]))))
+                p = (filllpx.filter(self.points[first][0]), filllpy.filter(self.points[first][1]))
             else:
                 p = (self.points[first][0], self.points[first][1])
             if not templist:
@@ -500,13 +500,13 @@ class Trajectory:
                 xpt = self.points[first][0] + xdir * xscale
                 ypt = self.points[first][1] + ydir * yscale
                 if self.activeLp:
-                    p = (int(round(filllpx.filter(xpt))),int(round(filllpy.filter(ypt))))
+                    p = (filllpx.filter(xpt), filllpy.filter(ypt))
                 else:
                     p = (xpt, ypt)
                 gate = self.removeMatch(templist, p)
                 if gate:
                     templist.append(p)
-        templist.append((int(round(filllpx.filter(self.points[-1][0]))), int(round(filllpy.filter(self.points[-1][1])))))
+        templist.append((filllpx.filter(self.points[-1][0]), filllpy.filter(self.points[-1][1])))
         templist.append(self.points[-1])
         self.points = [(p[0], p[1]) for p in templist]
 
@@ -531,8 +531,8 @@ class Trajectory:
             # scales i points each side of clicked point
             if index+i < len(self.initPoints): iplus = index+i
             else: iplus = index+i - len(self.initPoints)
-            self.points[index-i] = [int(round(self.initPoints[index-i][0] - offset[0] * mult)), int(round(self.initPoints[index-i][1] - offset[1] * mult))]
-            self.points[iplus] = [int(round(self.initPoints[iplus][0] - offset[0] * mult)), int(round(self.initPoints[iplus][1] - offset[1] * mult))]
+            self.points[index-i] = [self.initPoints[index-i][0] - offset[0] * mult, self.initPoints[index-i][1] - offset[1] * mult]
+            self.points[iplus] = [self.initPoints[iplus][0] - offset[0] * mult, self.initPoints[iplus][1] - offset[1] * mult]
 
     def move(self, offset):
         self.points = [(p[0]-offset[0], p[1]-offset[1]) for p in self.initPoints]
@@ -595,7 +595,7 @@ class Trajectory:
             if point == self.points[-1]:
                 return
             if self.activeLp:
-                point = (int(round(self.lpx.filter(point[0]))), int(round(self.lpy.filter(point[1]))))
+                point = (self.lpx.filter(point[0]), self.lpy.filter(point[1]))
         self.points.append(point)
 
     def getLosangePoint(self):

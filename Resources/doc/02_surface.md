@@ -11,6 +11,15 @@ ______________________________________________________________________________
 Mouse Bindings
 --------------
 
+##### Vertical scroll #####
+
+Zoom horizontally around the pointer. Zoom changes the view only; trajectory
+and FX positions and their sound behavior remain unchanged.
+
+##### Horizontal scroll or Shift+scroll #####
+
+Move the zoomed view left or right.
+
 ##### Left-click and drag in an empty space #####
 
 Create a new trajectory.
@@ -65,6 +74,10 @@ Keyboard Bindings
 -----------------
 
 Whit the focus on the drawing surface:
+
+##### Escape key #####
+
+Restore the full view at 100% zoom.
 
 ##### Delete key #####
 

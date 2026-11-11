@@ -359,8 +359,10 @@ class SG_Audio:
         self.globalAmplitude = val
         self.server.amp = self.globalAmplitude
 
-    def getViewTable(self, size):
-        return self.table.getViewTable(size)
+    def getViewTable(self, size, begin=0, end=0):
+        if not hasattr(self, "table"):
+            return []
+        return self.table.getViewTable(size, begin, end)
 
     def setMidiMethod(self, value):
         self.midiTriggerMethod = value
@@ -432,12 +434,18 @@ class SG_Audio:
         self.ff_noise.choice = lst
 
     def setMetroTime(self, which, x):
+        if not getattr(self, "streams", None):
+            return
         self.streams[which].metro.time = x
 
     def setTranspo(self, which, x):
+        if not getattr(self, "streams", None):
+            return
         self.streams[which].transpo.value = x
 
     def setTrajAmplitude(self, which, x):
+        if not getattr(self, "streams", None):
+            return
         self.streams[which].traj_amp.value = x
 
     def setCheck(self, which, state):
@@ -453,9 +461,13 @@ class SG_Audio:
         self.map_dict[which][3] = value
 
     def setXposition(self, which, x):
+        if not getattr(self, "streams", None):
+            return
         self.streams[which].position.value = x
 
     def setYposition(self, which, x):
+        if not getattr(self, "streams", None):
+            return
         params = [("y_dns", 1.0), ("y_pit", 1.0), ("y_len", 1.0), ("y_dev", 0.0),
                   ("y_pos", 0.0), ("y_trs", 0.0), ("y_dur", 0.0), ("y_amp", 1.0),
                   ("y_pan", 0.5), ("y_fif", 1.0), ("y_fiq", 1.0), ("y_ffr", 0.0),
@@ -511,7 +523,13 @@ class SG_Audio:
         self.mixer.setAmp(vin, vout, val)
 
     def setMixerChannelAmps(self, trajs, fxballs):
-        [self.mixer.setAmp(t.getId(), fx.getId(), fx.getAmpValue(t.circlePos)) for t in trajs for fx in fxballs]
+        # Canvas repaints can arrive after the audio graph has been torn down.
+        mixer = getattr(self, "mixer", None)
+        if mixer is None:
+            return
+        for t in trajs:
+            for fx in fxballs:
+                mixer.setAmp(t.getId(), fx.getId(), fx.getAmpValue(t.circlePos))
 
     def handleFxSlider1(self, fx, key, val):
         if fx == 0:

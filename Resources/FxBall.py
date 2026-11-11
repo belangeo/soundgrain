@@ -190,7 +190,7 @@ def GetRoundBitmap(w, h, mask, col, gradient):
     return wx.Bitmap(image)
 
 class FxBall():
-    def __init__(self, fx, id, sg_audio, pos, size=64, gradient=30, fader=1., xfac=1.0, yfac=1.0):
+    def __init__(self, fx, id, sg_audio, pos, size=64, gradient=30, fader=1., xfac=1.0, yfac=1.0, parent=None):
         self.fx = fx
         self.id = id
         self.pos = [pos[0] * xfac, pos[1] * yfac]
@@ -201,7 +201,7 @@ class FxBall():
         self._center = self.center = (self.pos[0]+self.halfSize, self.pos[1]+self.halfSize)
         self.setBitmaps(self.size, self.halfSize)
 
-        self.controls = FxBallControls(None, self, sg_audio)
+        self.controls = FxBallControls(parent, self, sg_audio)
 
     def save(self):
         return {"fx": self.fx,
@@ -284,5 +284,5 @@ class FxBall():
         self.controls.SetPosition(pos)
         self.controls.Show()
 
-    def hideControls(self):
-        self.controls.Hide()
+    def destroyControls(self):
+        self.controls.Destroy()

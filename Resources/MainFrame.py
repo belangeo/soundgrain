@@ -21,7 +21,7 @@ import os, wx, time, json
 from Resources.constants import *
 from Resources.audio import *
 from Resources.Modules import *
-from pyo.lib._wxwidgets import Grapher
+from pyo.lib._wxwidgets import ControlSlider, Grapher
 from Resources.Trajectory import Trajectory
 from Resources.MidiSettings import MidiSettings
 from Resources.CommandFrame import CommandFrame
@@ -37,6 +37,14 @@ if "phoenix" in wx.version():
     from wx.adv import AboutDialogInfo, AboutBox
 else:
     from wx import AboutDialogInfo, AboutBox
+
+
+def silenceSliderCallbacks(window):
+    """Prevent queued slider repaints from calling the torn-down audio graph."""
+    if isinstance(window, ControlSlider):
+        window.outFunction = None
+    for child in window.GetChildren():
+        silenceSliderCallbacks(child)
 
 class EnvelopeFrame(wx.Frame):
     def __init__(self, parent, size=(600, 300)):
@@ -794,6 +802,10 @@ class MainFrame(wx.Frame):
             f.write("lastFilePath=%s\n" % self.lastFilePath)
             f.write("lastAudioPath=%s\n" % self.lastAudioPath)
             f.write("recentProjects=%s\n" % json.dumps(self.recentProjects))
+        # pyo sliders invoke their callbacks on paint, including paints queued
+        # before quit. Stop those callbacks before removing audio objects.
+        for window in wx.GetTopLevelWindows():
+            silenceSliderCallbacks(window)
         if self.granulatorControls.IsShown():
             self.granulatorControls.Hide()
         # The MIDI listener owns a native PortTime callback independently of
