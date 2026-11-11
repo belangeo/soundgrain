@@ -117,6 +117,7 @@ class Module(wx.Frame):
                                log=log, integer=integer, outFunction=callback)
         sliderBox.Add(slider, 1, wx.LEFT | wx.RIGHT, 5)
         box.Add(sliderBox, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+        box.AddStretchSpacer(1)
         return slider
 
     def handleDensity(self, x, fromSlider=True):
@@ -221,6 +222,7 @@ class Module(wx.Frame):
         self.tx_trans.Bind(wx.EVT_CHAR, self.onCharTrans)
         transBox.Add(self.tx_trans, 1, wx.LEFT | wx.RIGHT, 5)
         box.Add(transBox, 0, wx.EXPAND | wx.ALL, 5)
+        box.AddStretchSpacer(1)
 
     def getTrans(self):
         return [float(value) for value in self.tx_trans.GetValue().split(',') if value not in [" ", ""]]

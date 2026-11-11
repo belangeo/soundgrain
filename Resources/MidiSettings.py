@@ -99,13 +99,14 @@ class MidiSettings(wx.Frame):
 
         self.panel.SetSizerAndFit(box)
 
-        size = self.GetBestSize()
-        size = (size[0], size[1]+30)
+        # Size the client area for the panel rather than estimating space for
+        # the frame decorations and menu bar, which vary by platform.
+        self.SetClientSize(box.CalcMin())
+        size = self.GetSize()
         self.SetMinSize(size)
         self.SetMaxSize(size)
         self.SetPosition((self.parent.GetPosition()[0] + self.parent.GetSize()[0], self.parent.GetPosition()[1]))
         self.Show(False)
-        wx.CallAfter(self.SetSize, size)
 
     def show(self):
         self.Show()
