@@ -1,7 +1,7 @@
 Introduction
 ============
 
-Welcome to the SoundGrain 6.0.1 documentation.
+Welcome to the SoundGrain 6.1.0 documentation.
 ----------------------------------------------
 
 Soundgrain is a graphical interface where users can draw and edit 

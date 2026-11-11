@@ -1,7 +1,7 @@
 rm -rf build dist
 
-export DMG_DIR="SoundGrain 6.0.1"
-export DMG_NAME="SoundGrain_6.0.1.dmg"
+export DMG_DIR="SoundGrain DEPRECATED"
+export DMG_NAME="SoundGrain_DEPRECATED.dmg"
 
 python3.6 setup.py py2app --plist=scripts/Info.plist
 
