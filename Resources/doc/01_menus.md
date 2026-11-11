@@ -42,8 +42,12 @@ Save the current state of the project in a new .sg file.
 
 ##### Open Settings (*Ctrl+;*) #####
 
-Opens the Settings window, which contains __Project Settings__ and
-__Record Settings__.
+Opens the Settings window, which contains __Audio Settings__, __Project Settings__
+and __Record Settings__.
+
+In __Audio Settings__, choose the output audio driver and sample precision. The
+driver list is updated at startup, and the driver cannot be changed during
+playback. Changing sample precision requires restarting SoundGrain.
 
 In __Project Settings__, choose the __Sample rate__ and number of __Channels__.
 Both values must be supported by the current audio driver. These controls are
@@ -121,19 +125,6 @@ key is pressed with the focus is on the drawing surface.
 ##### Reinit counters  (*Ctrl+T*) #####
 
 Re-sync the trajectories's counters (automatically done when audio is started).
-
-______________________________________________________________________________
-
-Audio Drivers Menu
-------------------
-
-##### Audio Driver #####
-
-Choose the desired audio driver. The drivers list is updated only at startup.
-
-##### Sample Precision #####
-
-Set the audio sample precision either 32 or 64 bits. Require restarting the application.
 
 ______________________________________________________________________________
 

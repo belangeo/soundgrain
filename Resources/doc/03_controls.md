@@ -2,7 +2,7 @@ Control Panel
 =============
 
 This panel provides controls for drawing, playback, global audio processing
-and starting or stopping audio and recording. Project and recording settings
+and starting or stopping audio and recording. Audio, project and recording settings
 are in the Settings window (_File_ -> _Open Settings_, _Ctrl+;_).
  
 ______________________________________________________________________________

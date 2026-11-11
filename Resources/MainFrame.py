@@ -164,9 +164,6 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.handleReinit, id=103)
         self.menuBar.Append(self.menu1, "&Drawing")
 
-        self.menu2 = wx.Menu()
-        self.menuBar.Append(self.menu2, "&Audio Drivers")
-
         self.menu3 = wx.Menu()
         self.menu3.Append(2004, "Memorize Trajectory\tShift+Ctrl+M", "")
         self.Bind(wx.EVT_MENU, self.handleMemorize, id=2004)
@@ -271,27 +268,11 @@ class MainFrame(wx.Frame):
                 self.audioDriver = self.driverIndexes[self.driversList.index(pref)]
             else:
                 self.audioDriver = selected
-        for i, driver in enumerate(self.driversList):
-            menuId = 200 + i
-            self.menu2.Append(menuId, driver, "", wx.ITEM_RADIO)
-            self.Bind(wx.EVT_MENU, self.handleDriver, id=menuId)
-            if driver == self.driversList[self.driverIndexes.index(self.audioDriver)]:
-                self.menu2.Check(menuId, True)
-        self.menu2.AppendSeparator()
-        precision_label = self.menu2.Append(-1, "Sample Precision (Require restarting the app)", "")
-        precision_label.Enable(False)
-        menuId += 1
-        item32 = self.menu2.Append(menuId, "32-bit", "", wx.ITEM_CHECK)
-        if SAMPLE_PRECISION == "32-bit":
-            self.menu2.Check(menuId, True)
-            self.menu2.Enable(menuId, False)
-        self.Bind(wx.EVT_MENU, self.handlePrecision, id=menuId)
-        menuId += 1
-        item64 = self.menu2.Append(menuId, "64-bit", "", wx.ITEM_CHECK)
-        if SAMPLE_PRECISION == "64-bit":
-            self.menu2.Check(menuId, True)
-            self.menu2.Enable(menuId, False)
-        self.Bind(wx.EVT_MENU, self.handlePrecision, id=menuId)
+        self.controls.pop_audio_driver.Set(self.driversList)
+        if self.audioDriver in self.driverIndexes:
+            self.controls.pop_audio_driver.SetSelection(self.driverIndexes.index(self.audioDriver))
+        else:
+            self.controls.pop_audio_driver.Disable()
         self.status.SetStatusText('Audio drivers loaded')
         self.controls.bootServer()
 
@@ -299,8 +280,7 @@ class MainFrame(wx.Frame):
         self.midiSettings.show()
 
     def enableDrivers(self, state):
-        for i in range(len(self.driversList)):
-            self.menu2.FindItemById(200+i).Enable(state)
+        self.controls.pop_audio_driver.Enable(state and bool(self.driverIndexes))
 
     def handleReinit(self, evt):
         for t in self.panel.getAllTrajectories():
@@ -378,12 +358,15 @@ class MainFrame(wx.Frame):
             t.setEditionLevel(self.editionLevel)
 
     def handleDriver(self, evt):
+        index = evt.GetSelection()
+        if index < 0 or index >= len(self.driverIndexes):
+            return
+        if self.driverIndexes[index] == self.audioDriver:
+            return
         status, path = self.checkForMixedSound()
         if not status:
-            for i, driver in enumerate(self.driversList):
-                menuId = 200 + i
-                if driver == self.driversList[self.driverIndexes.index(self.audioDriver)]:
-                    self.menu2.Check(menuId, True)
+            if self.audioDriver in self.driverIndexes:
+                self.controls.pop_audio_driver.SetSelection(self.driverIndexes.index(self.audioDriver))
             return
         if "Mixed sound" in self.controls.sndPath:
             self.controls.sndPath = path
@@ -391,26 +374,12 @@ class MainFrame(wx.Frame):
                 self.panel.sndBitmap = None
                 self.panel.needBitmap = True
                 wx.CallAfter(self.panel.Refresh)
-        menuId = evt.GetId()
-        self.audioDriver = self.driverIndexes[menuId - 200]
+        self.audioDriver = self.driverIndexes[index]
         self.controls.shutdownServer()
         self.controls.bootServer()
 
     def handlePrecision(self, evt):
-        menuId = evt.GetId()
-        item = self.menu2.FindItemById(menuId)
-        label = item.GetItemLabel()
-        self.sample_precision = label
-        if label == "32-bit":
-            self.menu2.Check(menuId, True)
-            self.menu2.Enable(menuId, False)
-            self.menu2.Check(menuId+1, False)
-            self.menu2.Enable(menuId+1, True)
-        elif label == "64-bit":
-            self.menu2.Check(menuId, True)
-            self.menu2.Enable(menuId, False)
-            self.menu2.Check(menuId-1, False)
-            self.menu2.Enable(menuId-1, True)
+        self.sample_precision = self.controls.pop_precision.GetStringSelection()
 
     def openFxWindow(self, evt):
         if self.granulatorControls.IsShown():
