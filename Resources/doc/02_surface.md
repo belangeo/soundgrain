@@ -91,6 +91,19 @@ Move all trajectories.
 
 Move the selected trajectory.
 
+##### D #####
+
+Duplicate the selected trajectory.
+
+##### H / V #####
+
+Flip the selected trajectory horizontally / vertically around its center.
+
+##### R / Shift+R / Ctrl+Shift+R #####
+
+Rotate the selected trajectory clockwise by 15 / 5 / 1 degrees around its
+center. These transformations can be undone.
+
 ##### 1 to 8 (not on numeric keypad) #####
 
 Freeze/unfreeze the selected trajectory.

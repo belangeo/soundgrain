@@ -97,6 +97,7 @@ class Trajectory:
         self.wanderSpeed = 1.0
         self.wanderPeriodicity = 0.0
         self.closed = False
+        self.geometryTransformed = False
         self._random = random.Random()
         self.resetWander()
 
@@ -287,6 +288,7 @@ class Trajectory:
         self.setWanderPeriodicity(0)
         self.resetWander()
         self.closed = False
+        self.geometryTransformed = False
         self.type = None
         self.center = None
         self.radius = None
@@ -298,6 +300,7 @@ class Trajectory:
 
     def getAttributes(self):
         return {'width': self.width,
+                'geometryTransformed': self.geometryTransformed,
                 'wanderSpeed': self.wanderSpeed,
                 'wanderPeriodicity': self.wanderPeriodicity,
                 'closed': self.closed,
@@ -321,6 +324,7 @@ class Trajectory:
         self.setWanderSpeed(dict.get('wanderSpeed', 1))
         self.setWanderPeriodicity(dict.get('wanderPeriodicity', 0))
         self.closed = dict.get('closed', dict.get('type') == 'circle')
+        self.geometryTransformed = dict.get('geometryTransformed', False)
         self.activeLp = dict['activeLp']
         self.editLevel = dict['editLevel']
         self.setTimeSpeed(dict['timeSpeed'])
@@ -334,7 +338,10 @@ class Trajectory:
         self.type = dict['type']
         if self.getType() in ['circle', 'oscil'] and type(dict['center']) in [list, tuple]:
             self.center = [dict['center'][0]*xfac, dict['center'][1]*yfac]
-            self.setRadius(self.center[0] - self.getFirstPoint()[0])
+            if self.geometryTransformed and dict.get('radius') is not None:
+                self.setRadius(dict['radius'] * xfac)
+            else:
+                self.setRadius(self.center[0] - self.getFirstPoint()[0])
         else:
             self.center = dict['center']
             self.radius = dict['radius']

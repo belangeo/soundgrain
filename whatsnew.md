@@ -21,6 +21,9 @@
 
 ### Trajectories and drawing
 
+- Added keyboard shortcuts to duplicate, flip, and rotate the selected
+  trajectory, with rotation steps of 15, 5, or 1 degree. These edits support
+  undo and preserve transformed circle and oscillation shapes.
 - Added a **Var** tab for controlling each trajectory's width, variation speed,
   and blend between periodic and random motion. Wider trajectories appear as
   translucent bands, and the playback position moves within the band.

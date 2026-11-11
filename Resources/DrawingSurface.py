@@ -161,7 +161,10 @@ class DrawingSurface(wx.Panel):
                 xscl = center[0] / float(cX)
                 yscl = center[1] / float(cY)
                 t.setCenter((w * xscl, h * yscl))
-                t.setRadius(t.getCenter()[0] - t.getFirstPoint()[0])
+                if t.geometryTransformed:
+                    t.setRadius(t.getRadius() * w / float(cX))
+                else:
+                    t.setRadius(t.getCenter()[0] - t.getFirstPoint()[0])
             t.setInitPoints()
         for fxball in self.fxballs.values():
             center = fxball.getCenter()
@@ -336,6 +339,7 @@ class DrawingSurface(wx.Panel):
         self.memorizedTrajectory.setWanderSpeed(t.getWanderSpeed())
         self.memorizedTrajectory.setWanderPeriodicity(t.getWanderPeriodicity())
         self.memorizedTrajectory.closed = t.closed
+        self.memorizedTrajectory.geometryTransformed = t.geometryTransformed
         self.memorizedTrajectory.setType(t.getType())
         self.memorizedTrajectory.setTimeSpeed(t.getTimeSpeed())
         self.memorizedTrajectory.setStep(t.getStep())
@@ -365,6 +369,7 @@ class DrawingSurface(wx.Panel):
                 new_t.setWanderSpeed(t.getWanderSpeed())
                 new_t.setWanderPeriodicity(t.getWanderPeriodicity())
                 new_t.closed = t.closed
+                new_t.geometryTransformed = t.geometryTransformed
                 new_t.setStep(t.getStep())
                 new_t.setActive(True)
                 new_t.setType(self.mode)
@@ -434,6 +439,31 @@ class DrawingSurface(wx.Panel):
             evt.StopPropagation()
             return
 
+        key = evt.GetKeyCode()
+        if not evt.AltDown() and not evt.MetaDown():
+            if key in (ord('D'), ord('d')) and not evt.ControlDown() and not evt.ShiftDown():
+                if (not self.HasCapture() and self.selected is not None and self.selected.getActive()
+                        and len(self.selected.getPoints()) >= 2):
+                    if self.duplicateTrajectory(self.selected) is not None:
+                        self.parent.createTempFile()
+                        self.needBitmap = True
+                        self.Refresh()
+                evt.StopPropagation()
+                return
+            if key in (ord('H'), ord('h')) and not evt.ControlDown() and not evt.ShiftDown():
+                self.transformSelected('horizontal')
+                evt.StopPropagation()
+                return
+            if key in (ord('V'), ord('v')) and not evt.ControlDown() and not evt.ShiftDown():
+                self.transformSelected('vertical')
+                evt.StopPropagation()
+                return
+            if key in (ord('R'), ord('r')) and (not evt.ControlDown() or evt.ShiftDown()):
+                angle = 1 if evt.ControlDown() else 5 if evt.ShiftDown() else 15
+                self.transformSelected('rotate', angle)
+                evt.StopPropagation()
+                return
+
         level = self.parent.arrowSpeedLevel
         off = {wx.WXK_UP: [0,level], wx.WXK_DOWN: [0,-level], wx.WXK_LEFT: [level,0], wx.WXK_RIGHT: [-level,0]}.get(evt.GetKeyCode(), [0,0])
         # Move selected trajectory
@@ -479,11 +509,75 @@ class DrawingSurface(wx.Panel):
                     self.useMario = False
         evt.Skip()
 
+    def transformSelected(self, operation, angle=0):
+        trajectory = self.selected
+        if self.HasCapture() or trajectory is None or not trajectory.getActive() or len(trajectory.points) < 2:
+            return
+        xs, ys = zip(*trajectory.points)
+        if operation == 'rotate' and trajectory.getType() in ('circle', 'oscil') and trajectory.center is not None:
+            cx, cy = trajectory.center
+        elif operation == 'rotate':
+            cx, cy = sum(xs) / len(xs), sum(ys) / len(ys)
+        else:
+            cx, cy = (min(xs) + max(xs)) / 2.0, (min(ys) + max(ys)) / 2.0
+        radians = math.radians(angle)
+        cosine, sine = math.cos(radians), math.sin(radians)
+
+        def vector(dx, dy):
+            if operation == 'horizontal':
+                return -dx, dy
+            if operation == 'vertical':
+                return dx, -dy
+            return cosine * dx - sine * dy, sine * dx + cosine * dy
+
+        def point(pos):
+            dx, dy = vector(pos[0] - cx, pos[1] - cy)
+            return cx + dx, cy + dy
+
+        trajectory.points = [point(p) for p in trajectory.points]
+        if trajectory.center is not None:
+            trajectory.center = point(trajectory.center)
+        if trajectory.circlePos is not None:
+            trajectory.circlePos = point(trajectory.circlePos)
+        if trajectory.lastCirclePos is not None:
+            trajectory.lastCirclePos = point(trajectory.lastCirclePos)
+        if trajectory._normal is not None:
+            trajectory._normal = vector(*trajectory._normal)
+        if trajectory.getType() in ('circle', 'oscil'):
+            trajectory.geometryTransformed = True
+        trajectory.setInitPoints()
+        self.parent.createTempFile()
+        self.needBitmap = True
+        self.Refresh()
+
     def KeyUp(self, evt):
         self.onMotion = False
         if evt.GetKeyCode() in [wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE, wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT]:
             self.needBitmap = True
             self.Refresh()
+
+    def duplicateTrajectory(self, source):
+        """Copy a trajectory into the first available slot and select it."""
+        for target in self.trajectories:
+            if not target.getActive():
+                target.setActive(True)
+                target.setType(source.getType())
+                target.lpx.reinit()
+                target.lpy.reinit()
+                target.activateLp(self.parent.lowpass)
+                target.setEditionLevel(self.parent.editionLevel)
+                target.setWidth(source.getWidth())
+                target.setWanderSpeed(source.getWanderSpeed())
+                target.setWanderPeriodicity(source.getWanderPeriodicity())
+                target.closed = source.closed
+                target.geometryTransformed = source.geometryTransformed
+                target.setPoints(source.getPoints())
+                if target.getType() not in ['free', 'line']:
+                    target.setRadius(source.getRadius())
+                    target.setCenter(source.getCenter())
+                self.setSelected(target)
+                return target
+        return None
 
     def MouseDoubleClick(self, evt):
         self.SetFocus()
@@ -491,26 +585,7 @@ class DrawingSurface(wx.Panel):
         for t in self.getActiveTrajectories():
             # Select or duplicate trajectory
             if t.getFirstPoint() is not None and self.hitHandle(self.downPos, t.getFirstPoint(), 7):
-                for new_t in self.trajectories:
-                    if not new_t.getActive():
-                        self.setSelected(new_t)
-                        self.selected.setActive(True)
-                        self.selected.setType(t.getType())
-                        self.selected.lpx.reinit()
-                        self.selected.lpy.reinit()
-                        self.selected.activateLp(self.parent.lowpass)
-                        self.selected.setEditionLevel(self.parent.editionLevel)
-                        self.selected.setWidth(t.getWidth())
-                        self.selected.setWanderSpeed(t.getWanderSpeed())
-                        self.selected.setWanderPeriodicity(t.getWanderPeriodicity())
-                        self.selected.closed = t.closed
-                        self.selected.setPoints(t.getPoints())
-                        self.selected.setInitPoints()
-                        if self.selected.getType() not in  ['free', 'line']:
-                            self.selected.setRadius(t.getRadius())
-                            self.selected.setCenter(t.getCenter())
-                        break
-                else:
+                if self.duplicateTrajectory(t) is None:
                     self.setSelected(t)
                 Xs = [p[0] for p in self.selected.getPoints()]
                 self.extremeXs = (min(Xs), max(Xs))
@@ -536,25 +611,8 @@ class DrawingSurface(wx.Panel):
             # Select or duplicate trajectory
             if t.getFirstPoint() is not None and self.hitHandle(self.downPos, t.getFirstPoint(), 7):
                 if evt.AltDown():
-                    for new_t in self.trajectories:
-                        if not new_t.getActive():
-                            self.setSelected(new_t)
-                            self.selected.setActive(True)
-                            self.selected.setType(t.getType())
-                            self.selected.lpx.reinit()
-                            self.selected.lpy.reinit()
-                            self.selected.activateLp(self.parent.lowpass)
-                            self.selected.setEditionLevel(self.parent.editionLevel)
-                            self.selected.setWidth(t.getWidth())
-                            self.selected.setWanderSpeed(t.getWanderSpeed())
-                            self.selected.setWanderPeriodicity(t.getWanderPeriodicity())
-                            self.selected.closed = t.closed
-                            self.selected.setPoints(t.getPoints())
-                            self.selected.setInitPoints()
-                            if self.selected.getType() not in  ['free', 'line']:
-                                self.selected.setRadius(t.getRadius())
-                                self.selected.setCenter(t.getCenter())
-                            break
+                    if self.duplicateTrajectory(t) is None:
+                        self.setSelected(t)
                 else:
                     self.setSelected(t)
                 Xs = [p[0] for p in self.selected.getPoints()]
@@ -571,6 +629,8 @@ class DrawingSurface(wx.Panel):
             if t.getType() in ('circle', 'oscil') and t.getPoints() and self.hitHandle(self.downPos, t.getLosangePoint(), 5):
                 self.setSelected(t)
                 self.action = 'rescale'
+                self.rescaleRadius = t.getRadius()
+                t.setInitPoints()
                 self.CaptureMouse()
                 return
             # Check for trajectory transformation
@@ -610,6 +670,7 @@ class DrawingSurface(wx.Panel):
                 self.traj.setWanderSpeed(self.parent.controls.wanderSpeed.GetValue())
                 self.traj.setWanderPeriodicity(self.parent.controls.wanderPeriodicity.GetValue())
                 self.traj.resetWander()
+                self.traj.geometryTransformed = False
                 self.traj.closed = self.mode == 'circle' or (self.mode == 'free' and self.closed)
                 self.traj.setActive(True)
                 self.traj.setType(self.mode)
@@ -652,7 +713,9 @@ class DrawingSurface(wx.Panel):
             elif self.action == 'drag':
                 self.selected.setInitPoints()
             elif self.action == 'rescale':
-                if self.selected.getType() == 'circle':
+                if self.selected.geometryTransformed:
+                    pass
+                elif self.selected.getType() == 'circle':
                     if self.parent.fillPoints:
                         self.selected.fillPoints(True)
                 else:
@@ -755,24 +818,30 @@ class DrawingSurface(wx.Panel):
                 Ylen = abs(self.selected.getCenter()[1] - pos[1])
                 self.selected.setRadius(self.clipCirclePos(math.sqrt( Xlen**2 + Ylen**2 ), self.selected.getCenter(), self.selected.getRadius()))
                 r = self.selected.getRadius()
-                halfR = int(round(r/2.))
-                if halfR <= 1: scaleR = 1
-                else: scaleR = 1./(halfR-1)
-                self.selected.points = []
-                self.selected.lpx.reinit()
-                self.selected.lpy.reinit()
-                if self.selected.getType() == 'circle':
-                    for i in range(-halfR,halfR+1):
-                        a = i * scaleR * r
-                        x = math.cos(math.pi * i * scaleR) * r
-                        y = math.sin(math.pi * i * scaleR) * r
-                        self.selected.addCirclePoint((x + self.selected.getCenter()[0], y + self.selected.getCenter()[1]))
+                if self.selected.geometryTransformed and self.rescaleRadius:
+                    cx, cy = self.selected.getCenter()
+                    factor = r / self.rescaleRadius
+                    self.selected.points = [(cx + (x - cx) * factor, cy + (y - cy) * factor)
+                                            for x, y in self.selected.initPoints]
                 else:
-                    for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling + 1)):
-                        a = i * scaleR * r
-                        x = math.cos(math.pi * i * scaleR) * r
-                        y = math.sin(math.pi * self.oscilPeriod * i * scaleR) * r
-                        self.selected.addCirclePoint((x + self.selected.getCenter()[0], y + self.selected.getCenter()[1]))
+                    halfR = int(round(r/2.))
+                    if halfR <= 1: scaleR = 1
+                    else: scaleR = 1./(halfR-1)
+                    self.selected.points = []
+                    self.selected.lpx.reinit()
+                    self.selected.lpy.reinit()
+                    if self.selected.getType() == 'circle':
+                        for i in range(-halfR,halfR+1):
+                            a = i * scaleR * r
+                            x = math.cos(math.pi * i * scaleR) * r
+                            y = math.sin(math.pi * i * scaleR) * r
+                            self.selected.addCirclePoint((x + self.selected.getCenter()[0], y + self.selected.getCenter()[1]))
+                    else:
+                        for i in range(int(-halfR * self.oscilScaling), int(halfR * self.oscilScaling + 1)):
+                            a = i * scaleR * r
+                            x = math.cos(math.pi * i * scaleR) * r
+                            y = math.sin(math.pi * self.oscilPeriod * i * scaleR) * r
+                            self.selected.addCirclePoint((x + self.selected.getCenter()[0], y + self.selected.getCenter()[1]))
             elif self.action == 'edit':
                 x,y = pos
                 offset = (self.downPos[0] - x, self.downPos[1] - y)
