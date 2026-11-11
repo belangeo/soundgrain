@@ -37,6 +37,10 @@ def checkForDrivers():
     selectedDriver = pa_get_default_output()
     return driverList, driverIndexes, selectedDriver
 
+def checkForInputDrivers():
+    driverList, driverIndexes = pa_get_input_devices()
+    return driverList, driverIndexes, pa_get_default_input()
+
 def checkForMidiDrivers():
     driverList, driverIndexes = pm_get_input_devices()
     selectedDriver = pm_get_default_input()
@@ -191,8 +195,10 @@ class SG_Audio:
         self.midiVoices = {}
         self.ctlscan_callback = None
         self.bindings = {}
-        self.server = Server(sr=self.samplingRate, buffersize=512, duplex=0)
+        self.server = Server(sr=self.samplingRate, buffersize=512, duplex=1, ichnls=1)
         self.server.deactivateMidi()
+        self.micRecording = False
+        self.inputAvailable = False
         self.check_dict = {"y_dns_check": 0, "y_pit_check": 1, "y_len_check": 0,
                            "y_dev_check": 0, "y_amp_check": 0, "y_trs_check": 0,
                            "y_dur_check": 0, "y_pos_check": 0, "y_pan_check": 0,
@@ -211,14 +217,27 @@ class SG_Audio:
         self.listen = MidiListener(self.midirecv, device)
         self.listen.start()
 
-    def boot(self, driver, chnls, samplingRate):
+    def boot(self, driver, chnls, samplingRate, inputDriver=None):
         self.server.setOutputDevice(driver)
+        self.server.setDuplex(1 if inputDriver is not None else 0)
+        if inputDriver is not None:
+            self.server.setInputDevice(inputDriver)
         self.chnls = chnls
         self.server.setNchnls(chnls)
         self.samplingRate = samplingRate
         self.server.setSamplingRate(samplingRate)
         self.server._server.setAmpCallable(self.controls.meter)
-        self.server.boot()
+        try:
+            self.server.boot()
+        except Exception:
+            if inputDriver is None:
+                raise
+        self.inputAvailable = inputDriver is not None and bool(self.server.getIsBooted())
+        if not self.server.getIsBooted() and inputDriver is not None:
+            self.server.setDuplex(0)
+            self.server.boot()
+        if not self.server.getIsBooted():
+            raise RuntimeError("Could not start the audio server with the selected devices.")
         self.mixer = Mixer(outs=10, chnls=chnls)
         self.env = CosTable([(0,0),(2440,1),(5751,1),(8191,0)])
         self.envFrame.setEnv(self.env)
@@ -263,6 +282,8 @@ class SG_Audio:
         self.outComp.out()
 
     def shutdown(self):
+        if self.micRecording:
+            self.stopMic()
         if hasattr(self, "table"):
             del self.table
         if hasattr(self, "pos_rnd"):
@@ -333,18 +354,52 @@ class SG_Audio:
         return self.table.getDur(False)
 
     def loadSnd(self, sndPath):
-        ch, sndsr, dur = soundInfo(sndPath)
-        self.table = SndTable(sndPath)
-        self.table.normalize()
+        table = SndTable(sndPath)
+        table.normalize()
+        self.useTable(table)
+
+    def useTable(self, table):
+        self.table = table
         self.pos_rnd = Sig(self.pos_noise, self.table.getSize(False))
         for gr in self.streams.values():
             gr.create_granulator(self.table, self.pos_rnd)
             gr.ajustLength()
         self.stream_sum.value = Mix([st.granulator for st in self.streams.values()] + \
                                     [f.pan for f in self.fxs.values()], voices=self.chnls)
-        if self.server.getIsStarted():
-            for which in self.activeStreams:
+        for which in self.activeStreams:
+            if which in self.mixer.getKeys():
+                self.mixer.delInput(which)
+            self.mixer.addInput(which, self.streams[which].granulator)
+            if self.started:
                 self.streams[which].setActive(1)
+
+    def startMic(self, length, finished):
+        if not self.inputAvailable:
+            raise RuntimeError("No usable audio input is available. Check the input device in Settings.")
+        if self.micRecording:
+            raise RuntimeError("A microphone recording is already in progress.")
+        table = NewTable(length=length, chnls=1)
+        self.micInput = Input(chnl=0)
+        self.micRecorder = TableRec(self.micInput, table=table)
+        self.micTrigger = TrigFunc(self.micRecorder['trig'], lambda: wx.CallAfter(finished))
+        if not self.server.getIsStarted():
+            self.server.start()
+        if not self.server.getIsStarted():
+            raise RuntimeError("Could not start the audio server for microphone recording.")
+        self.useTable(table)
+        self.micRecording = True
+        self.micRecorder.play()
+
+    def stopMic(self):
+        if not self.micRecording:
+            return
+        self.micRecording = False
+        self.micRecorder.stop()
+        self.micTrigger.stop()
+        self.micInput.stop()
+        del self.micRecorder, self.micTrigger, self.micInput
+        if not self.started and self.server.getIsStarted():
+            self.server.stop()
 
     def insertSnd(self, sndPath, start, end, point, cross):
         self.table.insert(sndPath, point, cross, start, end)
@@ -589,14 +644,23 @@ class SG_Audio:
         for which in self.activeStreams:
             self.setActive(which, 1)
         self.refresh_met.play()
-        self.server.start()
+        if not self.server.getIsStarted():
+            self.server.start()
         self.server.amp = self.globalAmplitude
         self.started = True
 
     def stop(self):
         self.refresh_met.stop()
         self.started = False
-        wx.CallAfter(self.server.stop)
+        if self.micRecording:
+            for which in self.activeStreams:
+                self.streams[which].setActive(0)
+        else:
+            wx.CallAfter(self.stopServerIfIdle)
+
+    def stopServerIfIdle(self):
+        if not self.started and not self.micRecording and self.server.getIsStarted():
+            self.server.stop()
 
     def refresh_screen(self):
         wx.CallAfter(self.refresh)

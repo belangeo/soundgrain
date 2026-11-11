@@ -97,6 +97,7 @@ class MainFrame(wx.Frame):
         self.arrowSpeedLevels = [1, 2, 4, 8, 16, 32]
         self.arrowSpeedLevel = 1
         self.audioDriver = None
+        self.inputDriver = None
         self.recall = self.undos = 0
         self.sample_precision = SAMPLE_PRECISION
 
@@ -229,7 +230,10 @@ class MainFrame(wx.Frame):
             self.lastFilePath = os.path.expanduser("~")
             self.lastAudioPath = os.path.expanduser("~")
 
+        inputPreference = None
         for line in lines:
+            if line.startswith("inputDriver="):
+                inputPreference = ensureNFD(line.split("=", 1)[1].strip())
             if line.startswith("recentProjects="):
                 try:
                     paths = json.loads(line.split("=", 1)[1])
@@ -260,12 +264,12 @@ class MainFrame(wx.Frame):
         self.midiSettings = MidiSettings(self, self.panel, self.sg_audio, miDriver)
         self.createInitTempFile()
 
-        self.check(auDriver)
+        self.check(auDriver, inputPreference)
 
     def onRun(self, event):
         self.controls.handleAudio(event)
 
-    def check(self, pref=None):
+    def check(self, pref=None, inputPreference=None):
         self.status.SetStatusText('Scanning audio drivers...')
         self.driversList, self.driverIndexes, selected = checkForDrivers()
         self.driversList = [ensureNFD(driver) for driver in self.driversList]
@@ -281,6 +285,17 @@ class MainFrame(wx.Frame):
             self.controls.pop_audio_driver.SetSelection(self.driverIndexes.index(self.audioDriver))
         else:
             self.controls.pop_audio_driver.Disable()
+        self.inputDriversList, self.inputDriverIndexes, inputDefault = checkForInputDrivers()
+        self.inputDriversList = [ensureNFD(driver) for driver in self.inputDriversList]
+        if inputPreference in self.inputDriversList:
+            self.inputDriver = self.inputDriverIndexes[self.inputDriversList.index(inputPreference)]
+        elif inputDefault in self.inputDriverIndexes:
+            self.inputDriver = inputDefault
+        self.controls.pop_input_driver.Set(self.inputDriversList)
+        if self.inputDriver in self.inputDriverIndexes:
+            self.controls.pop_input_driver.SetSelection(self.inputDriverIndexes.index(self.inputDriver))
+        else:
+            self.controls.pop_input_driver.Disable()
         self.status.SetStatusText('Audio drivers loaded')
         self.controls.bootServer()
 
@@ -289,6 +304,8 @@ class MainFrame(wx.Frame):
 
     def enableDrivers(self, state):
         self.controls.pop_audio_driver.Enable(state and bool(self.driverIndexes))
+        if hasattr(self.controls, "pop_input_driver"):
+            self.controls.pop_input_driver.Enable(state and bool(self.inputDriverIndexes))
 
     def handleReinit(self, evt):
         for t in self.panel.getAllTrajectories():
@@ -389,6 +406,27 @@ class MainFrame(wx.Frame):
     def handlePrecision(self, evt):
         self.sample_precision = self.controls.pop_precision.GetStringSelection()
 
+    def handleInputDriver(self, evt):
+        index = evt.GetSelection()
+        if index < 0 or index >= len(self.inputDriverIndexes):
+            return
+        if self.inputDriverIndexes[index] == self.inputDriver:
+            return
+        status, path = self.checkForMixedSound()
+        if not status:
+            if self.inputDriver in self.inputDriverIndexes:
+                self.controls.pop_input_driver.SetSelection(self.inputDriverIndexes.index(self.inputDriver))
+            return
+        if "Mixed sound" in self.controls.sndPath:
+            self.controls.sndPath = path
+            if path == "":
+                self.panel.sndBitmap = None
+                self.panel.needBitmap = True
+                wx.CallAfter(self.panel.Refresh)
+        self.inputDriver = self.inputDriverIndexes[index]
+        self.controls.shutdownServer()
+        self.controls.bootServer()
+
     def openFxWindow(self, evt):
         if self.granulatorControls.IsShown():
             self.granulatorControls.Hide()
@@ -410,10 +448,11 @@ class MainFrame(wx.Frame):
         newpath = False
         if self.controls.sndPath != "":
             status, path = self.checkForMixedSound()
-            if "Mixed sound" in self.controls.sndPath:
+            if not status:
+                return
+            if "Mixed sound" in self.controls.sndPath and path:
                 self.controls.sndPath = path
-                if path != "":
-                    newpath = True
+                newpath = True
         if self.is_unsaved or newpath:
             if self.currentFile == None:
                 curfile = "Granulator.sg"
@@ -569,7 +608,7 @@ class MainFrame(wx.Frame):
             status, sndpath = self.checkForMixedSound()
             if not status:
                 return
-            if sndpath != "":
+            if "Mixed sound" in self.controls.sndPath:
                 self.controls.sndPath = sndpath
         self.currentFile = path
         self.currentPath = os.path.split(path)[0]
@@ -655,6 +694,11 @@ class MainFrame(wx.Frame):
         self.controls.resetPlaybackSliders()
 
     def loadFile(self, path):
+        if "Mixed sound" in self.controls.sndPath:
+            status, saved_path = self.checkForMixedSound()
+            if not status:
+                return
+            self.controls.sndPath = saved_path
         if self.midiSettings.IsShown():
             self.midiSettings.Hide()
         self.panel.removeAllFxBalls()
@@ -737,6 +781,8 @@ class MainFrame(wx.Frame):
         return_status = True
         saved_path = ""
         if "Mixed sound" in self.controls.sndPath:
+            if self.sg_audio.micRecording:
+                self.controls.finishMic()
             dlg = wx.MessageDialog(self, "There is a mixed sound loaded in the drawing table, if you don't save it, it will be lost. Do you want to save it on disk ?",
                                    'Mixed sound no saved...', wx.YES_NO | wx.YES_DEFAULT | wx.CANCEL | wx.ICON_INFORMATION)
             ret = dlg.ShowModal()
@@ -769,6 +815,10 @@ class MainFrame(wx.Frame):
                         sampletype = self.controls.sampletype
                         self.sg_audio.table.save(path, fileformat, sampletype)
                         saved_path = path
+                    else:
+                        return_status = False
+                else:
+                    return_status = False
                 dlg2.Destroy()
         return return_status, saved_path
 
@@ -776,10 +826,11 @@ class MainFrame(wx.Frame):
         newpath = False
         if self.controls.sndPath != "":
             status, path = self.checkForMixedSound()
-            if "Mixed sound" in self.controls.sndPath:
+            if not status:
+                return
+            if "Mixed sound" in self.controls.sndPath and path:
                 self.controls.sndPath = path
-                if path != "":
-                    newpath = True
+                newpath = True
         if self.is_unsaved or newpath:
             if self.currentFile == None:
                 curfile = "Granulator.sg"
@@ -802,6 +853,8 @@ class MainFrame(wx.Frame):
             f.write("lastFilePath=%s\n" % self.lastFilePath)
             f.write("lastAudioPath=%s\n" % self.lastAudioPath)
             f.write("recentProjects=%s\n" % json.dumps(self.recentProjects))
+            if self.inputDriver in self.inputDriverIndexes:
+                f.write("inputDriver=%s\n" % self.inputDriversList[self.inputDriverIndexes.index(self.inputDriver)])
         # pyo sliders invoke their callbacks on paint, including paints queued
         # before quit. Stop those callbacks before removing audio objects.
         for window in wx.GetTopLevelWindows():

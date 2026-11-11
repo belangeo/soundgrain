@@ -11,6 +11,14 @@
 - Isolated installed resources so SoundGrain and Cecilia can share a Python
   environment.
 
+### Microphone recording
+
+- Added mono microphone recording directly into the sound table, with an
+  adjustable duration and a live waveform display. Recording can run alongside
+  trajectory playback, and captured audio can be saved when prompted.
+- Added input-device selection in Settings and output-only fallback when the
+  input device cannot be opened.
+
 ### Trajectories and drawing
 
 - Added a **Var** tab for controlling each trajectory's width, variation speed,

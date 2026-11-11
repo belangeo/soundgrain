@@ -4,6 +4,14 @@ Control Panel
 This panel provides controls for drawing, playback, global audio processing
 and starting or stopping audio and recording. Audio, project and recording settings
 are in the Settings window (_File_ -> _Open Settings_, _Ctrl+;_).
+
+To fill the sound table from a microphone, select an input device in Settings,
+enter the table length in seconds, and click __Mic__. The waveform updates as
+the mono recording fills the table. Recording stops when the table is full;
+click __Mic Stop__ to stop earlier and keep the captured sound. __Mic__ and
+__Start__ both start the audio server, and playback can run during capture.
+Captured audio is unsaved until exported when prompted. If the input device
+cannot be opened, SoundGrain falls back to output-only audio when possible.
  
 ______________________________________________________________________________
 

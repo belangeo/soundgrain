@@ -16,7 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os, math, random, wx
+import os, math, random, time, wx
 import  wx.lib.scrolledpanel as scrolled
 from .constants import *
 from .audio import soundInfo
@@ -39,6 +39,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.fileformat = 0
         self.sampletype = 0
         self.tempState = None
+        self.micGeneration = 0
+        self.micTimer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.refreshMicWaveform, self.micTimer)
         self._variationWidthValue = 2
         self._variationSpeedValue = 1.0
         self._variationPeriodicityValue = 0.0
@@ -78,7 +81,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         tab_width = sum(self.notebook.GetTextExtent(label)[0]
                         for label in ("Draw", "Var", "Play")) + 120
         self.notebook.SetMinSize((tab_width, -1))
-        box.Add(self.notebook, 0, wx.ALL, 5)
+        box.Add(self.notebook, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
 
         # EQ
         eqTitle = wx.StaticText(self, id=-1, label="4 Bands Equalizer")
@@ -95,7 +98,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         eqFreqBox.Add(self.knobEqF3, 0, wx.LEFT | wx.RIGHT, 20)
         self.knobEqF3.setFloatPrecision(2)
 
-        box.Add(eqFreqBox)
+        box.Add(eqFreqBox, 0, wx.ALIGN_CENTER_HORIZONTAL)
 
         eqGainBox = wx.BoxSizer(wx.HORIZONTAL)
         self.knobEqA1 = ControlKnob(self, -40, 18, 0, label='B1 gain', outFunction=self.changeEqA1)
@@ -107,9 +110,9 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.knobEqA4 = ControlKnob(self, -40, 18, 0, label='B4 gain', outFunction=self.changeEqA4)
         eqGainBox.Add(self.knobEqA4, 0, wx.LEFT | wx.RIGHT, 5)
 
-        box.Add(eqGainBox)
+        box.Add(eqGainBox, 0, wx.ALIGN_CENTER_HORIZONTAL)
 
-        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
+        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
 
         #Compress
         compTitle = wx.StaticText(self, id=-1, label="Dynamic Compressor")
@@ -125,24 +128,34 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.knobComp4 = ControlKnob(self, 0.01, 1, .2, label='Fall', outFunction=self.changeComp4)
         cpKnobBox.Add(self.knobComp4, 0, wx.LEFT | wx.RIGHT, 5)
 
-        box.Add(cpKnobBox)
+        box.Add(cpKnobBox, 0, wx.ALIGN_CENTER_HORIZONTAL)
 
-        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
+        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
 
         box.Add(wx.StaticText(self, -1, "Global amplitude (dB)"), 0, wx.LEFT | wx.TOP, 10)
         ampBox = wx.BoxSizer(wx.HORIZONTAL)
         self.sl_amp = ControlSlider(self, -60, 18, 0, size=(200, 16), outFunction=self.handleAmp)
         ampBox.Add(self.sl_amp, 0, wx.LEFT | wx.RIGHT, 5)
-        box.Add(ampBox, 0, wx.LEFT | wx.RIGHT, 5)
+        box.Add(ampBox, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT | wx.RIGHT, 5)
         box.AddSpacer(10)
         self.meter = VuMeter(self, size=(200,11))
         self.meter.setNumSliders(self.nchnls)
-        box.Add(self.meter, 0, wx.LEFT, 10)
+        box.Add(self.meter, 0, wx.ALIGN_CENTER_HORIZONTAL)
         box.AddSpacer(5)
 
-        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALL, 5)
+        box.Add(wx.StaticLine(self, size=(210, 1)), 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
 
         self.createSettingsWindow(font)
+
+        micBox = wx.BoxSizer(wx.HORIZONTAL)
+        micBox.Add(wx.StaticText(self, label="Dur (s)"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        self.micLength = wx.TextCtrl(self, value="5", size=(55, -1), style=wx.TE_PROCESS_ENTER)
+        micBox.Add(self.micLength, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        self.tog_mic = wx.ToggleButton(self, label="Mic", size=(80, -1))
+        self.tog_mic.SetFont(font)
+        self.tog_mic.Bind(wx.EVT_TOGGLEBUTTON, self.handleMic)
+        micBox.Add(self.tog_mic, 0, wx.ALIGN_CENTER_VERTICAL)
+        box.Add(micBox, 0, wx.CENTER | wx.ALL, 5)
 
         soundBox = wx.BoxSizer(wx.HORIZONTAL)
         self.tog_audio = wx.ToggleButton(self, -1, "Start", size=(90,-1))
@@ -174,10 +187,14 @@ class ControlPanel(scrolled.ScrolledPanel):
         audioGroup = audioBox.GetStaticBox()
         audioGrid = wx.FlexGridSizer(cols=2, vgap=8, hgap=10)
         audioGrid.AddGrowableCol(1, 1)
-        audioGrid.Add(wx.StaticText(audioGroup, label="Audio driver"), 0, wx.ALIGN_CENTER_VERTICAL)
+        audioGrid.Add(wx.StaticText(audioGroup, label="Output device"), 0, wx.ALIGN_CENTER_VERTICAL)
         self.pop_audio_driver = wx.Choice(audioGroup, size=(300, -1))
         self.pop_audio_driver.Bind(wx.EVT_CHOICE, self.handleAudioDriver)
         audioGrid.Add(self.pop_audio_driver, 1, wx.EXPAND)
+        audioGrid.Add(wx.StaticText(audioGroup, label="Input device"), 0, wx.ALIGN_CENTER_VERTICAL)
+        self.pop_input_driver = wx.Choice(audioGroup, size=(300, -1))
+        self.pop_input_driver.Bind(wx.EVT_CHOICE, self.handleInputDriver)
+        audioGrid.Add(self.pop_input_driver, 1, wx.EXPAND)
         audioGrid.Add(wx.StaticText(audioGroup, label="Sample precision"), 0, wx.ALIGN_CENTER_VERTICAL)
         self.pop_precision = wx.Choice(audioGroup, choices=["32-bit", "64-bit"])
         self.pop_precision.SetStringSelection(SAMPLE_PRECISION)
@@ -241,6 +258,9 @@ class ControlPanel(scrolled.ScrolledPanel):
 
     def handleAudioDriver(self, event):
         self.parent.handleDriver(event)
+
+    def handleInputDriver(self, event):
+        self.parent.handleInputDriver(event)
 
     def handleSamplePrecision(self, event):
         self.parent.handlePrecision(event)
@@ -558,8 +578,12 @@ class ControlPanel(scrolled.ScrolledPanel):
                             wildcard=AUDIO_WILDCARD, style=wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             sndPath = dlg.GetPath()
-            self.loadSound(ensureNFD(sndPath))
-            self.parent.lastAudioPath = os.path.split(sndPath)[0]
+            status, _ = self.parent.checkForMixedSound()
+            if status:
+                if self.parent.sg_audio.micRecording:
+                    self.finishMic()
+                self.loadSound(ensureNFD(sndPath))
+                self.parent.lastAudioPath = os.path.split(sndPath)[0]
         dlg.Destroy()
 
     def handleInsert(self):
@@ -720,18 +744,25 @@ class ControlPanel(scrolled.ScrolledPanel):
         self.sampletype = event.GetInt()
 
     def bootServer(self):
-        self.parent.sg_audio.boot(self.parent.audioDriver, self.nchnls, self.samplingRate)
+        self.parent.sg_audio.boot(self.parent.audioDriver, self.nchnls, self.samplingRate,
+                                  self.parent.inputDriver)
         self.tog_audio.Enable()
+        self.tog_mic.Enable(self.parent.sg_audio.inputAvailable)
         if self.sndPath != "" and self.tempState == None:
             self.loadSound(self.sndPath)
         if self.tempState != None:
             self.parent.setState(self.tempState)
             self.tempState = None
+        if not self.parent.sg_audio.inputAvailable:
+            self.parent.log("Audio input unavailable; playback is using output only. Check the input device in Settings.")
 
     def shutdownServer(self):
+        if self.parent.sg_audio.micRecording:
+            self.finishMic()
         self.tempState = self.parent.getState()
         self.parent.sg_audio.shutdown()
         self.tog_audio.Disable()
+        self.tog_mic.Disable()
         self.surface.Refresh()
 
     def handleAudio(self, event):
@@ -755,12 +786,92 @@ class ControlPanel(scrolled.ScrolledPanel):
             self.tx_chnls.Enable()
             self.pop_sr.Enable()
             self.parent.enableDrivers(True)
+            if self.parent.sg_audio.micRecording:
+                self.tx_chnls.Disable()
+                self.pop_sr.Disable()
+                self.parent.enableDrivers(False)
             self.tog_audio.SetLabel('Start')
             self.tog_audio.SetValue(0)
             self.parent.menu.Check(7, False)
             self.tog_record.SetValue(0)
             self.tog_record.SetLabel('Rec Start')
             self.parent.sg_audio.stop()
+
+    def handleMic(self, event):
+        if not self.tog_mic.GetValue():
+            self.finishMic()
+            return
+        try:
+            length = float(self.micLength.GetValue())
+            if not math.isfinite(length) or not 0.1 <= length <= 3600:
+                raise ValueError()
+        except ValueError:
+            self.tog_mic.SetValue(False)
+            wx.MessageBox("Enter a recording length from 0.1 to 3600 seconds.",
+                          "Microphone", wx.OK | wx.ICON_ERROR, self)
+            return
+        status, _ = self.parent.checkForMixedSound()
+        if not status:
+            self.tog_mic.SetValue(False)
+            return
+        self.micGeneration += 1
+        generation = self.micGeneration
+        try:
+            self.parent.sg_audio.startMic(length, lambda: self.finishMic(generation))
+        except Exception as error:
+            self.tog_mic.SetValue(False)
+            wx.MessageBox(str(error), "Microphone", wx.OK | wx.ICON_ERROR, self)
+            return
+        self.sndPath = "Mixed sound (microphone)"
+        self.surface.bitmapDict.pop(self.sndPath, None)
+        self.surface.zoomWaveform = None
+        self.sndDur = self.parent.sg_audio.getTableDuration()
+        self.sndInfoStr = "Microphone recording: %.3f seconds, mono" % self.sndDur
+        self.parent.is_unsaved = True
+        self.micLastSamples = self.parent.sg_audio.server.getCurrentTimeInSamples()
+        self.micLastProgress = time.monotonic()
+        self.micLength.Disable()
+        self.tog_mic.SetLabel("Mic Stop")
+        self.tx_chnls.Disable()
+        self.pop_sr.Disable()
+        self.parent.enableDrivers(False)
+        self.refreshMicWaveform(None)
+        self.micTimer.Start(100)
+        self.logSndInfo()
+
+    def refreshMicWaveform(self, event):
+        if not self.parent.sg_audio.micRecording:
+            return
+        samples = self.parent.sg_audio.server.getCurrentTimeInSamples()
+        now = time.monotonic()
+        if samples != self.micLastSamples:
+            self.micLastSamples = samples
+            self.micLastProgress = now
+        elif now - self.micLastProgress > 5:
+            self.finishMic()
+            wx.MessageBox("The audio device did not deliver samples. Check the input and output devices in Settings.",
+                          "Microphone", wx.OK | wx.ICON_ERROR, self)
+            return
+        if self.parent.draw:
+            self.surface.analyse(self.sndPath)
+
+    def finishMic(self, generation=None):
+        if generation is not None and generation != self.micGeneration:
+            return
+        if not self.parent.sg_audio.micRecording:
+            return
+        self.micGeneration += 1
+        self.micTimer.Stop()
+        self.parent.sg_audio.stopMic()
+        self.tog_mic.SetValue(False)
+        self.tog_mic.SetLabel("Mic")
+        self.micLength.Enable()
+        if not self.parent.sg_audio.started:
+            self.tx_chnls.Enable()
+            self.pop_sr.Enable()
+            self.parent.enableDrivers(True)
+        if self.parent.draw:
+            self.surface.analyse(self.sndPath)
 
     def setRecordFolder(self, str):
         self.tx_rec_folder.SetValue(str)

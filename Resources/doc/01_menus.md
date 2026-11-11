@@ -45,9 +45,10 @@ Save the current state of the project in a new .sg file.
 Opens the Settings window, which contains __Audio Settings__, __Project Settings__
 and __Record Settings__.
 
-In __Audio Settings__, choose the output audio driver and sample precision. The
-driver list is updated at startup, and the driver cannot be changed during
-playback. Changing sample precision requires restarting SoundGrain.
+In __Audio Settings__, choose the input and output audio devices and sample
+precision. The device lists are updated at startup, and devices cannot be
+changed during playback or microphone recording. Changing sample precision
+requires restarting SoundGrain.
 
 In __Project Settings__, choose the __Sample rate__ and number of __Channels__.
 Both values must be supported by the current audio driver. These controls are
