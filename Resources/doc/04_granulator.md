@@ -92,6 +92,10 @@ by an amount randomly picked up from a user-defined list (comma separated).
 A value of 1 does no transposition, 0.5 is an octave below, 2 is an octave 
 above and so on...
 
+Both list fields accept digits, signs, decimal points, commas, and spaces while typing.
+Press Enter or leave the field to apply the list. Invalid lists revert to the
+previous value without changing the sound; a trailing comma is allowed.
+
 ______________________________________________________________________________
 
 Y Axis
@@ -109,6 +113,10 @@ _mid_ is the value when the trajectory is in the middle of the surface. Leave it
 empty to get a straight line from bottom to top (old behaviour).
 
 _max_ is the value when the trajectory is at the top of the surface.
+
+The fields accept digits, a sign, and a decimal point while typing. Press Enter
+or leave a field to apply its value. Invalid pasted or incomplete values revert
+to the previous value without changing the mapping.
  
 ##### Density of Grains Multiplier #####
 

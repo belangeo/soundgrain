@@ -21,6 +21,7 @@ import  wx.lib.scrolledpanel as scrolled
 from .constants import *
 from .audio import soundInfo
 from .widgets import ControlKnob
+from .numeric_input import filterNumericChar
 from pyo.lib._wxwidgets import ControlSlider, VuMeter
 
 class ControlPanel(scrolled.ScrolledPanel):
@@ -150,6 +151,7 @@ class ControlPanel(scrolled.ScrolledPanel):
         micBox = wx.BoxSizer(wx.HORIZONTAL)
         micBox.Add(wx.StaticText(self, label="Dur (s)"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         self.micLength = wx.TextCtrl(self, value="5", size=(55, -1), style=wx.TE_PROCESS_ENTER)
+        self.micLength.Bind(wx.EVT_CHAR, filterNumericChar)
         micBox.Add(self.micLength, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         self.tog_mic = wx.ToggleButton(self, label="Mic", size=(80, -1))
         self.tog_mic.SetFont(font)

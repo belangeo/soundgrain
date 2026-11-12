@@ -11,6 +11,7 @@ from pyo import Server, Sig, SndTable
 from Resources import audio
 from Resources.ControlPanel import ControlPanel
 from Resources.MainFrame import MainFrame
+from Resources.numeric_input import filterNumericChar
 
 
 class MicrophoneAudioTests(unittest.TestCase):
@@ -177,6 +178,25 @@ class MicrophoneControlTests(unittest.TestCase):
         self.panel.handleMic(None)
         self.frame.sg_audio.startMic.assert_not_called()
         self.assertFalse(self.panel.tog_mic.GetValue())
+
+    def test_duration_filters_typed_characters_and_allows_editing(self):
+        field = self.panel.micLength
+        field.ChangeValue('1.5')
+        field.SetSelection(3, 3)
+        for char, allowed in (('a', False), (',', False), ('.', False), ('7', True)):
+            event = Mock()
+            event.GetEventObject.return_value = field
+            event.GetKeyCode.return_value = ord(char)
+            event.GetUnicodeKey.return_value = ord(char)
+            event.ControlDown.return_value = False
+            event.MetaDown.return_value = False
+            event.AltDown.return_value = False
+            filterNumericChar(event)
+            self.assertEqual(event.Skip.call_count, int(allowed))
+        event.ControlDown.return_value = True
+        event.Skip.reset_mock()
+        filterNumericChar(event)
+        event.Skip.assert_called_once()
 
     def test_stale_completion_does_not_stop_a_new_recording(self):
         self.frame.sg_audio.micRecording = True

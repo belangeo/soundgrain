@@ -17,10 +17,12 @@ You should have received a copy of the GNU General Public License
 along with SoundGrain.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import math
 import wx
 from pyo import rescale
 from pyo.lib._wxwidgets import ControlSlider
 from .constants import PLATFORM
+from .numeric_input import filterNumericChar
 
 class SGControlSlider(ControlSlider):
     def __init__(self, parent, minvalue, maxvalue, init=None, pos=(0,0), size=(200,16), log=False,
@@ -92,6 +94,7 @@ class Module(wx.Frame):
         self.panel2 = wx.Panel(self.notebook, wx.ID_ANY)
         self.box1 = wx.BoxSizer(wx.VERTICAL)
         self.box2 = wx.BoxSizer(wx.VERTICAL)
+        self.yMapFields = []
 
     def onRun(self, event):
         self.parent.onRun(event)
@@ -220,24 +223,26 @@ class Module(wx.Frame):
         self.tx_trans.SetFont(font)
         self.tx_trans.Bind(wx.EVT_TEXT_ENTER, self.handleTrans)
         self.tx_trans.Bind(wx.EVT_CHAR, self.onCharTrans)
+        self.tx_trans.Bind(wx.EVT_KILL_FOCUS, self.onListFocusLost)
+        self.tx_trans.lastValidValue = "1, "
+        self.tx_trans.lastValidValues = [1.0]
         transBox.Add(self.tx_trans, 1, wx.LEFT | wx.RIGHT, 5)
         box.Add(transBox, 0, wx.EXPAND | wx.ALL, 5)
         box.AddStretchSpacer(1)
 
     def getTrans(self):
-        return [float(value) for value in self.tx_trans.GetValue().split(',') if value not in [" ", ""]]
+        self.commitNumericList(self.tx_trans, self.sg_audio.setDiscreteTrans)
+        return list(self.tx_trans.lastValidValues)
 
     def setTrans(self, trans):
-        self.tx_trans.SetValue(", ".join(str(t) for t in trans))
-        self.handleTrans(None)
+        self.tx_trans.ChangeValue(", ".join(str(t) for t in trans))
+        self.commitNumericList(self.tx_trans, self.sg_audio.setDiscreteTrans, force=True)
 
     def handleTrans(self, evt):
-        self.sg_audio.setDiscreteTrans(self.getTrans())
+        self.commitNumericList(self.tx_trans, self.sg_audio.setDiscreteTrans)
 
     def onCharTrans(self, evt):
-        if evt.GetKeyCode() == wx.WXK_TAB:
-            self.handleTrans(evt)
-        evt.Skip()
+        self.onNumericChar(evt, self.handleTrans, allowList=True)
 
     def makeFilterTransBox(self, box):
         staticLabel1 = wx.StaticText(self.panel1, -1, "Random Filter Freq per Grain (list of ratios)")
@@ -254,21 +259,50 @@ class Module(wx.Frame):
         self.tx_ftrans.SetFont(font)
         self.tx_ftrans.Bind(wx.EVT_TEXT_ENTER, self.handleFilterTrans)
         self.tx_ftrans.Bind(wx.EVT_CHAR, self.onCharFilterTrans)
+        self.tx_ftrans.Bind(wx.EVT_KILL_FOCUS, self.onListFocusLost)
+        self.tx_ftrans.lastValidValue = "1, "
+        self.tx_ftrans.lastValidValues = [1.0]
         transBox.Add(self.tx_ftrans, 1, wx.LEFT | wx.RIGHT, 5)
         box.Add(transBox, 0, wx.EXPAND | wx.ALL, 5)
 
     def getFilterTrans(self):
-        return [float(value) for value in self.tx_ftrans.GetValue().split(',') if value not in [" ", ""]]
+        self.commitNumericList(self.tx_ftrans, self.sg_audio.setDiscreteFilterTrans)
+        return list(self.tx_ftrans.lastValidValues)
 
     def setFilterTrans(self, trans):
-        self.tx_ftrans.SetValue(", ".join(str(t) for t in trans))
-        self.handleFilterTrans(None)
+        self.tx_ftrans.ChangeValue(", ".join(str(t) for t in trans))
+        self.commitNumericList(self.tx_ftrans, self.sg_audio.setDiscreteFilterTrans, force=True)
 
     def handleFilterTrans(self, evt):
-        self.sg_audio.setDiscreteFilterTrans(self.getFilterTrans())
+        self.commitNumericList(self.tx_ftrans, self.sg_audio.setDiscreteFilterTrans)
 
     def onCharFilterTrans(self, evt):
-        if evt.GetKeyCode() == wx.WXK_TAB:
+        self.onNumericChar(evt, self.handleFilterTrans, allowList=True)
+
+    def commitNumericList(self, control, setter, force=False):
+        text = control.GetValue()
+        parts = text.split(',')
+        if len(parts) > 1 and not parts[-1].strip():
+            parts.pop()
+        try:
+            if not parts or any(not part.strip() for part in parts):
+                raise ValueError()
+            values = [float(part.strip()) for part in parts]
+            if not all(math.isfinite(value) for value in values):
+                raise ValueError()
+        except ValueError:
+            control.ChangeValue(control.lastValidValue)
+            return False
+        if force or text != control.lastValidValue:
+            setter(values)
+            control.lastValidValue = text
+            control.lastValidValues = values
+        return True
+
+    def onListFocusLost(self, evt):
+        if evt.GetEventObject() is self.tx_trans:
+            self.handleTrans(evt)
+        else:
             self.handleFilterTrans(evt)
         evt.Skip()
 
@@ -303,6 +337,9 @@ class Module(wx.Frame):
         tx_min.SetFont(font)
         tx_min.Bind(wx.EVT_TEXT_ENTER, self.handleMapMin)
         tx_min.Bind(wx.EVT_CHAR, self.onCharMapMin)
+        tx_min.Bind(wx.EVT_KILL_FOCUS, self.onMapFocusLost)
+        tx_min.lastValidValue = minval
+        self.yMapFields.append((tx_min, self.sg_audio.setMapMin, False))
         textBox.Add(tx_min, 0, wx.RIGHT, 20)
 
         midLabel = wx.StaticText(self.panel2, -1, "Mid: ")
@@ -315,6 +352,9 @@ class Module(wx.Frame):
         tx_mid.SetFont(font)
         tx_mid.Bind(wx.EVT_TEXT_ENTER, self.handleMapMid)
         tx_mid.Bind(wx.EVT_CHAR, self.onCharMapMid)
+        tx_mid.Bind(wx.EVT_KILL_FOCUS, self.onMapFocusLost)
+        tx_mid.lastValidValue = midval
+        self.yMapFields.append((tx_mid, self.sg_audio.setMapMid, True))
         textBox.Add(tx_mid, 0, wx.RIGHT, 20)
 
         maxLabel = wx.StaticText(self.panel2, -1, "Max: ")
@@ -326,6 +366,9 @@ class Module(wx.Frame):
         tx_max.SetFont(font)
         tx_max.Bind(wx.EVT_TEXT_ENTER, self.handleMapMax)
         tx_max.Bind(wx.EVT_CHAR, self.onCharMapMax)
+        tx_max.Bind(wx.EVT_KILL_FOCUS, self.onMapFocusLost)
+        tx_max.lastValidValue = maxval
+        self.yMapFields.append((tx_max, self.sg_audio.setMapMax, False))
         textBox.Add(tx_max, 0, wx.RIGHT, 20)
 
         box.Add(textBox, 0, wx.LEFT | wx.RIGHT, 10)
@@ -337,37 +380,55 @@ class Module(wx.Frame):
         self.sg_audio.setCheck(which, evt.GetInt())
 
     def onCharMapMin(self, evt):
-        if evt.GetKeyCode() == wx.WXK_TAB:
-            self.handleMapMin(evt)
-        evt.Skip()
+        self.onYMapChar(evt, self.handleMapMin)
 
     def handleMapMin(self, evt):
-        which = evt.GetEventObject().GetName()
-        value = float(evt.GetEventObject().GetValue())
-        self.sg_audio.setMapMin(which, value)
+        self.commitYMap(evt.GetEventObject(), self.sg_audio.setMapMin)
 
     def onCharMapMax(self, evt):
-        if evt.GetKeyCode() == wx.WXK_TAB:
-            self.handleMapMax(evt)
-        evt.Skip()
+        self.onYMapChar(evt, self.handleMapMax)
 
     def handleMapMax(self, evt):
-        which = evt.GetEventObject().GetName()
-        value = float(evt.GetEventObject().GetValue())
-        self.sg_audio.setMapMax(which, value)
+        self.commitYMap(evt.GetEventObject(), self.sg_audio.setMapMax)
 
     def onCharMapMid(self, evt):
-        if evt.GetKeyCode() == wx.WXK_TAB:
-            self.handleMapMid(evt)
-        evt.Skip()
+        self.onYMapChar(evt, self.handleMapMid)
 
     def handleMapMid(self, evt):
-        which = evt.GetEventObject().GetName()
-        value = evt.GetEventObject().GetValue()
-        if value == "":
-            self.sg_audio.setMapMid(which, None)
-        else:
-            self.sg_audio.setMapMid(which, float(value))
+        self.commitYMap(evt.GetEventObject(), self.sg_audio.setMapMid, allowEmpty=True)
+
+    def onYMapChar(self, evt, commit):
+        self.onNumericChar(evt, commit)
+
+    def onNumericChar(self, evt, commit, allowList=False):
+        key = evt.GetKeyCode()
+        if key == wx.WXK_TAB:
+            commit(evt)
+            evt.Skip()
+            return
+        filterNumericChar(evt, allowList)
+
+    def commitYMap(self, control, setter, allowEmpty=False, force=False):
+        text = control.GetValue().strip()
+        try:
+            value = None if allowEmpty and not text else float(text)
+            if value is not None and not math.isfinite(value):
+                raise ValueError()
+        except ValueError:
+            control.ChangeValue(control.lastValidValue)
+            return False
+        if force or text != control.lastValidValue:
+            setter(control.GetName(), value)
+            control.lastValidValue = text
+        return True
+
+    def onMapFocusLost(self, evt):
+        control = evt.GetEventObject()
+        for field, setter, allowEmpty in self.yMapFields:
+            if field is control:
+                self.commitYMap(control, setter, allowEmpty)
+                break
+        evt.Skip()
 
 class GranulatorFrame(Module):
     def __init__(self, parent, sg_audio):
@@ -437,6 +498,8 @@ class GranulatorFrame(Module):
         self.Show(False)
 
     def save(self):
+        for control, setter, allowEmpty in self.yMapFields:
+            self.commitYMap(control, setter, allowEmpty)
         return {'density': self.density,
                 'graindur': self.graindur,
                 'graindev': self.graindev,
@@ -587,8 +650,10 @@ class GranulatorFrame(Module):
                 value = dict.get(key, 1.0)
             else:
                 value = dict.get(key, "")
-            tb.SetValue(str(value))
-            event = wx.PyCommandEvent(wx.EVT_TEXT_ENTER.typeId, tb.GetId())
-            event.SetEventObject(tb)
-            event.SetString(str(value))
-            wx.PostEvent(tb.GetEventHandler(), event)
+            tb.ChangeValue(str(value))
+            if "min" in key:
+                self.commitYMap(tb, self.sg_audio.setMapMin, force=True)
+            elif "max" in key:
+                self.commitYMap(tb, self.sg_audio.setMapMax, force=True)
+            else:
+                self.commitYMap(tb, self.sg_audio.setMapMid, allowEmpty=True, force=True)
