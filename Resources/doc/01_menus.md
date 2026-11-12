@@ -20,7 +20,7 @@ Open a previously created .sg file.
 
 ##### Open Recent... #####
 
-Reopen one of the last 10 opened projects. The most recently opened project is
+Reopen one of the last 10 opened or saved projects. The most recent project is
 listed first. This list is remembered between sessions. If a project has been
 moved or deleted, selecting it displays a message and removes it from the list.
 

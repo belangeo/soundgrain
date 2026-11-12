@@ -617,6 +617,7 @@ class MainFrame(wx.Frame):
         f = open(path, 'w')
         f.write(msg)
         f.close()
+        self.rememberRecentProject(path)
         self.SetTitle('%s %s - %s' % (NAME, SG_VERSION, os.path.split(self.currentFile)[1]))
         self.is_unsaved = False
 
